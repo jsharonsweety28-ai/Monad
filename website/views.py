@@ -57,16 +57,11 @@ def generate_invite_code():
 def inject_globals():
     now = datetime.now(timezone.utc)
     life_phase = getattr(current_user, 'life_phase', 'other') if current_user.is_authenticated else 'other'
-    if current_user.is_authenticated:
-        total_sessions = FocusSession.query.filter_by(user_id=current_user.id, completed=True).count()
-    else:
-        total_sessions = 0
     return dict(
         datetime=datetime,
         current_year=now.year,
         current_month=now.month,
         user_theme=getattr(current_user, 'theme', 'default') if current_user.is_authenticated else 'default',
-        total_focus_sessions=total_sessions,
         life_phase=life_phase,
         phase_copy=PHASE_COPY.get(life_phase, PHASE_COPY['other']),
     )
@@ -1171,7 +1166,8 @@ def settings():
         db.session.commit()
         flash('Preferences saved!', category='success')
         return redirect(url_for('views.settings'))
-    return render_template("settings.html", active_page="settings")
+    total_focus_sessions = FocusSession.query.filter_by(user_id=current_user.id, completed=True).count()
+    return render_template("settings.html", active_page="settings", total_focus_sessions=total_focus_sessions)
 
 # ─────────────────────────────────────────────
 # 🧭 ONBOARDING
