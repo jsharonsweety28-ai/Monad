@@ -17,7 +17,11 @@ oauth = OAuth()
 def create_app():
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-only-change-in-production')
+    secret_key = os.environ.get('SECRET_KEY')
+    if not secret_key:
+        raise RuntimeError('SECRET_KEY environment variable is required')
+    app.config['SECRET_KEY'] = secret_key
+
 
     # ✅ Database path
     db_path = os.path.join(os.path.dirname(__file__), 'db.sqlite')
