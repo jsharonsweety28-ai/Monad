@@ -159,7 +159,7 @@
             
             {% if not isFuture %}
               {% if finalPhoto %}
-                <img src="/media/{{ finalPhoto }}" class="day-photo" alt="Memory" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <img src="{{ get_public_url(finalPhoto) }}" class="day-photo" alt="Memory" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                 <div class="day-upload" style="display:none;">
                   <span onclick="event.stopPropagation(); showUpload('{{ dateStr }}')">📸</span>
                 </div>

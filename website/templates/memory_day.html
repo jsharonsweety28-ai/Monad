@@ -72,7 +72,7 @@
       <div class="photo-grid">
         {% for photo in all_photos %}
           <div class="photo-item">
-            <img src="/media/{{ photo.filename }}" alt="Memory" onerror="this.style.display='none';this.parentElement.querySelector('.error-msg').style.display='block';">
+            <img src="{{ get_public_url(photo.filename) }}" alt="Memory" onerror="this.style.display='none';this.parentElement.querySelector('.error-msg').style.display='block';">
             <div class="error-msg" style="display:none; padding:20px; text-align:center; color:var(--text-secondary);">📷 Image not found</div>
             {% if photo.caption %}<div class="caption">{{ photo.caption }}</div>{% endif %}
             <div class="time">{{ photo.created_at.strftime('%I:%M %p') if photo.created_at else '' }}</div>
@@ -160,7 +160,7 @@
           {% endif %}
           {% if h.photo %}
             <div class="habit-reflect-photo">
-              <img src="/media/{{ h.photo.filename }}" alt="{{ h.name }} progress">
+              <img src="{{ get_public_url(h.photo.filename) }}" alt="{{ h.name }} progress">
             </div>
           {% endif %}
         </div>

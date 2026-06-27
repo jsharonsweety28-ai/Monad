@@ -197,7 +197,7 @@
         {% if note.content|length > 120 %}<div class="nc-expand-hint" id="hint-{{ note.id }}">tap to expand ↓</div>{% endif %}
         {% endif %}
         {% if note.file_path %}
-          <a class="nc-file" href="/media/{{ note.file_path }}" target="_blank">
+          <a class="nc-file" href="{{ get_public_url(note.file_path) }}" target="_blank">
             {% if note.file_type in ['pdf'] %}📄{% elif note.file_type in ['png','jpg','jpeg','gif','webp'] %}🖼{% else %}📎{% endif %}
             {{ note.title }}
           </a>

@@ -925,7 +925,7 @@
       else fd.append('recipient_id', activeId);
       fetch('/connect/upload', { method: 'POST', body: fd })
         .then(r => r.json()).then(d => {
-          if (d.ok) { clearFile(); fetching = false; fetchMessages(); }
+          if (d.ok) { clearFile(); }
           btn.disabled = false;
           input.focus();
         });

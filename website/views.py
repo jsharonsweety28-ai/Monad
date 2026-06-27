@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file, abort, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, abort, jsonify
+from .storage import upload_file, get_public_url
 from flask_login import login_required, current_user
 from . import db
 from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, FocusSession, DailyPhoto, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Note, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark
@@ -10,7 +11,6 @@ import random
 import string
 import threading as _threading
 from werkzeug.utils import secure_filename
-from PIL import Image
 
 views = Blueprint('views', __name__)
 
@@ -44,104 +44,13 @@ PHASE_COPY = {
     },
 }
 
-UPLOAD_FOLDER = 'website/userdata/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-import mimetypes
-
-@views.route('/media/<path:filename>')
-@login_required
-def serve_media(filename):
-    uid = str(current_user.id)
-    parts = filename.replace('\\', '/').split('/')
-    base = parts[-1]  # guard against path traversal
-
-    if base.startswith('msg_'):
-        # Message files: sender, DM recipient, or community member may view
-        msg = Message.query.filter_by(filename=base).first()
-        allowed = False
-        if msg:
-            if msg.sender_id == current_user.id or msg.recipient_id == current_user.id:
-                allowed = True
-            elif msg.community_id:
-                allowed = CommunityMember.query.filter_by(
-                    community_id=msg.community_id, user_id=current_user.id
-                ).first() is not None
-        if not allowed:
-            abort(403)
-    else:
-        owned = (
-            base.startswith(f'{uid}_') or
-            base.startswith(f'profile_{uid}.') or
-            base.startswith(f'collage_{uid}_')
-        )
-        if not owned:
-            abort(403)
-    filepath = os.path.join(os.path.dirname(__file__), '..', UPLOAD_FOLDER, base)
-    filepath = os.path.abspath(filepath)
-    # Guard against path traversal
-    upload_abs = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', UPLOAD_FOLDER))
-    if not filepath.startswith(upload_abs + os.sep):
-        abort(403)
-    if not os.path.isfile(filepath):
-        abort(404)
-    mime = mimetypes.guess_type(filepath)[0] or 'application/octet-stream'
-    return send_file(filepath, mimetype=mime)
-
 def generate_invite_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-
-def create_collage(photos, output_path):
-    """Create a collage that adapts to the number of photos (up to 9)."""
-    if not photos:
-        return None
-    
-    # Limit to 9 photos max
-    photos = photos[:9]
-    thumb_size = 150
-    images = []
-
-    for photo in photos:
-        try:
-            filepath = os.path.join(UPLOAD_FOLDER, photo.filename)
-            if not os.path.exists(filepath):
-                continue
-            img = Image.open(filepath).convert("RGB")
-            img = img.resize((thumb_size, thumb_size))
-            images.append(img)
-        except Exception as e:
-            print(f"Error opening photo: {e}")
-            continue
-    
-    if not images:
-        return None
-    
-    count = len(images)
-
-    # Decide grid size dynamically
-    if count == 1:
-        cols, rows = 1, 1
-    elif count <= 2:
-        cols, rows = 2, 1
-    elif count <= 4:
-        cols, rows = 2, 2
-    elif count <= 6:
-        cols, rows = 3, 2
-    else:
-        cols, rows = 3, 3
-    
-    collage = Image.new("RGB", (cols * thumb_size, rows * thumb_size), (255, 255, 255))
-    
-    for i, img in enumerate(images):
-        row = i // cols
-        col = i % cols
-        collage.paste(img, (col * thumb_size, row * thumb_size))
-    
-    collage.save(output_path, "JPEG", quality=85)
-    return output_path
 
 
 @views.app_context_processor
@@ -1102,15 +1011,15 @@ def habit_reflect():
                 filename = secure_filename(
                     f"{current_user.id}_{log.date}_{int(datetime.now(timezone.utc).replace(tzinfo=None).timestamp())}_{file.filename}"
                 )
-                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                storage_path =  upload_file(file, "daily_photos")
                 photo = DailyPhoto(
                     user_id=current_user.id,
                     date=log.date,
-                    filename=filename,
+                    filename=storage_path,
                     caption=reflection[:300] if reflection else habit.name,
                     habit_log_id=log.id
-                )
+                    )
+               
                 db.session.add(photo)
                 db.session.commit()
 
@@ -1577,66 +1486,51 @@ def memory_day(date_str):
                          journal=journal, tasks=tasks, habits_status=habits_status,
                          active_page="memories")
 
-@views.route('/daily-collage/<date_str>')
-@login_required
-def daily_collage(date_str):
-    day_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    photos = DailyPhoto.query.filter_by(user_id=current_user.id, date=day_date).order_by(DailyPhoto.created_at.asc()).all()
-    if not photos:
-        return '', 404
-    
-    collage_filename = f"collage_{current_user.id}_{day_date}.jpg"
-    collage_path = os.path.join(UPLOAD_FOLDER, collage_filename)
-    
-    result = create_collage(photos, collage_path)
-    if result and os.path.exists(collage_path):
-        return send_file(collage_path, mimetype='image/jpeg')
-    
-    for photo in photos:
-        filepath = os.path.join(UPLOAD_FOLDER, photo.filename)
-        if os.path.exists(filepath):
-            return send_file(filepath)
-    
-    return '', 404
-
 @views.route('/upload-photo', methods=['POST'])
 @login_required
 def upload_photo():
-    date_str = request.form.get('date', datetime.now(timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d'))
+    date_str = request.form.get(
+        'date',
+        datetime.now(timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d')
+    )
     day_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     task_id = request.form.get('task_id', None)
-    
+
     if 'photo' not in request.files:
         flash('No file selected', 'error')
         return redirect(request.referrer or url_for('views.daily'))
-    
+
     file = request.files['photo']
+
     if file.filename == '':
         flash('No file selected', 'error')
         return redirect(request.referrer or url_for('views.daily'))
-    
+
     if file and allowed_file(file.filename):
-        filename = secure_filename(f"{current_user.id}_{day_date}_{int(datetime.now(timezone.utc).replace(tzinfo=None).timestamp())}_{file.filename}")
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
-        
+
+        # Upload to Supabase
+        storage_path = upload_file(file, "daily_photos")
+
         caption = request.form.get('caption', '')
+
         if task_id and not caption:
             task = Task.query.get(int(task_id))
             if task:
                 caption = f"Task: {task.content}"
-        
+
         photo = DailyPhoto(
             user_id=current_user.id,
             date=day_date,
-            filename=filename,
+            filename=storage_path,
             caption=caption,
             task_id=int(task_id) if task_id else None
         )
+
         db.session.add(photo)
         db.session.commit()
+
         flash('Photo uploaded! 📸', 'success')
-    
+
     return redirect(request.referrer or url_for('views.daily'))
 
 @views.route('/set-final-photo/<int:photo_id>')
@@ -1950,34 +1844,77 @@ def connect_upload():
     community_id = request.form.get('community_id')
     recipient_id = request.form.get('recipient_id')
     file = request.files.get('file')
+
     if not file or not file.filename:
         return jsonify({'ok': False, 'error': 'No file'}), 400
+
     original = file.filename
     ext = os.path.splitext(secure_filename(original))[1].lower()
-    ALLOWED_MSG_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.pdf', '.docx', '.txt'}
+
+    ALLOWED_MSG_EXTS = {
+        '.png', '.jpg', '.jpeg', '.gif', '.webp',
+        '.pdf', '.docx', '.txt'
+    }
+
     if ext not in ALLOWED_MSG_EXTS:
         return jsonify({'ok': False, 'error': 'File type not allowed'}), 400
-    stored = f"msg_{current_user.id}_{int(datetime.now(timezone.utc).replace(tzinfo=None).timestamp())}{ext}"
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    file.save(os.path.join(UPLOAD_FOLDER, stored))
+
+    # Upload attachment to Supabase Storage
+    stored = upload_file(file, "messages")
+
     if community_id:
         community = Community.query.get_or_404(int(community_id))
-        if not CommunityMember.query.filter_by(community_id=community.id, user_id=current_user.id).first():
+
+        if not CommunityMember.query.filter_by(
+            community_id=community.id,
+            user_id=current_user.id
+        ).first():
             return jsonify({'ok': False}), 403
-        msg = Message(sender_id=current_user.id, community_id=community.id, content='', filename=stored, original_name=original)
+
+        msg = Message(
+            sender_id=current_user.id,
+            community_id=community.id,
+            content='',
+            filename=stored,
+            original_name=original
+        )
+
     elif recipient_id:
         rid = int(recipient_id)
+
         # Verify recipient shares at least one community with sender
-        my_comm_ids = {m.community_id for m in CommunityMember.query.filter_by(user_id=current_user.id).all()}
-        their_comm_ids = {m.community_id for m in CommunityMember.query.filter_by(user_id=rid).all()}
+        my_comm_ids = {
+            m.community_id
+            for m in CommunityMember.query.filter_by(user_id=current_user.id).all()
+        }
+
+        their_comm_ids = {
+            m.community_id
+            for m in CommunityMember.query.filter_by(user_id=rid).all()
+        }
+
         if not my_comm_ids.intersection(their_comm_ids):
             return jsonify({'ok': False}), 403
-        msg = Message(sender_id=current_user.id, recipient_id=rid, content='', filename=stored, original_name=original)
+
+        msg = Message(
+            sender_id=current_user.id,
+            recipient_id=rid,
+            content='',
+            filename=stored,
+            original_name=original
+        )
+
     else:
         return jsonify({'ok': False}), 400
+
     db.session.add(msg)
     db.session.commit()
-    return jsonify({'ok': True, 'id': msg.id, 'created_at': msg.created_at.strftime('%H:%M')})
+
+    return jsonify({
+        'ok': True,
+        'id': msg.id,
+        'created_at': msg.created_at.strftime('%H:%M')
+    })
 
 @views.route('/connect/messages/group/<int:community_id>')
 @login_required
@@ -2017,7 +1954,7 @@ def _msg_json(m, my_id):
         'filename': m.filename,
         'original_name': m.original_name,
         'is_image': ext in IMAGE_EXTS,
-        'file_url': f'/media/{m.filename}' if m.filename else None,
+        'file_url': get_public_url(m.filename) if m.filename else None,
         'time': m.created_at.strftime('%H:%M'),
         'mine': m.sender_id == my_id
     }
@@ -2790,10 +2727,7 @@ def study_setup_save():
     if photo and photo.filename:
         ext = os.path.splitext(photo.filename)[1].lower()
         if ext in {'.jpg', '.jpeg', '.png', '.gif', '.webp'}:
-            stored = f'profile_{current_user.id}{ext}'
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            photo.save(os.path.join(UPLOAD_FOLDER, stored))
-            profile.photo_filename = stored
+            profile.photo_filename = upload_file(photo, "profile_photos")
 
     db.session.commit()
     return redirect(url_for('views.study_profile'))
@@ -3006,24 +2940,14 @@ def study_profile_upload_photo():
     ext = os.path.splitext(f.filename)[1].lower()
     if ext not in {'.jpg', '.jpeg', '.png', '.gif', '.webp'}:
         return jsonify({'status': 'error', 'msg': 'Invalid type'}), 400
-    stored = f'profile_{current_user.id}{ext}'
     profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
     if not profile:
         profile = StudentProfile(user_id=current_user.id)
         db.session.add(profile)
-    if profile.photo_filename and profile.photo_filename != stored:
-        for upload_dir in [
-            UPLOAD_FOLDER,
-            os.path.join(os.path.dirname(__file__), 'static', 'uploads'),
-        ]:
-            old_path = os.path.join(upload_dir, profile.photo_filename)
-            if os.path.isfile(old_path):
-                os.remove(old_path)
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    f.save(os.path.join(UPLOAD_FOLDER, stored))
-    profile.photo_filename = stored
+    storage_path = upload_file(f, "profile_photos")
+    profile.photo_filename = storage_path
     db.session.commit()
-    return jsonify({'status': 'ok', 'url': f'/media/{stored}'})
+    return jsonify({'status': 'ok', 'url': get_public_url(storage_path)})
 
 @views.route('/study/profile/delete-photo', methods=['POST'])
 @login_required
@@ -3031,15 +2955,6 @@ def study_profile_delete_photo():
     profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
     if not profile or not profile.photo_filename:
         return jsonify({'status': 'ok'})
-
-    filename = os.path.basename(profile.photo_filename)
-    for upload_dir in [
-        UPLOAD_FOLDER,
-        os.path.join(os.path.dirname(__file__), 'static', 'uploads'),
-    ]:
-        path = os.path.join(upload_dir, filename)
-        if os.path.isfile(path):
-            os.remove(path)
 
     profile.photo_filename = None
     db.session.commit()
@@ -3074,9 +2989,7 @@ def add_study_note():
     if f and f.filename:
         ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
         if ext in {'pdf', 'docx', 'png', 'jpg', 'jpeg', 'gif', 'webp'}:
-            fname = f"{current_user.id}_{subject_id}_{int(datetime.now().timestamp())}_{secure_filename(f.filename)}"
-            f.save(os.path.join(UPLOAD_FOLDER, fname))
-            file_path = fname
+            file_path = upload_file(f, "study_notes")
             file_type = 'img' if ext in {'png','jpg','jpeg','gif','webp'} else ext
     note = StudyNote(subject_id=subject_id, title=title or f.filename or 'Note',
                      content=content or None, file_path=file_path,

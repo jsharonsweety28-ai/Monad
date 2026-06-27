@@ -183,7 +183,7 @@
           <div class="sp-photo-col">
             <div class="sp-photo-wrap" id="photoWrap">
               {% if profile and profile.photo_filename %}
-                <img src="/media/{{ profile.photo_filename }}" id="photoImg" alt="ID Photo">
+                <img src="{{ get_public_url(profile.photo_filename) }}" id="photoImg" alt="ID Photo">
                 <span class="sp-photo-placeholder" id="photoPlaceholder" style="display:none">🧑‍🎓</span>
               {% else %}
                 <span class="sp-photo-placeholder" id="photoPlaceholder">🧑‍🎓</span>
