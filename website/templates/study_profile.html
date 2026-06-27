@@ -82,6 +82,13 @@
     opacity:.8; transition:opacity .15s;
   }
   .sp-upload-btn:hover { opacity:1; }
+  .sp-photo-actions { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .sp-delete-photo-btn {
+    font-size:.58rem; font-weight:700; color:#dc2626;
+    background:none; border:none; cursor:pointer; padding:0;
+    opacity:.78; transition:opacity .15s;
+  }
+  .sp-delete-photo-btn:hover { opacity:1; }
   .sp-info-col { flex:1; display:flex; flex-direction:column; justify-content:center; gap:5px; }
   .sp-info-name { font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:800; color:var(--text-primary); }
   .sp-info-row { display:flex; gap:6px; align-items:baseline; }
@@ -177,6 +184,7 @@
             <div class="sp-photo-wrap" id="photoWrap">
               {% if profile and profile.photo_filename %}
                 <img src="/media/{{ profile.photo_filename }}" id="photoImg" alt="ID Photo">
+                <span class="sp-photo-placeholder" id="photoPlaceholder" style="display:none">🧑‍🎓</span>
               {% else %}
                 <span class="sp-photo-placeholder" id="photoPlaceholder">🧑‍🎓</span>
                 <img src="" id="photoImg" style="display:none" alt="ID Photo">
@@ -184,6 +192,11 @@
             </div>
             <button class="sp-upload-btn" onclick="event.stopPropagation(); document.getElementById('photoInput').click()">
               📷 Change photo
+            </button>
+            <button class="sp-delete-photo-btn" id="deletePhotoBtn"
+                    style="{% if not profile or not profile.photo_filename %}display:none{% endif %}"
+                    onclick="deletePhoto(event)">
+              Delete photo
             </button>
             <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
           </div>
@@ -417,6 +430,25 @@ async function uploadPhoto(input) {
     img.src = data.url + '?t=' + Date.now();
     img.style.display = '';
     if (ph) ph.style.display = 'none';
+    const delBtn = document.getElementById('deletePhotoBtn');
+    if (delBtn) delBtn.style.display = '';
+  }
+  input.value = '';
+}
+
+async function deletePhoto(event) {
+  event.stopPropagation();
+  if (!confirm('Delete your student ID photo?')) return;
+  const res = await fetch('/study/profile/delete-photo', { method:'POST' });
+  const data = await res.json();
+  if (data.status === 'ok') {
+    const img = document.getElementById('photoImg');
+    const ph = document.getElementById('photoPlaceholder');
+    const delBtn = document.getElementById('deletePhotoBtn');
+    img.removeAttribute('src');
+    img.style.display = 'none';
+    if (ph) ph.style.display = '';
+    if (delBtn) delBtn.style.display = 'none';
   }
 }
 </script>

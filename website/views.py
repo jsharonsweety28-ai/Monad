@@ -2791,9 +2791,8 @@ def study_setup_save():
         ext = os.path.splitext(photo.filename)[1].lower()
         if ext in {'.jpg', '.jpeg', '.png', '.gif', '.webp'}:
             stored = f'profile_{current_user.id}{ext}'
-            upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
-            os.makedirs(upload_dir, exist_ok=True)
-            photo.save(os.path.join(upload_dir, stored))
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            photo.save(os.path.join(UPLOAD_FOLDER, stored))
             profile.photo_filename = stored
 
     db.session.commit()
@@ -3008,16 +3007,43 @@ def study_profile_upload_photo():
     if ext not in {'.jpg', '.jpeg', '.png', '.gif', '.webp'}:
         return jsonify({'status': 'error', 'msg': 'Invalid type'}), 400
     stored = f'profile_{current_user.id}{ext}'
-    upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
-    os.makedirs(upload_dir, exist_ok=True)
-    f.save(os.path.join(upload_dir, stored))
     profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
     if not profile:
         profile = StudentProfile(user_id=current_user.id)
         db.session.add(profile)
+    if profile.photo_filename and profile.photo_filename != stored:
+        for upload_dir in [
+            UPLOAD_FOLDER,
+            os.path.join(os.path.dirname(__file__), 'static', 'uploads'),
+        ]:
+            old_path = os.path.join(upload_dir, profile.photo_filename)
+            if os.path.isfile(old_path):
+                os.remove(old_path)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    f.save(os.path.join(UPLOAD_FOLDER, stored))
     profile.photo_filename = stored
     db.session.commit()
     return jsonify({'status': 'ok', 'url': f'/media/{stored}'})
+
+@views.route('/study/profile/delete-photo', methods=['POST'])
+@login_required
+def study_profile_delete_photo():
+    profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
+    if not profile or not profile.photo_filename:
+        return jsonify({'status': 'ok'})
+
+    filename = os.path.basename(profile.photo_filename)
+    for upload_dir in [
+        UPLOAD_FOLDER,
+        os.path.join(os.path.dirname(__file__), 'static', 'uploads'),
+    ]:
+        path = os.path.join(upload_dir, filename)
+        if os.path.isfile(path):
+            os.remove(path)
+
+    profile.photo_filename = None
+    db.session.commit()
+    return jsonify({'status': 'ok'})
 
 @views.route('/study/exams/<int:id>/create-task', methods=['POST'])
 @login_required
