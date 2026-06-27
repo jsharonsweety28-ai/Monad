@@ -16,6 +16,7 @@ __pycache__/
 # Uploads (user photos - don't commit personal data)
 website/static/uploads/
 website/userdata/
+website/uploads/
 
 # Virtual environment
 venv/
@@ -28,6 +29,7 @@ env/
 
 # Claude Code
 .claude/
+.agents/
 
 # OS
 .DS_Store
