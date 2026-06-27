@@ -73,44 +73,8 @@ def create_app():
 
     # ✅ Import models so db.create_all() knows about them
     from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, DailyPhoto, FocusSession, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark
-    # ✅ Permanent fix: always ensure tables exist
     with app.app_context():
         db.create_all()
-        # SQLite column migrations — safe to run on every startup
-        from sqlalchemy import text
-        with db.engine.connect() as conn:
-            for stmt in [
-                "ALTER TABLE task ADD COLUMN recurring_days VARCHAR(20)",
-                "ALTER TABLE task ADD COLUMN recurring_task_id INTEGER REFERENCES task(id)",
-                "ALTER TABLE task ADD COLUMN reminder_offset INTEGER",
-                "ALTER TABLE habit ADD COLUMN frequency VARCHAR(30) DEFAULT 'daily'",
-                "ALTER TABLE user ADD COLUMN time_format VARCHAR(3) DEFAULT '12h'",
-                "ALTER TABLE task ADD COLUMN category VARCHAR(100)",
-                "ALTER TABLE task ADD COLUMN end_time VARCHAR(5)",
-                "ALTER TABLE habit_log ADD COLUMN reflection TEXT",
-                "ALTER TABLE daily_photo ADD COLUMN habit_log_id INTEGER REFERENCES habit_log(id)",
-                "ALTER TABLE time_block ADD COLUMN category VARCHAR(100)",
-                "ALTER TABLE message ADD COLUMN filename VARCHAR(300)",
-                "ALTER TABLE message ADD COLUMN original_name VARCHAR(300)",
-                "ALTER TABLE class_slot ADD COLUMN reminder_note TEXT",
-                "ALTER TABLE class_slot ADD COLUMN reminder_time VARCHAR(5)",
-                "ALTER TABLE student_profile ADD COLUMN institution_type VARCHAR(20)",
-                "ALTER TABLE student_profile ADD COLUMN class_name VARCHAR(50)",
-                "ALTER TABLE student_profile ADD COLUMN section VARCHAR(20)",
-                "ALTER TABLE user ADD COLUMN pet_name VARCHAR(50)",
-                "ALTER TABLE user ADD COLUMN year_goal VARCHAR(200)",
-                "ALTER TABLE user ADD COLUMN motto VARCHAR(200)",
-                "ALTER TABLE achievement ADD COLUMN crowns INTEGER DEFAULT 0",
-                "ALTER TABLE user ADD COLUMN ai_report_json TEXT",
-                "ALTER TABLE user ADD COLUMN ai_report_date DATE",
-                "ALTER TABLE exam_result ADD COLUMN end_date DATE",
-                "ALTER TABLE user ADD COLUMN study_enabled BOOLEAN DEFAULT 1",
-            ]:
-                try:
-                    conn.execute(text(stmt))
-                    conn.commit()
-                except Exception:
-                    pass
         print("Database checked/initialized successfully!")
 
     # ✅ Login manager setup
