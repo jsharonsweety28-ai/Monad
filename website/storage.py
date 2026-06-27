@@ -5,14 +5,17 @@ from supabase import create_client
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-if not SUPABASE_URL:
-    raise RuntimeError("SUPABASE_URL is missing")
+_supabase_client = None
 
-if not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_KEY is missing")
-
-# Initialize Supabase client
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+def _get_client():
+    global _supabase_client
+    if _supabase_client is None:
+        if not SUPABASE_URL:
+            raise RuntimeError("SUPABASE_URL is missing")
+        if not SUPABASE_KEY:
+            raise RuntimeError("SUPABASE_KEY is missing")
+        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    return _supabase_client
 
 
 def upload_file(file, folder="uploads"):
@@ -43,7 +46,7 @@ def upload_file(file, folder="uploads"):
     print("File Size:", len(file_bytes), "bytes")
 
     try:
-        result = supabase.storage.from_("uploads").upload(
+        result = _get_client().storage.from_("uploads").upload(
             path=storage_path,
             file=file_bytes,
             file_options={
@@ -74,4 +77,4 @@ def get_public_url(storage_path):
     if not storage_path:
         return ""
 
-    return supabase.storage.from_("uploads").get_public_url(storage_path)
+    return _get_client().storage.from_("uploads").get_public_url(storage_path)
