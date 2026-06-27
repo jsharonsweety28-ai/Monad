@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}{{ day_date.strftime('%B %d, %Y') }} · monad{% endblock %}
+{% block page_title %}memory{% endblock %}
+{% block content %}
+
+<style>
+  .day-page { max-width: 700px; margin: 0 auto; }
+  .day-header { background: var(--header-gradient); border-radius: 20px; padding: 24px; color: white; text-align: center; margin-bottom: 24px; box-shadow: 0 8px 25px var(--glow-color); }
+  .day-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; }
+  .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+  .card h4 { font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .photo-item { position: relative; border-radius: 10px; overflow: hidden; background: var(--input-bg); border: 1px solid var(--border-color); }
+  .photo-item img { width: 100%; height: 130px; object-fit: cover; display: block; }
+  .photo-item .caption { font-size: 0.7rem; color: var(--text-secondary); padding: 6px 8px; }
+  .photo-item .time { font-size: 0.6rem; color: var(--text-secondary); padding: 0 8px 6px; }
+  .final-badge { position: absolute; top: 5px; right: 5px; background: #f59e0b; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.6rem; font-weight: 700; }
+  .set-final-btn { display: block; padding: 6px; text-align: center; font-size: 0.7rem; color: var(--accent-1); cursor: pointer; text-decoration: none; background: var(--hover); }
+  .set-final-btn:hover { background: var(--accent-1); color: white; }
+  .task-item { padding: 8px 0; border-bottom: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+  .task-item:last-child { border-bottom: none; }
+  .habit-row { padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+  .habit-row:last-child { border-bottom: none; }
+  .habit-row-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+  .yes { color: #10b981; font-weight: 600; } .no { color: #ef4444; font-weight: 600; }
+  .habit-reflection {
+    margin-top: 8px; font-size: 0.82rem; color: var(--text-secondary);
+    background: var(--input-bg); border-radius: 10px; padding: 8px 12px;
+    border-left: 3px solid var(--accent-1); line-height: 1.5;
+  }
+  .habit-reflect-photo {
+    margin-top: 8px; border-radius: 12px; overflow: hidden;
+    max-height: 180px; border: 1px solid var(--border-color);
+  }
+  .habit-reflect-photo img { width: 100%; max-height: 180px; object-fit: cover; display: block; }
+  .back-link { color: var(--text-secondary); text-decoration: none; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 16px; }
+  .back-link:hover { color: var(--accent-1); }
+  .empty-state { text-align: center; padding: 30px; color: var(--text-secondary); }
+  .upload-inline { display: inline-block; margin-top: 10px; }
+  .upload-inline input[type="file"] { display: none; }
+  .upload-inline label { padding: 8px 16px; background: var(--accent-1); color: white; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .day-header { padding: 16px; border-radius: 14px; }
+    .day-header h2 { font-size: 1.15rem; }
+    .card { padding: 14px; }
+    .photo-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 7px; }
+    .photo-item img { height: 100px; }
+    .habit-row-top { flex-direction: column; align-items: flex-start; gap: 4px; }
+  }
+</style>
+
+<div class="day-page">
+  <a href="{{ url_for('views.memories') }}" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+    Back to Memories
+  </a>
+
+  <div class="day-header">
+    <h2>{{ day_date.strftime('%A, %B %d, %Y') }}</h2>
+  </div>
+
+  <!-- Photos -->
+  <div class="card">
+    <h4>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+      Photos ({{ all_photos|length }})
+    </h4>
+    
+    {% if all_photos %}
+      <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:10px;">⭐ = shown in calendar view. Click "Set as final" to choose which photo appears.</p>
+      <div class="photo-grid">
+        {% for photo in all_photos %}
+          <div class="photo-item">
+            <img src="/media/{{ photo.filename }}" alt="Memory" onerror="this.style.display='none';this.parentElement.querySelector('.error-msg').style.display='block';">
+            <div class="error-msg" style="display:none; padding:20px; text-align:center; color:var(--text-secondary);">📷 Image not found</div>
+            {% if photo.caption %}<div class="caption">{{ photo.caption }}</div>{% endif %}
+            <div class="time">{{ photo.created_at.strftime('%I:%M %p') if photo.created_at else '' }}</div>
+            {% if photo.is_final %}<div class="final-badge">⭐ Final</div>{% endif %}
+            <a href="{{ url_for('views.set_final_photo', photo_id=photo.id) }}" class="set-final-btn">
+              {% if photo.is_final %}Change final{% else %}Set as final{% endif %}
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No photos for this day yet.</p>
+      </div>
+    {% endif %}
+    
+    <!-- Upload more photos -->
+    <div class="upload-inline" style="text-align:center;">
+      <form method="POST" action="{{ url_for('views.upload_photo') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="date" value="{{ day_date.strftime('%Y-%m-%d') }}">
+        <label>
+          📸 Add Photo
+          <input type="file" name="photo" accept="image/*" capture="environment" onchange="this.form.submit()">
+        </label>
+      </form>
+    </div>
+  </div>
+
+  <!-- Journal -->
+  {% if journal %}
+    <div class="card">
+      <h4>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Journal Entry
+      </h4>
+      <p style="font-size:0.9rem;"><strong>Mood:</strong>
+        {% if journal.mood == 'great' %}🌟 Great
+        {% elif journal.mood == 'good' %}😊 Good
+        {% elif journal.mood == 'okay' %}😐 Okay
+        {% elif journal.mood == 'bad' %}😔 Bad
+        {% elif journal.mood == 'terrible' %}😞 Terrible
+        {% else %}Not set{% endif %}
+      </p>
+      {% if journal.accomplishments %}<p style="font-size:0.85rem; margin-top:8px;"><strong>🏆 Wins:</strong> {{ journal.accomplishments }}</p>{% endif %}
+      {% if journal.learnings %}<p style="font-size:0.85rem; margin-top:4px;"><strong>📚 Learned:</strong> {{ journal.learnings }}</p>{% endif %}
+      {% if journal.gratitude %}<p style="font-size:0.85rem; margin-top:4px;"><strong>🙏 Grateful:</strong> {{ journal.gratitude }}</p>{% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Tasks -->
+  <div class="card">
+    <h4>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 12l2 2 4-4"/></svg>
+      Tasks
+    </h4>
+    {% if tasks %}
+      {% for task in tasks %}
+        <div class="task-item">
+          {% if task.completed %}✅{% else %}○{% endif %}
+          {{ task.content }}
+          {% if task.quick_note %}<small style="color:var(--accent-1); margin-left:auto;">💬 {{ task.quick_note }}</small>{% endif %}
+        </div>
+      {% endfor %}
+    {% else %}<p style="color:var(--text-secondary); font-size:0.85rem;">No tasks for this day.</p>{% endif %}
+  </div>
+
+  <!-- Habits -->
+  {% if habits_status %}
+    <div class="card">
+      <h4>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Habits
+      </h4>
+      {% for h in habits_status %}
+        <div class="habit-row">
+          <div class="habit-row-top">
+            <span>{{ h.name }}</span>
+            <span class="{% if h.done %}yes{% else %}no{% endif %}">
+              {% if h.done %}✅ Done{% else %}❌ Missed{% endif %}
+            </span>
+          </div>
+          {% if h.reflection %}
+            <div class="habit-reflection">💬 {{ h.reflection }}</div>
+          {% endif %}
+          {% if h.photo %}
+            <div class="habit-reflect-photo">
+              <img src="/media/{{ h.photo.filename }}" alt="{{ h.name }} progress">
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

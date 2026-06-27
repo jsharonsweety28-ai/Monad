@@ -1,0 +1,34 @@
+# Secrets & environment
+.env
+*.env
+
+# Database
+*.sqlite
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Uploads (user photos - don't commit personal data)
+website/static/uploads/
+website/userdata/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+{% block title %}Marks · monad{% endblock %}
+{% block page_title %}marks{% endblock %}
+{% block content %}
+
+<style>
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes barGrow { from{width:0} to{width:var(--w)} }
+
+  .marks-page { max-width: 860px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .marks-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+    animation: fadeUp .45s ease both;
+  }
+  .marks-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 800; color: var(--text-primary);
+  }
+  .marks-sub { font-size: .85rem; color: var(--text-secondary); margin-top: 3px; }
+
+  /* ── Add button ── */
+  .btn-add-exam {
+    display: flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: white; border: none; border-radius: 12px;
+    padding: 10px 18px; font-size: .88rem; font-weight: 700;
+    cursor: pointer; transition: all .15s; box-shadow: 0 4px 14px var(--glow-color);
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .btn-add-exam:hover { opacity: .9; transform: translateY(-1px); }
+
+  /* ── Avg banner ── */
+  .avg-banner {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border-radius: 18px; padding: 20px 24px; margin-bottom: 22px;
+    display: flex; align-items: center; gap: 20px; color: white;
+    box-shadow: 0 6px 24px var(--glow-color);
+    animation: fadeUp .45s ease .05s both;
+  }
+  .avg-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.8rem; font-weight: 900; line-height: 1;
+    flex-shrink: 0;
+  }
+  .avg-label { font-size: .8rem; opacity: .85; margin-top: 4px; }
+  .avg-info { flex: 1; }
+  .avg-info-title { font-size: 1rem; font-weight: 700; }
+  .avg-info-sub { font-size: .78rem; opacity: .8; margin-top: 3px; }
+
+  /* ── Empty state ── */
+  .marks-empty {
+    background: var(--card-bg); border: 1.5px dashed var(--border-color);
+    border-radius: 20px; padding: 56px 32px; text-align: center;
+    animation: fadeUp .5s ease both;
+  }
+  .marks-empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .marks-empty-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.1rem; color:var(--text-primary); }
+  .marks-empty-sub   { font-size:.84rem; color:var(--text-secondary); margin-top:6px; }
+
+  /* ── Exam card ── */
+  .exam-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 20px; overflow: hidden; margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    animation: fadeUp .45s ease both;
+  }
+  .exam-card-head {
+    padding: 16px 20px; display: flex; align-items: center;
+    gap: 12px; cursor: pointer; user-select: none;
+    border-bottom: 1px solid transparent; transition: border-color .2s;
+  }
+  .exam-card.open .exam-card-head { border-bottom-color: var(--border-color); }
+  .exam-card-icon {
+    width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: white;
+  }
+  .exam-card-info { flex: 1; min-width: 0; }
+  .exam-card-name {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    font-size: 1rem; color: var(--text-primary); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .exam-card-meta { font-size: .75rem; color: var(--text-secondary); margin-top: 2px; }
+  .exam-avg-pill {
+    padding: 5px 12px; border-radius: 20px; font-weight: 700;
+    font-size: .82rem; flex-shrink: 0;
+  }
+  .pill-great { background: rgba(34,197,94,.15);  color: #16a34a; }
+  .pill-good  { background: rgba(234,179, 8,.15); color: #ca8a04; }
+  .pill-ok    { background: rgba(249,115,22,.15); color: #ea580c; }
+  .pill-low   { background: rgba(239, 68,68,.15); color: #dc2626; }
+  .exam-chevron { color: var(--text-secondary); transition: transform .2s; font-size: .9rem; }
+  .exam-card.open .exam-chevron { transform: rotate(180deg); }
+
+  .exam-card-body { padding: 0 20px 20px; display: none; }
+  .exam-card.open .exam-card-body { display: block; }
+
+  /* ── Subject rows ── */
+  .subject-row {
+    display: grid; grid-template-columns: 1fr 90px 48px 1fr;
+    align-items: center; gap: 12px; padding: 11px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .subject-row:last-child { border-bottom: none; }
+  .subj-name { font-size: .88rem; font-weight: 600; color: var(--text-primary); }
+  .subj-score { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:.9rem; text-align:right; white-space:nowrap; }
+  .subj-pct   { font-size:.75rem; color:var(--text-secondary); text-align:center; }
+  .bar-wrap { height: 8px; background: var(--border-color); border-radius: 6px; overflow: hidden; }
+  .bar-fill {
+    height: 100%; border-radius: 6px;
+    width: var(--w); animation: barGrow .6s ease both;
+  }
+  .bar-great { background: linear-gradient(90deg, #22c55e, #4ade80); }
+  .bar-good  { background: linear-gradient(90deg, #eab308, #fbbf24); }
+  .bar-ok    { background: linear-gradient(90deg, #f97316, #fb923c); }
+  .bar-low   { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+  /* AI tip row */
+  .ai-tip-row {
+    font-size: .78rem; color: var(--text-secondary); padding: 6px 0 10px 0;
+    border-bottom: 1px solid var(--border-color); line-height: 1.5;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .ai-tip-row:last-child { border-bottom: none; }
+  .ai-tip-icon { flex-shrink: 0; font-size: .9rem; margin-top: 1px; }
+  .ai-tip-text { color: var(--text-primary); }
+
+  /* ── Action row ── */
+  .exam-actions {
+    display: flex; gap: 10px; margin-top: 16px; align-items: center;
+  }
+  .btn-analyse {
+    display: flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: white; border: none; border-radius: 10px;
+    padding: 9px 16px; font-size: .82rem; font-weight: 700;
+    cursor: pointer; transition: all .15s; box-shadow: 0 3px 10px var(--glow-color);
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .btn-analyse:hover { opacity: .9; }
+  .btn-analyse:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-delete-exam {
+    margin-left: auto;
+    background: none; border: 1.5px solid var(--border-color);
+    color: var(--text-secondary); border-radius: 10px;
+    padding: 8px 14px; font-size: .8rem; cursor: pointer; transition: all .15s;
+  }
+  .btn-delete-exam:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,.06); }
+
+  /* ── Add exam modal ── */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .modal-sheet {
+    background: var(--card-bg); border-radius: 24px 24px 0 0;
+    padding: 28px 24px 32px; width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 -8px 40px rgba(0,0,0,.2);
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(80px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-title {
+    font-family:'Space Grotesk',sans-serif; font-size:1.1rem;
+    font-weight:800; color:var(--text-primary); margin-bottom:20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-close { background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text-secondary); }
+
+  .form-field { margin-bottom: 14px; }
+  .form-label { font-size:.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:5px; display:block; }
+  .form-input {
+    width: 100%; padding: 10px 14px; border-radius: 11px;
+    border: 1.5px solid var(--border-color); background: var(--input-bg);
+    color: var(--text-primary); font-size: .9rem; outline: none; box-sizing: border-box;
+    transition: border-color .15s;
+  }
+  .form-input:focus { border-color: var(--accent-1); }
+
+  .subject-inputs { margin-bottom: 14px; }
+  .subj-input-row {
+    display: grid; grid-template-columns: 1fr 70px 70px 32px;
+    gap: 8px; align-items: center; margin-bottom: 8px;
+  }
+  .subj-input-row input { padding: 9px 11px; }
+  .btn-rm-subj {
+    background: none; border: 1.5px solid var(--border-color);
+    color: var(--text-secondary); border-radius: 8px; cursor: pointer;
+    width: 32px; height: 36px; display: flex; align-items: center;
+    justify-content: center; font-size: .9rem; transition: all .15s;
+  }
+  .btn-rm-subj:hover { border-color:#ef4444; color:#ef4444; }
+  .btn-add-subj {
+    background: none; border: 1.5px dashed var(--border-color);
+    color: var(--text-secondary); border-radius: 10px;
+    padding: 9px; width: 100%; cursor: pointer; font-size: .83rem;
+    transition: all .15s;
+  }
+  .btn-add-subj:hover { border-color: var(--accent-1); color: var(--accent-1); }
+  .subj-col-labels {
+    display: grid; grid-template-columns: 1fr 70px 70px 32px;
+    gap: 8px; font-size: .72rem; color: var(--text-secondary);
+    font-weight: 600; margin-bottom: 4px;
+  }
+  .btn-save-exam {
+    width: 100%; padding: 13px; border-radius: 13px; border: none;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: white; font-size: .95rem; font-weight: 800;
+    cursor: pointer; margin-top: 10px; transition: opacity .15s;
+    font-family: 'Space Grotesk', sans-serif;
+    box-shadow: 0 4px 16px var(--glow-color);
+  }
+  .btn-save-exam:hover { opacity: .9; }
+
+  /* study tabs (same as other study pages) */
+  .study-tabs { display:flex; gap:4px; background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:14px; padding:4px; width:fit-content; flex-wrap:wrap; }
+  .stab { padding:7px 16px; border-radius:10px; border:none; font-size:.82rem; font-weight:600; cursor:pointer; background:transparent; color:var(--text-secondary); text-decoration:none; transition:all .18s; display:inline-flex; align-items:center; gap:5px; }
+  .stab.active { background:var(--accent-1); color:white; box-shadow:0 2px 8px var(--glow-color); }
+  .stab:not(.active):hover { background:var(--hover); color:var(--text-primary); }
+
+  @media (max-width: 600px) {
+    .subject-row { grid-template-columns: 1fr 70px 38px; }
+    .subject-row .bar-wrap { display: none; }
+    .avg-num { font-size: 2rem; }
+    .study-tabs { gap: 2px; }
+    .stab { padding: 6px 10px; font-size: .75rem; }
+  }
+</style>
+
+<div class="marks-page">
+
+  <!-- Study tabs -->
+  <div class="study-tabs" style="margin-bottom:20px">
+    <a class="stab" href="{{ url_for('views.study_profile') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> Profile</a>
+    <a class="stab" href="{{ url_for('views.study_subjects') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Subjects</a>
+    <a class="stab" href="{{ url_for('views.study_timetable') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Timetable</a>
+    <a class="stab" href="{{ url_for('views.study_exams') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg> Exams</a>
+    <a class="stab active" href="{{ url_for('views.study_marks') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Marks</a>
+  </div>
+
+  <!-- Header -->
+  <div class="marks-header">
+    <div>
+      <div class="marks-title">📊 Marks</div>
+      <div class="marks-sub">Track your exam results and get personalised AI study tips</div>
+    </div>
+    <button class="btn-add-exam" onclick="openAddModal()">
+      <i class="bi bi-plus-lg"></i> Add Exam Result
+    </button>
+  </div>
+
+  {% if results %}
+    <!-- Average banner -->
+    {% set all_marks = [] %}
+    {% for r in results %}{% for m in r.marks %}{% if all_marks.append(m.marks_obtained / m.marks_total * 100) %}{% endif %}{% endfor %}{% endfor %}
+    {% if all_marks %}
+      {% set overall_avg = (all_marks | sum / all_marks | length) | round(1) %}
+      <div class="avg-banner">
+        <div class="avg-num">{{ overall_avg }}%</div>
+        <div class="avg-info">
+          <div class="avg-info-title">Overall Average</div>
+          <div class="avg-info-sub">
+            Across {{ results | length }} exam{{ 's' if results | length != 1 else '' }}
+            · {{ all_marks | length }} subject result{{ 's' if all_marks | length != 1 else '' }}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  <!-- Exam cards -->
+  {% if not results %}
+    <div class="marks-empty">
+      <div class="marks-empty-icon">📋</div>
+      <div class="marks-empty-title">No exam results yet</div>
+      <div class="marks-empty-sub">Add your first exam to start tracking your performance</div>
+    </div>
+  {% else %}
+    {% for result in results %}
+      {% set pcts = [] %}
+      {% for m in result.marks %}{% if pcts.append(m.marks_obtained / m.marks_total * 100) %}{% endif %}{% endfor %}
+      {% set avg = (pcts | sum / pcts | length) | round(1) if pcts else 0 %}
+      {% set pill_cls = 'pill-great' if avg >= 75 else ('pill-good' if avg >= 60 else ('pill-ok' if avg >= 40 else 'pill-low')) %}
+
+      <div class="exam-card" id="card-{{ result.id }}">
+        <div class="exam-card-head" onclick="toggleCard({{ result.id }})">
+          <div class="exam-card-icon">📝</div>
+          <div class="exam-card-info">
+            <div class="exam-card-name">{{ result.name }}</div>
+            <div class="exam-card-meta">
+              {% if result.date and result.end_date %}
+                {{ result.date.strftime('%d %b') }} – {{ result.end_date.strftime('%d %b %Y') }} ·
+              {% elif result.date %}
+                {{ result.date.strftime('%d %b %Y') }} ·
+              {% endif %}
+              {{ result.marks | length }} subject{{ 's' if result.marks | length != 1 else '' }}
+            </div>
+          </div>
+          <div class="exam-avg-pill {{ pill_cls }}">{{ avg }}%</div>
+          <i class="bi bi-chevron-down exam-chevron"></i>
+        </div>
+
+        <div class="exam-card-body">
+          <!-- Subject marks -->
+          <div style="margin-top:12px">
+            <div style="display:grid;grid-template-columns:1fr 90px 48px 1fr;gap:12px;padding:6px 0;font-size:.7rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">
+              <span>Subject</span><span style="text-align:right">Score</span><span style="text-align:center">%</span><span>Progress</span>
+            </div>
+            {% for mark in result.marks %}
+              {% set pct = (mark.marks_obtained / mark.marks_total * 100) | round(1) %}
+              {% set bar_cls = 'bar-great' if pct >= 75 else ('bar-good' if pct >= 60 else ('bar-ok' if pct >= 40 else 'bar-low')) %}
+              {% set score_cls = 'color:#16a34a' if pct >= 75 else ('color:#ca8a04' if pct >= 60 else ('color:#ea580c' if pct >= 40 else 'color:#dc2626')) %}
+              <div class="subject-row">
+                <div class="subj-name">{{ mark.subject_name }}</div>
+                <div class="subj-score" style="{{ score_cls }}">{{ mark.marks_obtained | int }}/{{ mark.marks_total | int }}</div>
+                <div class="subj-pct">{{ pct }}%</div>
+                <div class="bar-wrap">
+                  <div class="bar-fill {{ bar_cls }}" style="--w:{{ pct }}%"></div>
+                </div>
+              </div>
+              {% if mark.ai_tip %}
+              <div class="ai-tip-row">
+                <span class="ai-tip-icon">✦</span>
+                <span class="ai-tip-text">{{ mark.ai_tip }}</span>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <!-- Actions -->
+          <div class="exam-actions">
+            <button class="btn-analyse" id="analyse-btn-{{ result.id }}"
+              onclick="analyseExam({{ result.id }})">
+              <i class="bi bi-stars"></i> Get AI Study Tips
+            </button>
+            <button class="btn-delete-exam" style="margin-left:auto"
+              onclick="deleteExam({{ result.id }}, this)">
+              <i class="bi bi-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+</div>
+
+<!-- Toast notification -->
+<div id="marksToast" style="display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  padding:12px 22px;border-radius:12px;color:white;font-size:.88rem;font-weight:600;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;max-width:90vw;text-align:center;
+  align-items:center;gap:8px;"></div>
+
+<!-- Add Exam Modal -->
+<div id="addModal" class="modal-backdrop" style="display:none" onclick="closeIfBackdrop(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      Add Exam Result
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+
+    <form id="addExamForm" onsubmit="return submitExamForm(event)">
+      <div class="form-field">
+        <label class="form-label">Exam / Test Name</label>
+        <input type="text" name="exam_name" class="form-input" placeholder="e.g. Mid-Term 1, Unit Test 3…" required>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Exam Period (optional)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:.72rem;color:var(--text-secondary);margin-bottom:4px;font-weight:600">From</div>
+            <input type="date" name="exam_date" class="form-input">
+          </div>
+          <div>
+            <div style="font-size:.72rem;color:var(--text-secondary);margin-bottom:4px;font-weight:600">To</div>
+            <input type="date" name="exam_end_date" class="form-input">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-label" style="margin-bottom:6px">Subject Marks</div>
+      <div class="subj-col-labels">
+        <span>Subject</span><span style="text-align:center">Got</span><span style="text-align:center">Out of</span><span></span>
+      </div>
+      <div class="subject-inputs" id="subjectInputs">
+        <!-- rows injected by JS -->
+      </div>
+      <button type="button" class="btn-add-subj" onclick="addSubjectRow()">
+        + Add Subject
+      </button>
+
+      <button type="submit" class="btn-save-exam">Save Exam Result</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ── Card toggle ──
+  function toggleCard(id) {
+    const card = document.getElementById('card-' + id);
+    card.classList.toggle('open');
+  }
+
+  // ── Modal ──
+  function openAddModal() {
+    document.getElementById('addModal').style.display = 'flex';
+    document.getElementById('subjectInputs').innerHTML = '';
+    // Pre-fill with user's subjects
+    const subjects = {{ subjects | map(attribute='name') | list | tojson }};
+    if (subjects.length) {
+      subjects.forEach(s => addSubjectRow(s));
+    } else {
+      addSubjectRow(); addSubjectRow(); addSubjectRow();
+    }
+  }
+  function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+  function closeIfBackdrop(e) { if (e.target === document.getElementById('addModal')) closeAddModal(); }
+
+  function addSubjectRow(prefill) {
+    const wrap = document.getElementById('subjectInputs');
+    const row = document.createElement('div');
+    row.className = 'subj-input-row';
+    row.innerHTML = `
+      <input type="text" name="subject_name[]" class="form-input" placeholder="Subject" value="${prefill || ''}">
+      <input type="number" name="marks_obtained[]" class="form-input" placeholder="Got" min="0" step="0.5">
+      <input type="number" name="marks_total[]"    class="form-input" placeholder="100" min="1" step="0.5" value="100">
+      <button type="button" class="btn-rm-subj" onclick="this.parentElement.remove()">
+        <i class="bi bi-x"></i>
+      </button>`;
+    wrap.appendChild(row);
+  }
+
+  // ── Add exam form ──
+  async function submitExamForm(e) {
+    e.preventDefault();
+    const form = document.getElementById('addExamForm');
+    const data = new FormData(form);
+    // Append CSRF token directly from meta tag — most reliable approach
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (csrf) data.append('csrf_token', csrf);
+    const btn = form.querySelector('.btn-save-exam');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      await fetch('/study/marks/add', { method: 'POST', body: data });
+      window.location.href = '/study/marks';
+    } catch {
+      btn.disabled = false; btn.textContent = 'Save Exam Result';
+      alert('Something went wrong. Please try again.');
+    }
+    return false;
+  }
+
+  // ── AI Analysis ──
+  function showToast(msg, isError) {
+    var t = document.getElementById('marksToast');
+    t.textContent = msg;
+    t.style.background = isError ? '#ef4444' : '#22c55e';
+    t.style.display = 'flex';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.style.display = 'none'; }, 4000);
+  }
+
+  async function analyseExam(id) {
+    const btn = document.getElementById('analyse-btn-' + id);
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Analysing…';
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+      const fd = new FormData(); if (csrf) fd.append('csrf_token', csrf);
+      const res  = await fetch(`/study/marks/analyse/${id}`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) {
+        showToast(data.error, true);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars"></i> Get AI Study Tips';
+        return;
+      }
+      window.location.reload();
+    } catch {
+      showToast('Could not reach AI. Check your connection and try again.', true);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-stars"></i> Get AI Study Tips';
+    }
+  }
+
+  // ── Delete exam ──
+  async function deleteExam(id, btn) {
+    if (!confirm('Delete this exam result?')) return;
+    btn.disabled = true;
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+    const data = new FormData();
+    if (csrf) data.append('csrf_token', csrf);
+    await fetch(`/study/marks/delete/${id}`, { method: 'POST', body: data });
+    window.location.href = '/study/marks';
+  }
+
+  // Open card if it has tips (show analysis results prominently)
+  document.querySelectorAll('.exam-card').forEach(card => {
+    if (card.querySelector('.ai-tip-row')) card.classList.add('open');
+  });
+</script>
+
+{% endblock %}

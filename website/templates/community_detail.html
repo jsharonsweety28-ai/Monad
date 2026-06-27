@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+{% block title %}{{ community.name }} · monad{% endblock %}
+{% block page_title %}community{% endblock %}
+{% block content %}
+
+<style>
+  .detail-page { max-width: 700px; margin: 0 auto; }
+
+  .detail-header {
+    background: var(--header-gradient);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 25px var(--glow-color);
+  }
+  .detail-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; }
+  .invite-code-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: 'Space Grotesk', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 8px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h4 { font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+
+  .habit-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--border-color);
+  }
+  .habit-row:last-child { border-bottom: none; }
+  .habit-check {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+  .habit-check:hover { border-color: var(--accent-1); }
+  .habit-check.checked { background: var(--accent-1); border-color: var(--accent-1); }
+  .habit-check.checked::after { content: '✓'; color: white; font-size: 13px; font-weight: 700; }
+
+  .progress-bar {
+    height: 6px; background: var(--border-color);
+    border-radius: 3px; overflow: hidden;
+    width: 80px; margin: 0 10px;
+  }
+  .progress-fill { height: 100%; background: #10b981; border-radius: 3px; }
+
+  .member-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; background: var(--input-bg);
+    border: 1px solid var(--border-color); border-radius: 20px;
+    font-size: 0.8rem; color: var(--text-primary); margin: 3px;
+  }
+  .member-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent-1); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; font-weight: 700;
+  }
+
+  .add-habit-form { display: flex; gap: 10px; margin-top: 12px; }
+  .add-habit-form input {
+    flex: 1; padding: 10px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+  }
+  .add-habit-form input:focus { outline: none; border-color: var(--accent-1); }
+  .btn-add {
+    padding: 10px 18px;
+    background: var(--accent-1);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .btn-join {
+    display: inline-block;
+    padding: 10px 24px;
+    background: var(--accent-1);
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 12px;
+  }
+
+  .btn-leave {
+    display: inline-block;
+    padding: 8px 16px;
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+  .btn-leave:hover { background: rgba(239,68,68,0.05); }
+
+  .invite-link-box {
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+    flex-wrap: wrap; margin-top: 8px;
+  }
+  .invite-link-code {
+    background: var(--input-bg); padding: 10px 16px; border-radius: 10px;
+    font-family: 'Space Grotesk', monospace; font-size: 0.82rem;
+    color: var(--accent-1); border: 1px solid var(--border-color);
+    word-break: break-all;
+  }
+  .btn-copy {
+    padding: 10px 16px; background: var(--accent-1); color: white;
+    border: none; border-radius: 10px; cursor: pointer;
+    font-weight: 600; font-size: 0.85rem; white-space: nowrap;
+  }
+
+  .back-link { color: var(--text-secondary); text-decoration: none; font-weight: 600; font-size: 0.85rem; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 4px; }
+  .back-link:hover { color: var(--accent-1); }
+
+  /* ── Perfect Day banner ── */
+  .perfect-banner {
+    border-radius: 18px; padding: 18px 20px; margin-bottom: 16px;
+    background: linear-gradient(135deg, #f59e0b22, #fbbf2422);
+    border: 1.5px solid #f59e0b44;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .perfect-crown {
+    font-size: 2rem; flex-shrink: 0;
+    animation: crownPop .4s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes crownPop { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0)} }
+  .perfect-title { font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:800; color:#d97706; }
+  .perfect-sub   { font-size:.8rem; color:#92400e; margin-top:2px; opacity:.8; }
+  .perfect-count-chip {
+    margin-left:auto; background:#f59e0b; color:white;
+    border-radius:99px; padding:4px 14px;
+    font-size:.75rem; font-weight:800; flex-shrink:0;
+  }
+
+  /* ── Leaderboard ── */
+  .lb-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--border-color);
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank {
+    width: 28px; text-align: center; flex-shrink: 0;
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 800;
+    color: var(--text-secondary);
+  }
+  .lb-avatar {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent-1); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 800;
+    border: 2px solid transparent; transition: border-color .15s;
+  }
+  .lb-avatar.checked-in { border-color: #10b981; }
+  .lb-name { font-weight: 600; font-size: .88rem; color: var(--text-primary); flex: 1; min-width: 0; }
+  .lb-you  { font-size: .65rem; color: var(--accent-1); font-weight: 700; margin-left: 4px; vertical-align: middle; }
+  .lb-stats { display: flex; gap: 10px; flex-shrink: 0; }
+  .lb-stat-chip {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--hover); border-radius: 8px; padding: 4px 9px;
+    font-size: .74rem; font-weight: 700; color: var(--text-secondary);
+  }
+  .lb-stat-chip.streak { color: var(--accent-1); }
+  .lb-today-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: #10b981;
+  }
+
+  @media (max-width: 600px) {
+    .detail-page { padding: 0 2px; }
+    .detail-header { padding: 18px 16px; border-radius: 14px; }
+    .lb-stats { flex-wrap: wrap; gap: 4px; }
+    .lb-stat-chip { font-size: .68rem; padding: 3px 7px; }
+    .lb-name { font-size: .82rem; }
+    .habit-row { flex-wrap: wrap; gap: 6px; }
+    .progress-bar { width: 60px; }
+    .add-habit-form { flex-direction: column; }
+    .invite-link-code { font-size: .72rem; word-break: break-all; }
+    .card { padding: 16px; }
+    .perfect-banner { flex-wrap: wrap; gap: 8px; }
+    .perfect-count-chip { margin-left: 0; }
+  }
+</style>
+
+<div class="detail-page">
+  <a href="{{ url_for('views.communities') }}" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+    All Communities
+  </a>
+
+  <div class="detail-header">
+    <h2>{{ community.name }}</h2>
+    {% if community.description %}<p style="opacity:0.85;">{{ community.description }}</p>{% endif %}
+    {% if community.goal %}
+      <div style="margin-top:10px; background:rgba(255,255,255,0.15); border-radius:10px; padding:10px 14px; font-size:0.9rem; font-weight:600;">
+        🎯 {{ community.goal }}
+      </div>
+    {% endif %}
+    <div class="invite-code-badge">🔑 {{ community.invite_code }}</div>
+  </div>
+
+  <!-- Perfect Day Banner -->
+  {% if today_is_perfect %}
+  <div class="perfect-banner">
+    <div class="perfect-crown">👑</div>
+    <div>
+      <div class="perfect-title">Crown Day!</div>
+      <div class="perfect-sub">Every member checked in today — the whole crew showed up!</div>
+    </div>
+    {% if perfect_days > 0 %}
+    <div class="perfect-count-chip">{{ perfect_days }} 👑 this month</div>
+    {% endif %}
+  </div>
+  {% elif perfect_days > 0 %}
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--hover);border-radius:12px;margin-bottom:16px;font-size:.82rem;color:var(--text-secondary);">
+    <span>👑</span>
+    <span><strong style="color:var(--text-primary);">{{ perfect_days }} crown day{{ 's' if perfect_days != 1 }}</strong> this month — keep it going!</span>
+  </div>
+  {% endif %}
+
+  {% if community.created_by == current_user.id %}
+    <div class="card" style="padding:16px;">
+      <h4 style="margin-bottom:10px; font-size:0.95rem;">✏️ Edit Shared Goal</h4>
+      <form method="POST" action="{{ url_for('views.edit_community_goal', community_id=community.id) }}" style="display:flex; gap:10px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="goal" value="{{ community.goal or '' }}" placeholder="Set a shared goal for everyone…"
+               style="flex:1; padding:10px 14px; border:2px solid var(--border-color); border-radius:10px; background:var(--input-bg); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:0.9rem;">
+        <button type="submit" style="padding:10px 18px; background:var(--accent-1); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer;">Save</button>
+      </form>
+    </div>
+  {% endif %}
+
+  {% if not is_member %}
+    <div class="card" style="text-align:center;">
+      <h4>👋 Join this Community</h4>
+      <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:12px;">
+        Become a member to track habits together.
+      </p>
+      <form method="POST" action="{{ url_for('views.join_community_by_code') }}" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="invite_code" value="{{ community.invite_code }}">
+        <button type="submit" class="btn-join">👥 Join Community</button>
+      </form>
+    </div>
+  {% endif %}
+
+  <!-- Shareable Invite Link -->
+  <div class="card" style="text-align:center;">
+    <h4>🔗 Invite Friends</h4>
+    <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:10px;">
+      Share this link with friends to join instantly:
+    </p>
+    <div class="invite-link-box">
+      <code class="invite-link-code" id="inviteLink">
+        {{ request.host_url }}join/{{ community.invite_code }}
+      </code>
+      <button onclick="copyInviteLink()" class="btn-copy">📋 Copy Link</button>
+    </div>
+    <p style="color:var(--text-secondary); font-size:0.75rem; margin-top:8px;">
+      Or share code: <strong style="color:var(--accent-1); font-family:'Space Grotesk',monospace;">{{ community.invite_code }}</strong>
+    </p>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="card">
+    <h4 style="margin-bottom:16px;">🏆 Leaderboard <span style="font-weight:400;font-size:.8rem;color:var(--text-secondary);margin-left:6px;">{{ members|length }} members</span></h4>
+    {% for member in leaderboard %}
+      {% set rank = loop.index %}
+      <div class="lb-row">
+        <!-- Rank -->
+        <div class="lb-rank">
+          {% if rank == 1 %}🥇
+          {% elif rank == 2 %}🥈
+          {% elif rank == 3 %}🥉
+          {% else %}{{ rank }}{% endif %}
+        </div>
+        <!-- Avatar -->
+        <div class="lb-avatar {% if member_today[member.id] %}checked-in{% endif %}">
+          {{ member.name[:2].upper() }}
+        </div>
+        <!-- Name -->
+        <div class="lb-name">
+          {{ member.name }}
+          {% if member.id == current_user.id %}<span class="lb-you">you</span>{% endif %}
+        </div>
+        <!-- Stats -->
+        <div class="lb-stats">
+          {% if member_today[member.id] %}
+            <div class="lb-today-dot" title="Checked in today"></div>
+          {% endif %}
+          {% if member_streaks[member.id] > 0 %}
+            <div class="lb-stat-chip streak">🔥 {{ member_streaks[member.id] }}d</div>
+          {% endif %}
+          <div class="lb-stat-chip">{{ member_weekly[member.id] }}/7 this week</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Habits -->
+  <div class="card">
+    <h4>🎯 Today's Habits</h4>
+    {% if habits %}
+      {% for h in habits %}
+        <div class="habit-row">
+          <span style="font-weight:500;">{{ h.habit.name }}</span>
+          <div style="display:flex; align-items:center;">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:{{ (h.completed_users|length / h.total_members * 100) if h.total_members > 0 else 0 }}%"></div>
+            </div>
+            <small style="color:var(--text-secondary); min-width:35px;">{{ h.completed_users|length }}/{{ h.total_members }}</small>
+            {% if is_member %}
+              <div class="habit-check {% if current_user.id in h.completed_users %}checked{% endif %}" 
+                   onclick="window.location.href='{{ url_for('views.toggle_community_habit', habit_id=h.habit.id) }}'"></div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p style="color:var(--text-secondary);">No habits yet. Add one!</p>
+    {% endif %}
+
+    {% if is_member %}
+      <form method="POST" class="add-habit-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="habit_name" placeholder="Add a new habit..." required>
+        <button type="submit" class="btn-add">+ Add</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if is_member %}
+    <a href="{{ url_for('views.leave_community', community_id=community.id) }}" class="btn-leave" onclick="return confirm('Leave this community?')">🚪 Leave Community</a>
+  {% endif %}
+</div>
+
+<script>
+  function copyInviteLink() {
+    const link = document.getElementById('inviteLink').textContent.trim();
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Invite link copied! Share it with your friends.');
+    }).catch(() => {
+      prompt('Copy this link:', link);
+    });
+  }
+</script>
+
+{% endblock %}

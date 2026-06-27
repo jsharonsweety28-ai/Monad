@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}Study Setup · monad{% endblock %}
+{% block page_title %}study{% endblock %}
+
+{% block content %}
+<style>
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes floatIn  { from{opacity:0;transform:translateY(30px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+  .setup-wrap {
+    max-width: 520px; margin: 0 auto; padding: 16px 0 80px;
+    animation: fadeUp .5s ease both;
+  }
+
+  /* ── Hero ── */
+  .su-hero {
+    text-align: center; margin-bottom: 32px;
+    animation: fadeUp .4s ease .05s both;
+  }
+  .su-icon {
+    width: 72px; height: 72px; border-radius: 22px; margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2, #a78bfa));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 8px 24px var(--glow-color);
+  }
+  .su-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.7rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;
+  }
+  .su-sub {
+    font-size: .9rem; color: var(--text-secondary); line-height: 1.5;
+  }
+
+  /* ── Card ── */
+  .su-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 24px; padding: 28px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    animation: floatIn .5s ease .1s both;
+  }
+
+  /* ── Type toggle ── */
+  .su-type-row {
+    display: flex; gap: 8px; margin-bottom: 22px;
+  }
+  .su-type-btn {
+    flex: 1; padding: 10px 0; border-radius: 12px; font-size: .85rem; font-weight: 700;
+    border: 1.5px solid var(--border-color); background: var(--hover);
+    color: var(--text-secondary); cursor: pointer; transition: all .18s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .su-type-btn.active {
+    background: var(--accent-1); color: white; border-color: var(--accent-1);
+    box-shadow: 0 3px 12px var(--glow-color);
+  }
+  .su-type-btn:not(.active):hover { border-color: var(--accent-1); color: var(--accent-1); }
+
+  /* ── Fields ── */
+  .su-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .su-field { display: flex; flex-direction: column; gap: 5px; }
+  .su-field.full { grid-column: 1 / -1; }
+  .su-label {
+    font-size: .72rem; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .su-input {
+    padding: 10px 14px; border-radius: 12px;
+    border: 1.5px solid var(--border-color); background: var(--input-bg, var(--hover));
+    color: var(--text-primary); font-size: .88rem; font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .su-input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px var(--glow-color); }
+  .su-input::placeholder { color: var(--text-secondary); }
+
+  /* ── CTA ── */
+  .su-cta {
+    margin-top: 24px; width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2, #a78bfa));
+    color: white; border: none; border-radius: 14px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: opacity .2s, transform .15s;
+    box-shadow: 0 4px 16px var(--glow-color);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .su-cta:hover { opacity: .9; transform: translateY(-1px); }
+
+  /* ── Skip link ── */
+  .su-skip {
+    display: block; text-align: center; margin-top: 14px;
+    font-size: .8rem; color: var(--text-secondary);
+    text-decoration: none; transition: color .15s;
+  }
+  .su-skip:hover { color: var(--text-primary); }
+
+  @media (max-width: 560px) {
+    .su-grid { grid-template-columns: 1fr; }
+    .su-card  { padding: 20px; }
+  }
+</style>
+
+<div class="setup-wrap">
+
+  <!-- Hero -->
+  <div class="su-hero">
+    <div class="su-icon">🎓</div>
+    <div class="su-title">Set up your study profile</div>
+    <div class="su-sub">Tell Monad about your academic life<br>so it can personalise your study hub.</div>
+  </div>
+
+  <!-- Form card -->
+  <div class="su-card">
+    <form method="POST" action="{{ url_for('views.study_setup_save') }}"
+          id="setupForm" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <!-- Photo upload -->
+      <div class="su-field full" style="margin-bottom:22px;text-align:center">
+        <label class="su-label" style="display:block;margin-bottom:10px">
+          Student ID Photo <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span>
+        </label>
+        <div id="photoPreviewWrap"
+             style="width:90px;height:90px;border-radius:50%;border:2px dashed var(--border-color);
+                    margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
+                    overflow:hidden;cursor:pointer;background:var(--hover);transition:border-color .2s"
+             onclick="document.getElementById('photoInput').click()">
+          <img id="photoPreview" src="" alt=""
+               style="width:100%;height:100%;object-fit:cover;display:none">
+          <span id="photoPlaceholder" style="font-size:1.8rem">📷</span>
+        </div>
+        <input type="file" id="photoInput" name="photo" accept="image/*"
+               style="display:none" onchange="previewPhoto(this)">
+        <button type="button" onclick="document.getElementById('photoInput').click()"
+                style="font-size:.78rem;color:var(--accent-1);background:none;border:none;
+                       cursor:pointer;font-family:'Inter',sans-serif;font-weight:600">
+          Choose photo
+        </button>
+      </div>
+
+      <!-- Institution type -->
+      <div class="su-type-row">
+        <button type="button" class="su-type-btn active" id="btnSchool" onclick="switchType('school')">
+          🏫 School
+        </button>
+        <button type="button" class="su-type-btn" id="btnCollege" onclick="switchType('college')">
+          🎓 College / University
+        </button>
+      </div>
+      <input type="hidden" name="institution_type" id="fType" value="school">
+
+      <div class="su-grid">
+
+        <!-- Institution name -->
+        <div class="su-field full">
+          <label class="su-label" id="lInst">School Name</label>
+          <input class="su-input" name="institution" id="fInst"
+                 placeholder="e.g. St. Mary's Higher Secondary School" autocomplete="off">
+        </div>
+
+        <!-- Course / Stream -->
+        <div class="su-field full">
+          <label class="su-label" id="lCourse">Course / Stream</label>
+          <input class="su-input" name="course" id="fCourse"
+                 placeholder="e.g. Science Stream, B.Tech CSE">
+        </div>
+
+        <!-- School fields -->
+        <div class="su-field su-school" id="fClassWrap">
+          <label class="su-label">Class</label>
+          <input class="su-input" name="class_name" placeholder="e.g. 10th, 11th, 12th">
+        </div>
+        <div class="su-field su-school" id="fSectionWrap">
+          <label class="su-label">Section</label>
+          <input class="su-input" name="section" placeholder="e.g. A, B, C">
+        </div>
+
+        <!-- College fields -->
+        <div class="su-field su-college" id="fDeptWrap" style="display:none">
+          <label class="su-label">Department</label>
+          <input class="su-input" name="department" placeholder="e.g. Computer Science">
+        </div>
+        <div class="su-field su-college" id="fYearWrap" style="display:none">
+          <label class="su-label">Year</label>
+          <input class="su-input" name="year" placeholder="e.g. 2nd Year">
+        </div>
+        <div class="su-field su-college full" id="fSemWrap" style="display:none">
+          <label class="su-label">Semester</label>
+          <input class="su-input" name="semester" placeholder="e.g. 4th Semester">
+        </div>
+
+        <!-- Roll number -->
+        <div class="su-field full">
+          <label class="su-label">Roll Number / Student ID <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <input class="su-input" name="roll_number" placeholder="e.g. CS2024001">
+        </div>
+
+      </div>
+
+      <button type="submit" class="su-cta">
+        Let's go
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <a class="su-skip" href="{{ url_for('views.study_subjects') }}?skip=1">Skip for now →</a>
+
+</div>
+
+<script>
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photoPreview').src = e.target.result;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('photoPreviewWrap').style.borderStyle = 'solid';
+    document.getElementById('photoPreviewWrap').style.borderColor = 'var(--accent-1)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function switchType(type) {
+  document.getElementById('fType').value = type;
+  const isCollege = type === 'college';
+  document.getElementById('btnSchool').classList.toggle('active', !isCollege);
+  document.getElementById('btnCollege').classList.toggle('active', isCollege);
+  document.querySelectorAll('.su-school').forEach(el => el.style.display = isCollege ? 'none' : '');
+  document.querySelectorAll('.su-college').forEach(el => el.style.display = isCollege ? '' : 'none');
+  document.getElementById('lInst').textContent   = isCollege ? 'College / University Name' : 'School Name';
+  document.getElementById('lCourse').textContent = isCollege ? 'Course / Program' : 'Course / Stream';
+  document.getElementById('fInst').placeholder   = isCollege ? 'e.g. Anna University' : "e.g. St. Mary's Higher Secondary School";
+  document.getElementById('fCourse').placeholder = isCollege ? 'e.g. B.Tech Computer Science' : 'e.g. Science Stream, Commerce';
+}
+</script>
+{% endblock %}

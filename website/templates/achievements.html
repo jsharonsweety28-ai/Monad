@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Achievements · monad{% endblock %}
+{% block page_title %}achievements{% endblock %}
+{% block content %}
+
+<style>
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes starPop  { 0%{transform:scale(0.6) rotate(-10deg)} 60%{transform:scale(1.2) rotate(4deg)} 100%{transform:scale(1) rotate(0)} }
+  @keyframes crownPop { 0%{transform:scale(0.4) rotate(12deg)} 60%{transform:scale(1.15) rotate(-4deg)} 100%{transform:scale(1) rotate(0)} }
+  @keyframes shimmer  { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  .achieve-page { max-width: 820px; margin: 0 auto; }
+
+  /* ── Hero ── */
+  .achieve-hero {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+    animation: fadeUp 0.5s ease both;
+  }
+  .achieve-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+  }
+  .achieve-sub { font-size: 0.88rem; color: var(--text-secondary); margin-top: 3px; }
+
+  /* ── Streak banner ── */
+  .streak-banner {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    border-radius: 16px; padding: 14px 20px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 20px; color: white;
+    box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+    animation: fadeUp 0.5s ease 0.05s both;
+  }
+  .streak-fire { font-size: 2rem; animation: shimmer 2s ease-in-out infinite; }
+  .streak-text { flex: 1; }
+  .streak-num  { font-family:'Space Grotesk',sans-serif; font-size:1.4rem; font-weight:800; line-height:1; }
+  .streak-lbl  { font-size:0.82rem; opacity:0.9; margin-top:2px; }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 18px; padding: 20px 16px; text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.05);
+    transition: all 0.2s; animation: fadeUp 0.5s ease both;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
+  .stat-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px; font-size: 1.3rem;
+  }
+  .icon-stars   { background: rgba(245,158,11,0.12); }
+  .icon-crowns  { background: rgba(168,85,247,0.12); }
+  .icon-streak  { background: rgba(249,115,22,0.12); }
+  .icon-best    { background: rgba(139,92,246,0.12); }
+  .stat-num  { font-family:'Space Grotesk',sans-serif; font-size:1.9rem; font-weight:800; color:var(--accent-1); line-height:1; }
+  .stat-lbl  { font-size:0.7rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-top:5px; }
+
+  /* ── Calendar ── */
+  .cal-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+  .cal-title {
+    font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:700;
+    color:var(--text-primary); text-align:center; margin-bottom:16px;
+  }
+  .day-labels {
+    display: grid; grid-template-columns: repeat(7,1fr);
+    gap: 6px; text-align: center; margin-bottom: 8px;
+    font-size: 0.68rem; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase;
+  }
+  .star-grid {
+    display: grid; grid-template-columns: repeat(7,1fr); gap: 6px;
+  }
+  .star-day {
+    padding: 10px 4px; border-radius: 12px;
+    background: var(--input-bg); border: 1.5px solid var(--border-color);
+    text-align: center; transition: all 0.2s;
+  }
+  .star-day.earned {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-color: #f59e0b;
+    animation: starPop 0.4s ease both;
+  }
+  .star-day.crowned {
+    background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+    border-color: #a855f7;
+    animation: crownPop 0.4s ease both;
+  }
+  .star-day.earned.crowned {
+    background: linear-gradient(135deg, #fef3c7, #f3e8ff);
+    border-color: #a855f7;
+  }
+  .star-day.today-day { border: 2px solid var(--accent-1); }
+  .star-day.future-day { opacity: 0.3; }
+  .star-num  { font-weight:700; font-size:0.78rem; color:var(--text-primary); display:block; }
+  .star-day.earned .star-num,
+  .star-day.crowned .star-num { color: #1a1207; }
+  .star-icon { font-size:.85rem; display:block; margin-top:3px; line-height:1.3; }
+
+  .cal-legend {
+    display: flex; gap: 16px; justify-content: center; flex-wrap:wrap;
+    margin-top: 16px; font-size: 0.78rem; color: var(--text-secondary);
+  }
+  .legend-item { display:flex; align-items:center; gap:6px; }
+  .legend-dot  { width:10px; height:10px; border-radius:50%; }
+  .legend-dot.gold   { background:#f59e0b; }
+  .legend-dot.purple { background:#a855f7; }
+  .legend-dot.gray   { background:var(--border-color); }
+
+  /* ── All-time card ── */
+  .alltime-card {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border-radius: 20px; padding: 28px; text-align: center;
+    box-shadow: 0 8px 30px var(--glow-color);
+    animation: fadeUp 0.5s ease 0.3s both;
+    color: white;
+  }
+  .alltime-star { font-size: 3rem; font-weight: 900;
+    font-family:'Space Grotesk',sans-serif; line-height:1; }
+  .alltime-lbl { font-size: 0.9rem; opacity: 0.9; margin-top: 6px; }
+
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .star-grid  { gap: 3px; }
+    .star-day   { padding: 6px 2px; }
+    .star-num   { font-size: 0.65rem; }
+    .star-icon  { font-size: 0.85rem; }
+  }
+</style>
+
+<div class="achieve-page">
+
+  <!-- Hero -->
+  <div class="achieve-hero">
+    <div>
+      <div class="achieve-title">⭐ Achievements</div>
+      <div class="achieve-sub">{{ month_name }} · earn a star for every perfect day</div>
+      <div style="font-size:0.72rem;font-weight:600;color:var(--accent-1);opacity:0.75;letter-spacing:0.05em;margin-top:4px;">live the legacy</div>
+    </div>
+  </div>
+
+  <!-- Streak banner -->
+  {% if current_streak > 0 %}
+  <div class="streak-banner">
+    <div class="streak-fire">🔥</div>
+    <div class="streak-text">
+      <div class="streak-num">{{ current_streak }}-day streak</div>
+      <div class="streak-lbl">Keep it going! Don't break the chain.</div>
+    </div>
+    <div style="font-size:2rem;">💪</div>
+  </div>
+  {% endif %}
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card" style="animation-delay:0.08s">
+      <div class="stat-icon icon-stars">⭐</div>
+      <div class="stat-num">{{ total_stars }}</div>
+      <div class="stat-lbl">Stars This Month</div>
+    </div>
+    <div class="stat-card" style="animation-delay:0.11s">
+      <div class="stat-icon icon-crowns">👑</div>
+      <div class="stat-num">{{ total_crowns }}</div>
+      <div class="stat-lbl">Crowns This Month</div>
+    </div>
+    <div class="stat-card" style="animation-delay:0.14s">
+      <div class="stat-icon icon-streak">🔥</div>
+      <div class="stat-num">{{ current_streak }}</div>
+      <div class="stat-lbl">Current Streak</div>
+    </div>
+    <div class="stat-card" style="animation-delay:0.18s">
+      <div class="stat-icon icon-best">⚡</div>
+      <div class="stat-num">{{ max_streak }}</div>
+      <div class="stat-lbl">Best Streak</div>
+    </div>
+  </div>
+
+  <!-- Star Calendar -->
+  <div class="cal-card">
+    <div class="cal-title">Star Calendar · {{ month_name }}</div>
+    <div class="day-labels">
+      <span>Mon</span><span>Tue</span><span>Wed</span>
+      <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
+    <div class="star-grid">
+      {% for day in calendar_data %}
+        <div class="star-day
+          {% if day.earned %}earned{% endif %}
+          {% if day.crown %}crowned{% endif %}
+          {% if day.is_today %}today-day{% endif %}
+          {% if day.is_future %}future-day{% endif %}"
+          {% if day.earned or day.crown %}style="animation-delay: {{ loop.index * 0.03 }}s"{% endif %}>
+          <span class="star-num">{{ day.day }}</span>
+          <span class="star-icon">
+            {% if day.earned and day.crown %}⭐👑
+            {% elif day.earned %}⭐
+            {% elif day.crown %}👑
+            {% elif day.is_future %}·
+            {% else %}—{% endif %}
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="cal-legend">
+      <div class="legend-item"><div class="legend-dot gold"></div> Star — perfect personal day</div>
+      <div class="legend-item"><div class="legend-dot purple"></div> Crown — whole community showed up</div>
+      <div class="legend-item"><div class="legend-dot gray"></div> Missed</div>
+    </div>
+  </div>
+
+  <!-- All-time -->
+  <div class="alltime-card">
+    <div class="alltime-star">⭐ {{ all_time_stars }} · 👑 {{ all_time_crowns }}</div>
+    <div class="alltime-lbl">All-Time Stars &amp; Crowns Collected</div>
+  </div>
+
+</div>
+
+{% endblock %}

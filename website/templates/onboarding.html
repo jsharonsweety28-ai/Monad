@@ -1,0 +1,919 @@
+{% extends "base.html" %}
+{% block title %}Welcome to monad{% endblock %}
+
+{% block content %}
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .ob-wrap {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 20px; background: var(--bg-primary);
+  }
+
+  /* ── Logo ── */
+  .ob-logo { display: flex; align-items: center; gap: 9px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:.97rem; color:var(--text-primary); margin-bottom:32px; }
+  .ob-logo-icon { width:30px; height:30px; background:linear-gradient(145deg,#F5A623,#E07B39); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:.85rem; }
+
+  /* ── Progress dots ── */
+  .ob-dots { display:flex; gap:7px; margin-bottom:32px; align-items:center; }
+  .ob-dot { width:8px; height:8px; border-radius:50%; background:var(--border-color); transition:all .35s ease; flex-shrink:0; }
+  .ob-dot.active { background:var(--accent-1); width:22px; border-radius:99px; }
+  .ob-dot.done   { background:var(--accent-1); opacity:.35; }
+
+  /* ── Step card ── */
+  .ob-card { width:100%; max-width:500px; }
+  .ob-step { display:none; }
+  .ob-step.active { display:block; animation:obIn .32s ease both; }
+  @keyframes obIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Typography ── */
+  .ob-q   { font-family:'Space Grotesk',sans-serif; font-size:1.65rem; font-weight:800; color:var(--text-primary); margin-bottom:6px; line-height:1.22; letter-spacing:-.4px; }
+  .ob-sub { font-size:.88rem; color:var(--text-secondary); margin-bottom:22px; }
+  .ob-sec-label { display:block; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-secondary); margin-bottom:10px; }
+
+  /* ── Message ── */
+  .ob-msg { min-height:20px; margin:12px 0 16px; }
+  .ob-msg-inner { display:block; font-size:.87rem; color:var(--text-secondary); text-align:center; animation:msgIn 250ms ease both; line-height:1.55; }
+  @keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Tiles ── */
+  .ob-tiles { display:grid; gap:10px; margin-bottom:6px; }
+  .ob-tiles.c2 { grid-template-columns:1fr 1fr; }
+  .ob-tiles.c3 { grid-template-columns:1fr 1fr 1fr; }
+  .ob-tiles.c4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+  .ob-tiles.c5 { grid-template-columns:repeat(5,1fr); }
+  .ob-tiles.c6 { grid-template-columns:repeat(3,1fr); }
+
+  .ob-tile {
+    padding:13px 10px; border-radius:14px; text-align:center;
+    background:var(--card-bg); border:1.5px solid var(--border-color);
+    cursor:pointer; transition:all .18s ease;
+    font-size:.82rem; font-weight:600; color:var(--text-primary);
+    user-select:none; line-height:1.3;
+  }
+  .ob-tile:hover { border-color:var(--accent-1); transform:translateY(-2px); }
+  .ob-tile.selected {
+    border-color:var(--accent-1);
+    background:color-mix(in srgb, var(--accent-1) 9%, var(--card-bg));
+    transform:scale(1.04);
+    box-shadow:0 0 0 2.5px color-mix(in srgb,var(--accent-1) 28%,transparent), 0 6px 20px var(--glow-color);
+  }
+  .ob-tile-icon { font-size:1.45rem; display:block; margin-bottom:4px; line-height:1; }
+
+  /* ── Theme tiles ── */
+  .ob-theme-swatch { width:100%; height:36px; border-radius:8px; margin-bottom:5px; }
+
+  /* ── Input ── */
+  .ob-input {
+    width:100%; padding:13px 16px; border-radius:14px;
+    border:1.5px solid var(--border-color); background:var(--input-bg);
+    color:var(--text-primary); font-size:1rem; font-family:'Inter',sans-serif;
+    outline:none; transition:border-color .2s; margin-bottom:14px;
+  }
+  .ob-input:focus { border-color:var(--accent-1); }
+  .ob-input::placeholder { color:var(--text-secondary); }
+
+  /* ── Live greeting ── */
+  .ob-greeting {
+    text-align:center; min-height:24px; margin-bottom:18px;
+    font-size:.97rem; font-weight:600; color:var(--accent-1);
+    animation:msgIn 300ms ease both;
+  }
+
+  /* ── Time row ── */
+  .ob-time-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px; }
+  .ob-time-lbl { font-size:.74rem; font-weight:600; color:var(--text-secondary); margin-bottom:5px; }
+
+  /* ── Goal section (fades in) ── */
+  .ob-goal-section { margin-top:20px; padding-top:18px; border-top:1px solid var(--border-color); }
+
+  /* ── Button ── */
+  .ob-btn {
+    width:100%; padding:14px; background:var(--accent-1); color:white;
+    border:none; border-radius:14px; font-weight:700; font-size:.95rem;
+    cursor:pointer; transition:all .22s; font-family:'Inter',sans-serif;
+    margin-top:4px;
+  }
+  .ob-btn:hover:not(:disabled) { opacity:.88; transform:translateY(-2px); }
+  .ob-btn:disabled { opacity:.35; cursor:default; transform:none; }
+
+  /* ── Habit pills (step 7) ── */
+  .ob-habit-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .ob-habit-pill {
+    padding:8px 15px; border-radius:99px; cursor:pointer; user-select:none;
+    background:var(--card-bg); border:1.5px solid var(--border-color);
+    font-size:.82rem; font-weight:600; color:var(--text-primary);
+    transition:all .18s ease; display:flex; align-items:center; gap:6px;
+  }
+  .ob-habit-pill:hover { border-color:var(--accent-1); transform:translateY(-1px); }
+  .ob-habit-pill.selected {
+    border-color:var(--accent-1);
+    background:color-mix(in srgb, var(--accent-1) 10%, var(--card-bg));
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-1) 22%,transparent);
+  }
+  .ob-habit-pill.selected::before { content:'✓ '; font-weight:800; color:var(--accent-1); }
+  .ob-custom-pill {
+    padding:7px 12px; border-radius:99px; display:flex; align-items:center; gap:6px;
+    background:color-mix(in srgb,var(--accent-1) 10%,var(--card-bg));
+    border:1.5px solid var(--accent-1); font-size:.8rem; font-weight:600; color:var(--text-primary);
+  }
+  .ob-custom-pill button { background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size:.85rem; padding:0; line-height:1; }
+
+  /* ── Step 8: Building ── */
+  .ob-building { text-align:center; padding:10px 0; }
+  .ob-build-title { font-family:'Space Grotesk',sans-serif; font-size:1.45rem; font-weight:800; color:var(--text-primary); margin-bottom:28px; }
+  .ob-checklist { list-style:none; padding:0; margin:0 0 32px; text-align:left; max-width:280px; margin-left:auto; margin-right:auto; }
+  .ob-checklist li {
+    font-size:.88rem; color:var(--text-secondary); padding:7px 0;
+    display:flex; align-items:center; gap:10px;
+    opacity:0; transform:translateX(-14px); transition:all .4s ease;
+  }
+  .ob-checklist li.vis { opacity:1; transform:translateX(0); }
+  .ob-checklist li .ck { color:var(--accent-1); font-weight:800; font-size:.9rem; flex-shrink:0; }
+
+  .ob-bird-wrap { position:relative; height:56px; overflow:hidden; width:100%; }
+  @keyframes birdWalk { 0%{left:-64px} 100%{left:calc(100% + 64px)} }
+  @keyframes birdBob  { 0%,100%{transform:translateY(0) scaleX(1)} 50%{transform:translateY(-6px) scaleX(1)} }
+  .ob-bird { position:absolute; bottom:8px; font-size:2rem; animation:birdWalk 2.6s linear forwards; }
+  .ob-bird-inner { display:inline-block; animation:birdBob .38s ease-in-out infinite; }
+
+  /* ── Step 8: Welcome ── */
+  .ob-welcome { text-align:center; }
+  .ob-welcome-h { font-family:'Space Grotesk',sans-serif; font-size:2rem; font-weight:800; color:var(--text-primary); margin-bottom:22px; animation:obIn .4s ease both; }
+  .ob-summary-card {
+    background:var(--card-bg); border:1.5px solid var(--border-color);
+    border-radius:18px; padding:18px 22px; margin-bottom:16px; text-align:left;
+    animation:obIn .45s ease .08s both;
+  }
+  .ob-sum-row { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid var(--border-color); font-size:.83rem; }
+  .ob-sum-row:last-child { border-bottom:none; }
+  .ob-sum-lbl { color:var(--text-secondary); }
+  .ob-sum-val { font-weight:700; color:var(--text-primary); text-align:right; max-width:220px; }
+  .ob-persona { font-size:.9rem; color:var(--text-secondary); line-height:1.72; margin-bottom:24px; animation:obIn .5s ease .16s both; }
+  .ob-enter-btn { animation:obIn .5s ease .24s both; }
+
+  @media (max-width: 540px) {
+    .ob-wrap { padding: 24px 16px; }
+    .ob-q { font-size: 1.35rem; }
+    .ob-tiles.c3 { grid-template-columns: 1fr 1fr; }
+    .ob-tiles.c4 { grid-template-columns: 1fr 1fr; }
+    .ob-tiles.c5 { grid-template-columns: 1fr 1fr; }
+    .ob-tiles.c6 { grid-template-columns: 1fr 1fr 1fr; }
+    .ob-tile { padding: 11px 8px; font-size: .78rem; }
+    .ob-tile-icon { font-size: 1.25rem; }
+    .ob-theme-swatch { height: 28px; }
+  }
+  @media (max-width: 360px) {
+    .ob-tiles.c6 { grid-template-columns: 1fr 1fr; }
+    .ob-tiles.c5 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+
+<div class="ob-wrap">
+
+  <!-- Logo -->
+  <div class="ob-logo">
+    <div class="ob-logo-icon">m</div>
+    monad
+  </div>
+
+  <!-- Progress dots (hidden on steps 9–10) -->
+  <div class="ob-dots" id="obDots">
+    <div class="ob-dot" data-dot="1"></div>
+    <div class="ob-dot" data-dot="2"></div>
+    <div class="ob-dot" data-dot="3"></div>
+    <div class="ob-dot" data-dot="4"></div>
+    <div class="ob-dot" data-dot="5"></div>
+    <div class="ob-dot" data-dot="6"></div>
+    <div class="ob-dot" data-dot="7"></div>
+    <div class="ob-dot" data-dot="8"></div>
+  </div>
+
+  <form id="obForm" method="POST" action="/onboarding" class="ob-card"
+        onsubmit="return (window.obStep === 10)">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <!-- ── Hidden fields ── -->
+    <input type="hidden" name="name"          id="hName">
+    <input type="hidden" name="life_stage"    id="hLifeStage"  value="other">
+    <input type="hidden" name="wake_time"     id="hWakeTime"   value="07:00">
+    <input type="hidden" name="sleep_time"    id="hSleepTime"  value="23:00">
+    <input type="hidden" name="challenges"    id="hChallenges" value="">
+    <input type="hidden" name="available_time" id="hWorkStyle" value="mixed">
+    <input type="hidden" name="main_goal"     id="hGoals"      value="">
+    <input type="hidden" name="theme"         id="hTheme"      value="default">
+    <input type="hidden" name="time_format"   value="12h">
+    <input type="hidden" name="routine_text"  id="hRoutine"    value="">
+    <input type="hidden" name="year_goal"     id="hYearGoal"   value="">
+    <input type="hidden" name="ai_summary"    id="hAISummary"  value="">
+    <input type="hidden" name="motto"         id="hMotto"      value="">
+    <input type="hidden" name="custom_habits" value="">
+    <div id="habitsContainer"></div>
+
+    <!-- ════════════════════════════════
+         Step 1 — Name
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="1">
+      <div class="ob-q" style="margin-bottom:22px">What should we call you?</div>
+      <input class="ob-input" id="nameInput" type="text" placeholder="Your name"
+             autocomplete="off" autocapitalize="words">
+      <div id="nameGreeting" style="min-height:26px;margin-bottom:18px"></div>
+      <button type="button" class="ob-btn" id="nameBtn" onclick="goNext()" disabled>Continue →</button>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 2 — Life Phase
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="2">
+      <div class="ob-q">Which stage are you in right now?</div>
+      <div style="margin-bottom:20px"></div>
+      <div class="ob-tiles c2" id="lifeTiles">
+        <div class="ob-tile" data-val="school"  onclick="pickLife(this)"><span class="ob-tile-icon">🏫</span>School</div>
+        <div class="ob-tile" data-val="college" onclick="pickLife(this)"><span class="ob-tile-icon">🎓</span>College</div>
+        <div class="ob-tile" data-val="working" onclick="pickLife(this)"><span class="ob-tile-icon">💼</span>Working</div>
+        <div class="ob-tile" data-val="other"   onclick="pickLife(this)"><span class="ob-tile-icon">✨</span>Other</div>
+      </div>
+      <div class="ob-msg" id="lifeMsg"></div>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 3 — Daily Rhythm
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="3">
+      <div class="ob-q">When does your day usually begin and end?</div>
+      <div style="margin-bottom:20px"></div>
+      <div class="ob-time-row">
+        <div>
+          <div class="ob-time-lbl">Wake time</div>
+          <input class="ob-input" type="time" id="wakeInput" value="07:00"
+                 style="margin-bottom:0" oninput="updateRhythm()"
+                 onkeydown="if(event.key==='Enter')event.preventDefault()">
+        </div>
+        <div>
+          <div class="ob-time-lbl">Sleep time</div>
+          <input class="ob-input" type="time" id="sleepInput" value="23:00"
+                 style="margin-bottom:0" oninput="updateRhythm()"
+                 onkeydown="if(event.key==='Enter')event.preventDefault()">
+        </div>
+      </div>
+      <div class="ob-msg" id="rhythmMsg" style="margin-bottom:18px">
+        <span class="ob-msg-inner" id="rhythmTxt"></span>
+      </div>
+      <button type="button" class="ob-btn" onclick="goNext()">Continue →</button>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 4 — Biggest Struggle
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="4">
+      <div class="ob-q">What are your biggest challenges right now?</div>
+      <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;text-align:center">Pick all that apply.</div>
+      <div class="ob-tiles c2" id="challengeTiles">
+        <div class="ob-tile" data-val="focus"       onclick="pickChallenge(this)"><span class="ob-tile-icon">🎯</span>Focus</div>
+        <div class="ob-tile" data-val="consistency" onclick="pickChallenge(this)"><span class="ob-tile-icon">📅</span>Consistency</div>
+        <div class="ob-tile" data-val="overwhelmed" onclick="pickChallenge(this)"><span class="ob-tile-icon">🌊</span>Too Much To Manage</div>
+        <div class="ob-tile" data-val="energy"      onclick="pickChallenge(this)"><span class="ob-tile-icon">⚡</span>Low Energy</div>
+      </div>
+      <div class="ob-msg" id="challengeMsg"></div>
+      <button class="ob-btn" id="challengeBtn" disabled onclick="goNext()">Continue →</button>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 5 — Work Style + Goals
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="5">
+      <div class="ob-q">How do you work best?</div>
+      <div style="margin-bottom:20px"></div>
+      <div class="ob-tiles c3" id="workTiles">
+        <div class="ob-tile" data-val="deep"     onclick="pickWork(this)"><span class="ob-tile-icon">🔭</span>Deep Focus</div>
+        <div class="ob-tile" data-val="flexible" onclick="pickWork(this)"><span class="ob-tile-icon">🌊</span>Flexible Flow</div>
+        <div class="ob-tile" data-val="mixed"    onclick="pickWork(this)"><span class="ob-tile-icon">⚖️</span>Mix of Both</div>
+      </div>
+      <div class="ob-msg" id="workMsg"></div>
+
+      <div id="goalSection" style="display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--border-color)">
+        <span class="ob-sec-label" style="margin-bottom:10px;text-transform:none;font-size:.82rem;letter-spacing:0;color:var(--text-primary);font-weight:700">Pick up to 2 goals.</span>
+        <div class="ob-tiles c3" id="goalTiles">
+          <div class="ob-tile" data-val="productivity" onclick="pickGoal(this)"><span class="ob-tile-icon">🚀</span>Productivity</div>
+          <div class="ob-tile" data-val="habits"       onclick="pickGoal(this)"><span class="ob-tile-icon">🌱</span>Better Habits</div>
+          <div class="ob-tile" data-val="study"        onclick="pickGoal(this)"><span class="ob-tile-icon">📚</span>Study</div>
+          <div class="ob-tile" data-val="health"       onclick="pickGoal(this)"><span class="ob-tile-icon">💪</span>Health</div>
+          <div class="ob-tile" data-val="mental"       onclick="pickGoal(this)"><span class="ob-tile-icon">🧘</span>Mental Clarity</div>
+          <div class="ob-tile" data-val="career"       onclick="pickGoal(this)"><span class="ob-tile-icon">💼</span>Career</div>
+        </div>
+        <div class="ob-msg" id="goalMsg"></div>
+        <button type="button" class="ob-btn" id="goalBtn" onclick="goNext()" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 6 — Year Goal
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="6">
+      <div class="ob-q">What's your #1 goal for {{ now.year }}?</div>
+      <p class="ob-sub">Write it down — seeing it every day makes it real.</p>
+      <input class="ob-input" id="yearGoalInput" type="text"
+             placeholder="e.g. Get into my dream college, Land my first internship…"
+             maxlength="200" autocomplete="off"
+             oninput="onYearGoalInput(this)"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();goNext();}">
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;" id="yearGoalSuggestions">
+        <span class="ob-habit-pill" onclick="setYearGoal(this)">🎓 Graduate with honours</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)">💼 Land my first job</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)">📚 Improve my GPA</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)">💪 Get consistently fit</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)">🧠 Build a daily study habit</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)">🚀 Launch a side project</span>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="ob-btn" id="yearGoalBtn" onclick="goNext()">Continue →</button>
+        <button type="button" onclick="goNext()"
+          style="padding:14px 20px; background:none; border:1.5px solid var(--border-color); border-radius:14px; font-size:.85rem; color:var(--text-secondary); cursor:pointer; font-family:'Inter',sans-serif; white-space:nowrap;">
+          Skip
+        </button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 7 — Theme + Companion
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="7">
+      <div class="ob-q">Make it yours.</div>
+      <div style="margin-bottom:20px"></div>
+
+      <span class="ob-sec-label">Choose your space.</span>
+      <div class="ob-tiles c6" id="themeTiles">
+        <div class="ob-tile selected" data-val="default" onclick="pickTheme(this)">
+          <div class="ob-theme-swatch" style="background:linear-gradient(135deg,#FFFDF9 0%,#F5EBE0 100%)"></div>Cream
+        </div>
+        <div class="ob-tile" data-val="forest" onclick="pickTheme(this)">
+          <div class="ob-theme-swatch" style="background:linear-gradient(135deg,#1e3a1e 0%,#2d5a2d 100%)"></div>Forest
+        </div>
+        <div class="ob-tile" data-val="ocean" onclick="pickTheme(this)">
+          <div class="ob-theme-swatch" style="background:linear-gradient(135deg,#0a1628 0%,#1a3a6a 100%)"></div>Ocean
+        </div>
+        <div class="ob-tile" data-val="sunset" onclick="pickTheme(this)">
+          <div class="ob-theme-swatch" style="background:linear-gradient(135deg,#7c2d12 0%,#ea580c 100%)"></div>Sunset
+        </div>
+        <div class="ob-tile" data-val="dark" onclick="pickTheme(this)">
+          <div class="ob-theme-swatch" style="background:linear-gradient(135deg,#0d0d0d 0%,#1c1c1c 100%)"></div>Dark
+        </div>
+        <div class="ob-tile" data-val="haikyuu" onclick="pickTheme(this)">
+          <div class="ob-theme-swatch" style="background:linear-gradient(135deg,#1e1208 0%,#f48120 100%)"></div>Haikyu!!
+        </div>
+      </div>
+      <div class="ob-msg" id="themeMsg">
+        <span class="ob-msg-inner" id="themeTxt">Warm, calm and distraction-free.</span>
+      </div>
+
+      <button type="button" class="ob-btn" onclick="goNext()">Continue →</button>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 8 — Habits
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="8">
+      <div class="ob-q">Build habits that stick.</div>
+      <p class="ob-sub">Suggested based on your goals — pick what you want, skip what you don't, or add your own.</p>
+      <div class="ob-habit-wrap" id="habitGrid"></div>
+      <div style="margin-top:4px;margin-bottom:6px">
+        <div style="font-size:.74rem;font-weight:600;color:var(--text-secondary);margin-bottom:7px">Add your own</div>
+        <div style="display:flex;gap:8px">
+          <input class="ob-input" id="customHabitInput" type="text" placeholder="e.g. Read 20 pages daily"
+                 maxlength="80" style="margin-bottom:0;flex:1"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomHabit();}">
+          <button type="button" onclick="addCustomHabit()"
+                  style="padding:0 20px;background:var(--accent-1);color:white;border:none;border-radius:12px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Add</button>
+        </div>
+      </div>
+      <div class="ob-habit-wrap" id="customHabitChips" style="margin-top:8px"></div>
+      <button type="button" class="ob-btn" onclick="goNext()" style="margin-top:16px">Continue →</button>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 9 — Building
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="9">
+      <div class="ob-building">
+        <div class="ob-build-title">Building your workspace…</div>
+        <ul class="ob-checklist">
+          <li id="ck1"><span class="ck">✓</span> Setting up Daily Tasks</li>
+          <li id="ck2"><span class="ck">✓</span> Preparing Habits</li>
+          <li id="ck3"><span class="ck">✓</span> Personalizing Focus Sessions</li>
+          <li id="ck4"><span class="ck">✓</span> Creating Study Space</li>
+          <li id="ck5"><span class="ck">✓</span> Setting up your space</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         Step 10 — Welcome
+    ════════════════════════════════ -->
+    <div class="ob-step" data-step="10">
+      <div class="ob-welcome">
+        <div class="ob-welcome-h" id="welcomeH">Welcome.</div>
+        <div class="ob-summary-card">
+          <div class="ob-sum-row"><span class="ob-sum-lbl">Work Style</span><span class="ob-sum-val" id="sWork">—</span></div>
+          <div class="ob-sum-row"><span class="ob-sum-lbl">Challenge</span><span class="ob-sum-val" id="sChallenge">—</span></div>
+          <div class="ob-sum-row"><span class="ob-sum-lbl">Goals</span><span class="ob-sum-val" id="sGoals">—</span></div>
+          <div class="ob-sum-row"><span class="ob-sum-lbl">2026 Goal</span><span class="ob-sum-val" id="sYearGoal">—</span></div>
+          <div class="ob-sum-row"><span class="ob-sum-lbl">Theme</span><span class="ob-sum-val" id="sTheme">—</span></div>
+        </div>
+        <!-- Loading state shown while Gemini analyzes -->
+        <div id="aiLoadingState" style="text-align:center; padding:16px 0 8px; color:var(--text-secondary); font-size:.85rem; letter-spacing:.04em;">
+          ✦ Analyzing your profile…
+        </div>
+        <!-- "What Monad Notices" card — hidden until AI responds -->
+        <div id="aiInsightCard" style="display:none; background:var(--accent-3); border:1px solid var(--border-color); border-radius:16px; padding:18px 20px; margin-bottom:16px; text-align:left;">
+          <div style="font-size:.65rem; font-weight:700; letter-spacing:.1em; color:var(--accent-1); margin-bottom:10px;">WHAT MONAD NOTICES</div>
+          <p id="aiInsightText" style="font-size:.88rem; line-height:1.65; margin:0 0 14px; color:var(--text-primary);"></p>
+          <div style="border-top:1px solid var(--border-color); padding-top:12px; margin-bottom:12px;">
+            <div style="font-size:.65rem; font-weight:700; letter-spacing:.1em; color:var(--text-secondary); margin-bottom:8px;">YOUR FIRST 3 TASKS</div>
+            <div id="aiTasksList"></div>
+          </div>
+          <div style="font-size:.78rem; font-style:italic; color:var(--text-secondary);" id="aiMotto"></div>
+        </div>
+        <div class="ob-enter-btn">
+          <button type="submit" class="ob-btn">Enter Monad →</button>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<script>
+(function () {
+
+  /* ── State ── */
+  var step = 1;
+  window.obStep = 1;
+  var userName    = '';
+  var lifePhase   = 'other';
+  var selChallenges = [];
+  var workStyle   = 'mixed';
+  var selGoals    = [];
+  var yearGoal    = '';
+  var selTheme    = 'default';
+  var buildDone   = false;
+  var habitsReady = false;
+  var selectedHabits  = [];
+  var customHabits    = [];
+
+  var suggestedHabits = {{ suggested_habits | tojson }};
+
+  /* goal → extra habit suggestions */
+  var goalHabits = {
+    productivity: ['Time-block your day','Weekly review','Daily top-3 priorities','Single-tasking'],
+    habits:       ['Morning routine','Evening wind-down','Habit tracker check-in','No phone first 30 min'],
+    study:        ['Review notes daily','Read 20 pages','Practice problems','Weekly self-quiz'],
+    health:       ['Exercise 30 min','Drink 8 glasses of water','Sleep by 11 pm','10-minute walk after meals'],
+    mental:       ['5-minute meditation','Gratitude journal','Digital detox evening','Deep breathing breaks'],
+    career:       ['Learn one new thing','Weekly networking','Work on side project','Read industry news'],
+  };
+
+  /* ── Show step ── */
+  function showStep(n) {
+    document.querySelectorAll('.ob-step').forEach(function(s){ s.classList.remove('active'); });
+    var el = document.querySelector('[data-step="' + n + '"]');
+    if (el) el.classList.add('active');
+    step = n;
+    window.obStep = n;
+
+    var dots = document.getElementById('obDots');
+    if (n >= 9) {
+      dots.style.opacity = '0';
+      dots.style.pointerEvents = 'none';
+    } else {
+      dots.style.opacity = '1';
+      dots.style.pointerEvents = '';
+      document.querySelectorAll('.ob-dot').forEach(function(d) {
+        var dn = parseInt(d.dataset.dot);
+        d.classList.remove('active','done');
+        if (dn === n)     d.classList.add('active');
+        else if (dn < n)  d.classList.add('done');
+      });
+    }
+
+    if (n === 8) populateHabits();
+    if (n === 9) startBuilding();
+    if (n === 10) buildSummary();
+  }
+
+  window.goNext = function() { if (step < 10) showStep(step + 1); };
+
+  /* ── STEP 1: Name ── */
+  var nameInput = document.getElementById('nameInput');
+  nameInput.addEventListener('input', function() {
+    var v = this.value.trim();
+    userName = v;
+    document.getElementById('hName').value = v;
+    var g = document.getElementById('nameGreeting');
+    var btn = document.getElementById('nameBtn');
+    if (v) {
+      g.className = 'ob-greeting';
+      g.textContent = 'Nice to meet you, ' + v.split(' ')[0] + '.';
+      btn.disabled = false;
+    } else {
+      g.textContent = '';
+      btn.disabled = true;
+    }
+  });
+  nameInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (this.value.trim()) goNext();
+    }
+  });
+
+  /* ── STEP 2: Life Phase ── */
+  var lifeMsgs = {
+    school:  "We'll help you balance classes, exams and habits.",
+    college: "A lot to juggle. We'll help you stay ahead.",
+    working: "Let's create space for what matters most.",
+    other:   "We'll adapt Monad around your goals."
+  };
+  window.pickLife = function(el) {
+    tiles('#lifeTiles', el);
+    lifePhase = el.dataset.val;
+    document.getElementById('hLifeStage').value = lifePhase;
+    setMsg('lifeMsg', lifeMsgs[lifePhase] || '');
+    setTimeout(function() { showStep(3); }, 1000);
+  };
+
+  /* ── STEP 3: Daily Rhythm ── */
+  window.updateRhythm = function() {
+    var w = document.getElementById('wakeInput').value  || '07:00';
+    var s = document.getElementById('sleepInput').value || '23:00';
+    document.getElementById('hWakeTime').value  = w;
+    document.getElementById('hSleepTime').value = s;
+    var wH = toH(w), sH = toH(s);
+    var hrs = sH > wH ? sH - wH : 24 - wH + sH;
+    var msg;
+    if      (hrs >= 18) msg = "That's a long day. We'll help you avoid burnout.";
+    else if (hrs >= 15) msg = "Plenty of room for focused work and recovery.";
+    else if (hrs >= 12) msg = "Looks like you have about " + Math.round(hrs) + " waking hours to work with.";
+    else                msg = "A focused schedule. Let's make those hours count.";
+    var el = document.getElementById('rhythmTxt');
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+    el.textContent = msg;
+    // compose a routine text
+    document.getElementById('hRoutine').value = 'Wake at ' + w + ', sleep at ' + s + '. About ' + Math.round(hrs) + ' waking hours.';
+  };
+  function toH(t) {
+    var p = (t || '00:00').split(':');
+    return (parseInt(p[0]) || 0) + (parseInt(p[1]) || 0) / 60;
+  }
+  updateRhythm();
+
+  /* ── STEP 4: Challenge ── */
+  var challengeMsgs = {
+    focus:       "Small wins can beat procrastination.",
+    consistency: "Systems tend to last longer than motivation.",
+    overwhelmed: "We'll help you clear the mental clutter.",
+    energy:      "Progress starts with protecting your energy."
+  };
+  window.pickChallenge = function(el) {
+    var v = el.dataset.val;
+    var idx = selChallenges.indexOf(v);
+    if (idx > -1) {
+      selChallenges.splice(idx, 1);
+      el.classList.remove('selected');
+    } else {
+      selChallenges.push(v);
+      el.classList.add('selected');
+    }
+    document.getElementById('hChallenges').value = selChallenges.join(',');
+    document.getElementById('challengeBtn').disabled = selChallenges.length === 0;
+    var msg = selChallenges.length === 1 ? (challengeMsgs[selChallenges[0]] || '') : '';
+    setMsg('challengeMsg', msg);
+  };
+
+  /* ── STEP 5: Work Style + Goals ── */
+  var workMsgs = {
+    deep:     "We'll prioritize longer focus blocks.",
+    flexible: "We'll keep your plans adaptable.",
+    mixed:    "A balanced approach usually works best."
+  };
+  var goalMsgs = {
+    productivity: "We'll help you spend more time on what matters.",
+    habits:       "Consistency compounds over time.",
+    study:        "Sharp study habits change everything.",
+    health:       "Energy is the foundation of everything else.",
+    mental:       "A clear mind makes better decisions.",
+    career:       "Intentional effort builds real momentum."
+  };
+  var goalCombos = {
+    'productivity+habits': "Productivity and habits make a powerful combination.",
+    'productivity+study':  "Great output starts with smart study.",
+    'productivity+health': "Energy fuels productivity — perfect pairing.",
+    'productivity+mental': "Clarity and output go hand in hand.",
+    'productivity+career': "Intentional work drives real results.",
+    'habits+study':        "Discipline and knowledge compound together.",
+    'habits+health':       "The two most powerful things you can build.",
+    'habits+mental':       "Inner clarity and consistent action — unstoppable.",
+    'habits+career':       "Habits built today become results tomorrow.",
+    'study+health':        "A healthy body supports a sharp mind.",
+    'study+mental':        "Calm focus is the best study aid.",
+    'health+mental':       "Body and mind in sync — powerful combination.",
+  };
+
+  window.pickWork = function(el) {
+    tiles('#workTiles', el);
+    workStyle = el.dataset.val;
+    document.getElementById('hWorkStyle').value = workStyle;
+    setMsg('workMsg', workMsgs[workStyle] || '');
+    var gs = document.getElementById('goalSection');
+    if (gs.style.display === 'none' || !gs.style.display) {
+      gs.style.display = 'block';
+      gs.style.opacity = '0';
+      gs.style.transform = 'translateY(10px)';
+      gs.style.transition = 'opacity .3s ease, transform .3s ease';
+      setTimeout(function() { gs.style.opacity = '1'; gs.style.transform = 'translateY(0)'; }, 20);
+    }
+  };
+
+  window.pickGoal = function(el) {
+    var v = el.dataset.val;
+    if (el.classList.contains('selected')) {
+      el.classList.remove('selected');
+      selGoals = selGoals.filter(function(g){ return g !== v; });
+    } else {
+      if (selGoals.length >= 2) return;
+      el.classList.add('selected');
+      selGoals.push(v);
+    }
+    document.getElementById('hGoals').value = selGoals.join(',');
+    document.getElementById('goalBtn').disabled = selGoals.length === 0;
+
+    var msg = '';
+    if (selGoals.length === 2) {
+      var k1 = selGoals[0]+'+'+selGoals[1], k2 = selGoals[1]+'+'+selGoals[0];
+      msg = goalCombos[k1] || goalCombos[k2] || goalMsgs[selGoals[0]];
+    } else if (selGoals.length === 1) {
+      msg = goalMsgs[selGoals[0]] || '';
+    }
+    setMsg('goalMsg', msg);
+  };
+
+  /* ── STEP 6: Year Goal ── */
+  window.onYearGoalInput = function(el) {
+    yearGoal = el.value.trim();
+    document.getElementById('hYearGoal').value = yearGoal;
+  };
+  window.setYearGoal = function(pill) {
+    var txt = pill.textContent.replace(/^[\p{Emoji}\s]+/u, '').trim();
+    var input = document.getElementById('yearGoalInput');
+    input.value = txt;
+    yearGoal = txt;
+    document.getElementById('hYearGoal').value = yearGoal;
+    document.querySelectorAll('#yearGoalSuggestions .ob-habit-pill').forEach(function(p){ p.classList.remove('selected'); });
+    pill.classList.add('selected');
+  };
+
+  /* ── STEP 7: Theme + Companion ── */
+  var themeMsgs = {
+    'default': "Warm, calm and distraction-free.",
+    forest:    "Grounded and growth-focused.",
+    ocean:     "Clean, spacious and refreshing.",
+    sunset:    "Warm energy with a little creativity.",
+    dark:      "Focused and minimal."
+  };
+  var themeVars = {
+    'default': { '--nav-bg':'#FDF6F0','--body-bg':'#FFFDF9','--card-bg':'#FFFFFF','--accent-1':'#E07B39','--accent-2':'#F5A623','--accent-3':'#FEF3E8','--glow-color':'rgba(224,123,57,0.3)','--text-primary':'#2D2A26','--text-secondary':'#8B7E74','--border-color':'#F0E8DF','--input-bg':'#FDF6F0','--hover':'#FEF3E8','--header-gradient':'linear-gradient(135deg,#E07B39,#F5A623)' },
+    forest:    { '--nav-bg':'#e8f5e9','--body-bg':'#f1f8e9','--card-bg':'#ffffff','--accent-1':'#2e7d32','--accent-2':'#43a047','--accent-3':'#a5d6a7','--glow-color':'rgba(46,125,50,0.3)','--text-primary':'#1b3a1b','--text-secondary':'#4a6b4a','--border-color':'#c8e6c9','--input-bg':'#f5faf5','--hover':'#dcedc8','--header-gradient':'linear-gradient(135deg,#2e7d32,#43a047)' },
+    ocean:     { '--nav-bg':'#001f3f','--body-bg':'#e8f4f8','--card-bg':'#ffffff','--accent-1':'#0077b6','--accent-2':'#00b4d8','--accent-3':'#90e0ef','--glow-color':'rgba(0,180,216,0.4)','--text-primary':'#1a1a2e','--text-secondary':'#4a5568','--border-color':'#caf0f8','--input-bg':'#f0f9fc','--hover':'#d4eef7','--header-gradient':'linear-gradient(135deg,#0077b6,#00b4d8)' },
+    sunset:    { '--nav-bg':'#7a2d50','--body-bg':'#fff5f8','--card-bg':'#ffffff','--accent-1':'#e8607a','--accent-2':'#f5956a','--accent-3':'#fdd5dc','--glow-color':'rgba(232,96,122,0.35)','--text-primary':'#2a0f1a','--text-secondary':'#7a4a5a','--border-color':'#f5ccd8','--input-bg':'#fff0f4','--hover':'#fde8ee','--header-gradient':'linear-gradient(135deg,#e8607a,#f5956a)' },
+    dark:      { '--nav-bg':'#0a0a0a','--body-bg':'#121212','--card-bg':'#1e1e1e','--accent-1':'#bb86fc','--accent-2':'#03dac6','--accent-3':'#1f1a2e','--glow-color':'rgba(187,134,252,0.4)','--text-primary':'#e8e8e8','--text-secondary':'#b0b0b0','--border-color':'#2a2a2a','--input-bg':'#272727','--hover':'#2a2a2a','--header-gradient':'linear-gradient(135deg,#bb86fc,#03dac6)' },
+    haikyuu:   { '--nav-bg':'#1e1208','--body-bg':'#fdf6f0','--card-bg':'#ffffff','--accent-1':'#f48120','--accent-2':'#ffb347','--accent-3':'#ffd89b','--glow-color':'rgba(244,129,32,0.4)','--text-primary':'#1a1a1a','--text-secondary':'#6b5e53','--border-color':'#f0e0d0','--input-bg':'#fdf8f4','--hover':'#fff0e0','--header-gradient':'linear-gradient(135deg,#f48120,#1e1208)' },
+  };
+
+  function applyThemePreview(key) {
+    var vars = themeVars[key] || themeVars['default'];
+    var root = document.documentElement;
+    Object.keys(vars).forEach(function(k){ root.style.setProperty(k, vars[k]); });
+  }
+
+  window.pickTheme = function(el) {
+    tiles('#themeTiles', el);
+    selTheme = el.dataset.val;
+    document.getElementById('hTheme').value = selTheme;
+    refreshMsg('themeTxt', themeMsgs[selTheme] || '');
+    applyThemePreview(selTheme);
+  };
+  /* ── STEP 8: Habits ── */
+  function renderHabitPills(pool) {
+    var grid = document.getElementById('habitGrid');
+    grid.innerHTML = '';
+    pool.slice(0, 12).forEach(function(habit) {
+      var pill = document.createElement('div');
+      pill.className = 'ob-habit-pill';
+      pill.textContent = habit;
+      pill.dataset.val = habit;
+      pill.onclick = function() { toggleHabit(pill, habit); };
+      grid.appendChild(pill);
+    });
+  }
+
+  function populateHabits() {
+    selectedHabits = [];
+    var grid = document.getElementById('habitGrid');
+    grid.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text-secondary);font-size:.85rem;letter-spacing:.04em;">✦ Personalizing your habits…</div>';
+
+    var profileData = {
+      name: userName,
+      life_stage: lifePhase,
+      wake_time:  document.getElementById('wakeInput').value  || '07:00',
+      sleep_time: document.getElementById('sleepInput').value || '23:00',
+      challenge:  selChallenges.join(', '),
+      work_style: workStyle,
+      goals:      selGoals.join(', '),
+      year_goal:  yearGoal
+    };
+
+    fetch('/onboarding/suggest-habits', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify(profileData)
+    })
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(ai) {
+      if (ai.habits && ai.habits.length) {
+        renderHabitPills(ai.habits);
+      } else {
+        throw new Error('empty');
+      }
+    })
+    .catch(function() {
+      /* fallback: keyword suggestions */
+      var pool = suggestedHabits.slice();
+      selGoals.forEach(function(g) {
+        (goalHabits[g] || []).forEach(function(h) {
+          if (pool.indexOf(h) === -1) pool.push(h);
+        });
+      });
+      renderHabitPills(pool);
+    });
+  }
+
+  function toggleHabit(el, habit) {
+    var idx = selectedHabits.indexOf(habit);
+    if (idx > -1) {
+      selectedHabits.splice(idx, 1);
+      el.classList.remove('selected');
+    } else {
+      selectedHabits.push(habit);
+      el.classList.add('selected');
+    }
+  }
+
+  window.addCustomHabit = function() {
+    var inp = document.getElementById('customHabitInput');
+    var val = inp.value.trim();
+    if (!val || customHabits.indexOf(val) > -1) return;
+    customHabits.push(val);
+    selectedHabits.push(val);
+
+    var chip = document.createElement('div');
+    chip.className = 'ob-custom-pill';
+    chip.innerHTML = val + '<button onclick="removeCustomHabit(this,\'' + val.replace(/'/g,"\\'") + '\')">✕</button>';
+    document.getElementById('customHabitChips').appendChild(chip);
+    inp.value = '';
+  };
+
+  window.removeCustomHabit = function(btn, val) {
+    customHabits = customHabits.filter(function(h){ return h !== val; });
+    selectedHabits = selectedHabits.filter(function(h){ return h !== val; });
+    btn.parentElement.remove();
+  };
+
+  /* ── STEP 9: Building ── */
+  function startBuilding() {
+    buildDone   = false;
+    habitsReady = false;
+
+    /* reset checklist */
+    ['ck1','ck2','ck3','ck4','ck5'].forEach(function(id){
+      document.getElementById(id).classList.remove('vis');
+    });
+
+    /* reset bird */
+    var bird = document.getElementById('obBird');
+    bird.style.animation = 'none';
+    void bird.offsetWidth;
+    bird.style.animation = '';
+
+    /* submit the habits the user selected in step 7 */
+    var container = document.getElementById('habitsContainer');
+    container.innerHTML = '';
+    selectedHabits.forEach(function(h) {
+      var inp = document.createElement('input');
+      inp.type = 'hidden'; inp.name = 'habits'; inp.value = h;
+      container.appendChild(inp);
+    });
+    habitsReady = true;
+
+    /* fire AI analyze in parallel with building animation */
+    var profileData = {
+      name:            userName,
+      life_stage:      lifePhase,
+      wake_time:       document.getElementById('wakeInput').value  || '07:00',
+      sleep_time:      document.getElementById('sleepInput').value || '23:00',
+      challenge:       selChallenges.join(', '),
+      work_style:      workStyle,
+      goals:           selGoals.join(', '),
+      selected_habits: selectedHabits.join(', '),
+      year_goal:       yearGoal
+    };
+    fetch('/onboarding/analyze', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify(profileData)
+    })
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(ai) {
+      document.getElementById('hAISummary').value = ai.insight || '';
+      document.getElementById('hMotto').value     = ai.motto   || '';
+      /* inject starter_task hidden inputs */
+      var form = document.getElementById('obForm');
+      (ai.starter_tasks || []).forEach(function(t) {
+        var inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'starter_task'; inp.value = t;
+        form.appendChild(inp);
+      });
+      /* populate step 10 card */
+      document.getElementById('aiInsightText').textContent = ai.insight || '';
+      document.getElementById('aiMotto').textContent = ai.motto ? '✦ ' + ai.motto : '';
+      var tasksList = document.getElementById('aiTasksList');
+      tasksList.innerHTML = '';
+      (ai.starter_tasks || []).forEach(function(t) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;font-size:.85rem;color:var(--text-primary);';
+        row.innerHTML = '<span style="color:var(--accent-1);font-weight:700;flex-shrink:0;">→</span><span>' + t + '</span>';
+        tasksList.appendChild(row);
+      });
+      document.getElementById('aiLoadingState').style.display = 'none';
+      document.getElementById('aiInsightCard').style.display  = 'block';
+    })
+    .catch(function() {
+      document.getElementById('aiLoadingState').style.display = 'none';
+    });
+
+    /* animate checklist */
+    var ids = ['ck1','ck2','ck3','ck4','ck5'];
+    ids.forEach(function(id, i) {
+      setTimeout(function() {
+        document.getElementById(id).classList.add('vis');
+      }, 300 + i * 400);
+    });
+
+    /* advance after animation completes (~3.1s) */
+    setTimeout(function() {
+      buildDone = true;
+      if (habitsReady) showStep(10);
+    }, 300 + ids.length * 400 + 500);
+  }
+
+  /* ── STEP 10: Summary ── */
+  var workLabels      = { deep:'Deep Focus', flexible:'Flexible Flow', mixed:'Mix of Both' };
+  var challengeLabels = { focus:'Focus', consistency:'Consistency', overwhelmed:'Too Much To Manage', energy:'Low Energy' };
+  var themeLabels     = { 'default':'Cream', forest:'Forest', ocean:'Ocean', sunset:'Sunset', dark:'Dark', haikyuu:'Haikyu!!' };
+  var goalLabels      = { productivity:'Productivity', habits:'Better Habits', study:'Study', health:'Health', mental:'Mental Clarity', career:'Career' };
+
+  function buildSummary() {
+    var first = (userName.split(' ')[0] || userName) || 'there';
+    document.getElementById('welcomeH').textContent = 'Welcome, ' + first + '.';
+    document.getElementById('sWork').textContent      = workLabels[workStyle]       || workStyle;
+    document.getElementById('sChallenge').textContent = selChallenges.map(function(c){ return challengeLabels[c]||c; }).join(', ') || '—';
+    document.getElementById('sGoals').textContent     = selGoals.map(function(g){ return goalLabels[g]||g; }).join(', ') || '—';
+    document.getElementById('sYearGoal').textContent  = yearGoal || '—';
+    document.getElementById('sTheme').textContent     = themeLabels[selTheme]       || selTheme;
+
+  }
+
+  /* ── Helpers ── */
+  function tiles(selector, active) {
+    document.querySelectorAll(selector + ' .ob-tile').forEach(function(t){ t.classList.remove('selected'); });
+    active.classList.add('selected');
+  }
+  function setMsg(id, text) {
+    var el = document.getElementById(id);
+    el.innerHTML = text ? '<span class="ob-msg-inner">' + text + '</span>' : '';
+  }
+  function refreshMsg(id, text) {
+    var el = document.getElementById(id);
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+    el.textContent = text;
+  }
+
+  /* ── Init ── */
+  showStep(1);
+
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}monad{% endblock %}</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --nav-bg: #FDF6F0; --footer-bg: #FDF6F0;
+      --accent-1: #E07B39; --accent-2: #F5A623; --accent-3: #FEF3E8;
+      --glow-color: rgba(224,123,57,0.3); --body-bg: #FFFDF9;
+      --card-bg: #FFFFFF; --text-primary: #2D2A26; --text-secondary: #8B7E74;
+      --border-color: #F0E8DF; --input-bg: #FDF6F0; --hover: #FEF3E8;
+      --header-gradient: linear-gradient(135deg, #E07B39, #F5A623);
+      --sidebar-w: 240px; --sidebar-col: 64px; --topbar-h: 60px;
+      --danger-bg: rgba(239,68,68,0.1); --danger-border: rgba(239,68,68,0.25); --danger-text: #FCA5A5;
+    }
+
+    {% if user_theme == 'ocean' %}
+    :root {
+      --nav-bg: #001f3f; --footer-bg: #001f3f; --accent-1: #0077b6; --accent-2: #00b4d8; --accent-3: #90e0ef;
+      --glow-color: rgba(0,180,216,0.4); --body-bg: #e8f4f8; --card-bg: #ffffff; --text-primary: #1a1a2e;
+      --text-secondary: #4a5568; --border-color: #caf0f8; --input-bg: #f0f9fc; --hover: #d4eef7;
+      --header-gradient: linear-gradient(135deg, #0077b6, #00b4d8);
+    }
+    {% endif %}
+    {% if user_theme == 'forest' %}
+    :root {
+      --nav-bg: #e8f5e9; --footer-bg: #e8f5e9; --accent-1: #2e7d32; --accent-2: #43a047; --accent-3: #a5d6a7;
+      --glow-color: rgba(46,125,50,0.3); --body-bg: #f1f8e9; --card-bg: #ffffff; --text-primary: #1b3a1b;
+      --text-secondary: #4a6b4a; --border-color: #c8e6c9; --input-bg: #f5faf5; --hover: #dcedc8;
+      --header-gradient: linear-gradient(135deg, #2e7d32, #43a047);
+    }
+    {% endif %}
+    {% if user_theme == 'sunset' %}
+    :root {
+      --nav-bg: #7a2d50; --footer-bg: #7a2d50; --accent-1: #e8607a; --accent-2: #f5956a; --accent-3: #fdd5dc;
+      --glow-color: rgba(232,96,122,0.35); --body-bg: #fff5f8; --card-bg: #ffffff; --text-primary: #2a0f1a;
+      --text-secondary: #7a4a5a; --border-color: #f5ccd8; --input-bg: #fff0f4; --hover: #fde8ee;
+      --header-gradient: linear-gradient(135deg, #e8607a, #f5956a);
+    }
+    {% endif %}
+    {% if user_theme == 'dark' %}
+    :root {
+      --nav-bg: #0a0a0a; --footer-bg: #0a0a0a; --accent-1: #bb86fc; --accent-2: #03dac6; --accent-3: #1f1a2e;
+      --glow-color: rgba(187,134,252,0.4); --body-bg: #121212; --card-bg: #1e1e1e; --text-primary: #e8e8e8;
+      --text-secondary: #b0b0b0; --border-color: #2a2a2a; --input-bg: #272727; --hover: #2a2a2a;
+      --header-gradient: linear-gradient(135deg, #bb86fc, #03dac6);
+      --danger-bg: rgba(239,68,68,0.15); --danger-border: rgba(239,68,68,0.3);
+    }
+    {% endif %}
+    {% if user_theme == 'haikyuu' %}
+    :root {
+      --nav-bg: #1e1208; --footer-bg: #1e1208; --accent-1: #f48120; --accent-2: #ffb347; --accent-3: #ffd89b;
+      --glow-color: rgba(244,129,32,0.4); --body-bg: #fdf6f0; --card-bg: #ffffff; --text-primary: #1a1a1a;
+      --text-secondary: #6b5e53; --border-color: #f0e0d0; --input-bg: #fdf8f4; --hover: #fff0e0;
+      --header-gradient: linear-gradient(135deg, #f48120, #1e1208);
+      --danger-bg: rgba(239,68,68,0.1); --danger-border: rgba(239,68,68,0.25); --danger-text: #FCA5A5;
+    }
+    {% endif %}
+
+    body { font-family: 'Inter', sans-serif; background: var(--body-bg); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+    a { text-decoration: none; color: inherit; }
+    .app-shell { display: flex; min-height: 100vh; }
+
+    /* ════════════════════════════════════════════
+       SIDEBAR — clean, text-forward redesign
+       ════════════════════════════════════════════ */
+
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh;
+      width: var(--sidebar-w);
+      background: var(--nav-bg);
+      border-right: 1px solid var(--border-color);
+      transition: width 0.28s cubic-bezier(0.4,0,0.2,1);
+      z-index: 200; overflow: hidden;
+    }
+    .sidebar.collapsed { width: var(--sidebar-col); }
+
+    .sb-inner {
+      display: flex; flex-direction: column;
+      height: 100%; padding: 12px 12px 10px;
+      overflow: hidden;
+    }
+    .sb-scroll { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+    .sb-group { display: flex; flex-direction: column; }
+
+    /* ── Brand + toggle row ── */
+    .sb-logo {
+      display: flex; align-items: center; gap: 9px;
+      padding: 2px 6px 10px; margin-bottom: 2px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sb-logo-icon {
+      width: 28px; height: 28px; flex-shrink: 0;
+      background: var(--header-gradient); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; color: #fff; font-weight: 700;
+      transition: opacity 0.2s;
+    }
+    .sb-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 1rem; color: var(--text-primary);
+      letter-spacing: -0.3px; flex: 1; white-space: nowrap;
+      overflow: hidden; transition: opacity 0.2s, width 0.28s;
+    }
+    .sidebar.collapsed .sb-logo-icon { opacity: 0; width: 0; overflow: hidden; margin: 0; }
+    .sidebar.collapsed .sb-logo-text { opacity: 0; width: 0; overflow: hidden; }
+    .sidebar.collapsed .sb-logo { justify-content: center; gap: 0; }
+
+    /* ── Toggle — inline in brand row ── */
+    .sb-toggle {
+      flex-shrink: 0; margin-left: auto;
+      width: 28px; height: 28px; border-radius: 8px;
+      background: transparent; border: 1px solid var(--border-color);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 0.72rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sb-toggle:hover { background: var(--accent-1); color: #fff; border-color: var(--accent-1); }
+    .sb-toggle i { transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); }
+    .sidebar.collapsed .sb-toggle { margin-left: 0; }
+    .sidebar.collapsed .sb-toggle i { transform: rotate(180deg); }
+
+    /* ── Sidebar + topbar text — per-theme overrides for readability ── */
+    /* default/cream: light nav bg → dark text */
+    .sidebar, .topbar {
+      --text-primary: #2D2A26; --text-secondary: #4a3d36;
+    }
+    {% if user_theme == 'ocean' %}
+    .sidebar, .topbar {
+      --text-primary: #e8f4ff; --text-secondary: #a8d4f0;
+      --border-color: rgba(255,255,255,0.1); --hover: rgba(255,255,255,0.08);
+    }
+    {% endif %}
+    {% if user_theme == 'sunset' %}
+    .sidebar, .topbar {
+      --text-primary: #ffffff; --text-secondary: #f5c0d0;
+      --border-color: rgba(255,255,255,0.15); --hover: rgba(255,255,255,0.12);
+    }
+    {% endif %}
+    {% if user_theme == 'forest' %}
+    .sidebar, .topbar {
+      --text-primary: #0d2b0d; --text-secondary: #1a4a1a;
+      --border-color: rgba(0,0,0,0.1); --hover: rgba(46,125,50,0.14);
+    }
+    {% endif %}
+    {% if user_theme == 'haikyuu' %}
+    .sidebar, .topbar {
+      --text-primary: #ffffff; --text-secondary: #c8a882;
+      --border-color: rgba(255,255,255,0.1); --hover: rgba(244,129,32,0.18);
+    }
+    {% endif %}
+    {% if user_theme == 'dark' %}
+    .sidebar, .topbar {
+      --text-primary: #e8e8e8; --text-secondary: #b0b0b0;
+      --border-color: rgba(255,255,255,0.08); --hover: rgba(255,255,255,0.07);
+    }
+    {% endif %}
+
+    /* ── Collapsible section headers ── */
+    .sb-section {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 10px 3px; background: transparent;
+      border: none; width: 100%; cursor: pointer;
+      overflow: hidden;
+    }
+    .sb-section-line { display: none; }
+    .sb-section-label {
+      font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--text-primary); opacity: .45;
+      white-space: nowrap; flex: 1; transition: opacity 0.2s;
+      text-align: left;
+    }
+    .sb-sect-chevron {
+      font-size: .58rem; color: var(--text-primary); opacity: .3;
+      transition: transform .22s ease, opacity .2s; flex-shrink: 0;
+    }
+    .sb-section.open .sb-sect-chevron { transform: rotate(180deg); }
+    .sb-section:hover .sb-section-label { opacity: .7; }
+    .sb-section:hover .sb-sect-chevron  { opacity: .5; }
+    /* Collapsible body */
+    .sb-sect-body {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height .25s ease;
+    }
+    .sb-sect-body.open { max-height: 400px; }
+    /* When sidebar is icon-only, ignore collapse state */
+    .sidebar.collapsed .sb-section-label { opacity: 0; }
+    .sidebar.collapsed .sb-sect-chevron  { display: none; }
+    .sidebar.collapsed .sb-sect-body     { max-height: 400px !important; }
+
+    /* ── Nav list ── */
+    .sb-nav { display: flex; flex-direction: column; gap: 2px; }
+
+    /* ── Nav item — icon inline, no box ── */
+    .sb-item {
+      position: relative;
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 10px; border-radius: 9px;
+      color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+      text-decoration: none; white-space: nowrap; overflow: hidden; cursor: pointer;
+    }
+    .sb-item:hover { background: var(--hover); color: var(--text-primary); }
+    .sb-item:hover .sb-icon { color: var(--accent-1); }
+
+    /* Active — soft accent tint, text always readable */
+    .sb-item.active {
+      background: color-mix(in srgb, var(--accent-1) 18%, transparent);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .sb-item.active::before {
+      content: '';
+      position: absolute; left: 0; top: 18%; bottom: 18%;
+      width: 3px; border-radius: 0 3px 3px 0;
+      background: var(--accent-1);
+    }
+    .sb-item.active .sb-icon { color: var(--accent-1); }
+
+    /* Icon — inline, no background box */
+    .sb-icon {
+      width: 18px; height: 18px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.92rem; color: inherit;
+      transition: color 0.15s;
+    }
+
+    /* Label */
+    .sb-item-label { flex: 1; transition: opacity 0.2s; }
+    .sidebar.collapsed .sb-item-label { opacity: 0; pointer-events: none; }
+
+    /* Right-side badge (streak etc.) */
+    .sb-streak {
+      font-size: 0.7rem; font-weight: 600; flex-shrink: 0;
+      color: var(--accent-2); transition: opacity 0.2s;
+    }
+    .sb-item.active .sb-streak { color: var(--accent-1); }
+    .sidebar.collapsed .sb-streak { opacity: 0; }
+
+    /* ── Tooltip on collapsed ── */
+    .sb-item::after {
+      content: attr(data-tip);
+      position: absolute; left: calc(100% + 16px); top: 50%;
+      transform: translateY(-50%);
+      background: var(--text-primary); color: var(--nav-bg);
+      font-size: 0.76rem; font-weight: 600;
+      padding: 5px 10px; border-radius: 7px;
+      white-space: nowrap; pointer-events: none;
+      opacity: 0; transition: opacity 0.15s; z-index: 400;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    }
+    .sidebar.collapsed .sb-item:hover::after { opacity: 1; }
+
+    /* ── Divider ── */
+    .sb-divider { height: 1px; background: var(--border-color); margin: 8px 0; }
+
+    /* ── Footer / user ── */
+    .sb-footer { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color); }
+    .sb-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 9px;
+      cursor: pointer; overflow: hidden; white-space: nowrap;
+      transition: background 0.15s; text-decoration: none;
+    }
+    .sb-user:hover { background: var(--hover); }
+    .sb-avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: var(--header-gradient);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem; font-weight: 700; color: #fff;
+    }
+    .sb-user-info { overflow: hidden; transition: opacity 0.2s; }
+    .sidebar.collapsed .sb-user-info { opacity: 0; pointer-events: none; }
+    .sb-user-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+    .sb-user-plan { font-size: 0.68rem; color: var(--text-secondary); font-weight: 400; }
+
+    /* ════════════════════════════════════════════
+       MAIN CONTENT AREA
+       ════════════════════════════════════════════ */
+    .main-wrap {
+      margin-left: var(--sidebar-w); flex: 1;
+      display: flex; flex-direction: column; min-height: 100vh;
+      transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    .main-wrap.sidebar-collapsed { margin-left: var(--sidebar-col); }
+
+    /* Topbar */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--topbar-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(8px);
+    }
+    .topbar-title-wrap { display: flex; flex-direction: column; justify-content: center; gap: 1px; }
+    .topbar-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem; font-weight: 600; color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .topbar-greeting {
+      font-size: 0.72rem; color: var(--text-secondary); font-weight: 400;
+      line-height: 1; letter-spacing: 0.1px;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .topbar-btn {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: rgba(128,128,128,0.08); border: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-secondary); font-size: 1rem; text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .topbar-btn:hover { background: var(--hover); color: var(--accent-1); }
+    .topbar-logout {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px;
+      background: var(--danger-bg); border: 1px solid var(--danger-border);
+      border-radius: 9px; font-size: 0.82rem; font-weight: 500;
+      color: var(--danger-text); cursor: pointer; text-decoration: none;
+      transition: background 0.15s;
+    }
+    .topbar-logout:hover { background: rgba(239,68,68,0.18); }
+
+    /* Page + flash */
+    .page-content { flex: 1; padding: 28px; }
+    .flash-wrap { padding: 0 28px; margin-top: 16px; }
+    .flash-msg {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: 12px;
+      font-size: 0.88rem; margin-bottom: 10px; border: 1px solid;
+    }
+    .flash-success { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #16a34a; }
+    .flash-error   { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #dc2626; }
+    .flash-warning { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #d97706; }
+    .flash-info    { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: #2563eb; }
+    .flash-close { margin-left: auto; cursor: pointer; opacity: 0.6; background: none; border: none; color: inherit; font-size: 1rem; }
+    .flash-close:hover { opacity: 1; }
+    .app-footer { text-align: center; padding: 20px 28px; font-size: 0.78rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); }
+
+    /* Mobile overlay */
+    .sb-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 199; backdrop-filter: blur(2px); }
+
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); width: var(--sidebar-w) !important; box-shadow: none; }
+      .sidebar.mobile-open { transform: translateX(0); box-shadow: 8px 0 40px rgba(0,0,0,0.18); }
+      .sb-overlay.active { display: block; }
+      .main-wrap, .main-wrap.sidebar-collapsed { margin-left: 0; }
+      .topbar { padding: 0 16px; }
+      .page-content { padding: 16px; }
+      .flash-wrap { padding: 0 16px; }
+      .mobile-menu-btn { display: flex !important; }
+      /* Never show tooltips on mobile */
+      .sidebar .sb-item::after { display: none; }
+    }
+    .mobile-menu-btn {
+      display: none; width: 34px; height: 34px; border-radius: 9px;
+      background: rgba(128,128,128,0.08); border: 1px solid var(--border-color);
+      align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-secondary); font-size: 1.1rem; margin-right: 10px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mobile-menu-btn:hover { background: var(--hover); color: var(--accent-1); }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated and active_page != 'onboarding' %}
+
+<div class="app-shell">
+  <div class="sb-overlay" id="sbOverlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-inner">
+
+      <div class="sb-logo">
+        <img src="/static/monad_logo.png" alt="monad" class="sb-logo-icon" style="background:none;border-radius:8px;object-fit:cover;padding:0;">
+        <span class="sb-logo-text">monad</span>
+        <button class="sb-toggle" id="sbToggle" title="Toggle sidebar" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
+      </div>
+
+      <div class="sb-scroll">
+
+        <div class="sb-group">
+          <nav class="sb-nav">
+            <a class="sb-item {% if active_page == 'dashboard' %}active{% endif %}" href="{{ url_for('views.home') }}" data-tip="Home">
+              <div class="sb-icon"><i class="bi bi-house-fill"></i></div>
+              <span class="sb-item-label">Home</span>
+            </a>
+          </nav>
+        </div>
+
+        <div class="sb-group">
+          <button class="sb-section" id="stoggle-plan" onclick="toggleSection('plan')">
+            <span class="sb-section-label">plan</span>
+            <i class="bi bi-chevron-down sb-sect-chevron"></i>
+          </button>
+          <div class="sb-sect-body" id="sect-plan">
+            <nav class="sb-nav">
+              <a class="sb-item {% if active_page == 'daily' %}active{% endif %}" href="{{ url_for('views.daily') }}" data-tip="Daily tasks">
+                <div class="sb-icon"><i class="bi bi-calendar-check"></i></div>
+                <span class="sb-item-label">Daily tasks</span>
+              </a>
+              <a class="sb-item {% if active_page == 'weekly' %}active{% endif %}" href="{{ url_for('views.weekly') }}" data-tip="Weekly tasks">
+                <div class="sb-icon"><i class="bi bi-calendar-week"></i></div>
+                <span class="sb-item-label">Weekly tasks</span>
+              </a>
+              <a class="sb-item {% if active_page == 'timemap' %}active{% endif %}" href="{{ url_for('views.timemap') }}" data-tip="Time Map">
+                <div class="sb-icon"><i class="bi bi-clock-history"></i></div>
+                <span class="sb-item-label">Time Map</span>
+              </a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="sb-group">
+          <button class="sb-section" id="stoggle-build" onclick="toggleSection('build')">
+            <span class="sb-section-label">build</span>
+            <i class="bi bi-chevron-down sb-sect-chevron"></i>
+          </button>
+          <div class="sb-sect-body" id="sect-build">
+            <nav class="sb-nav">
+              <a class="sb-item {% if active_page == 'habits' %}active{% endif %}" href="{{ url_for('views.habits_monthly', year=current_year, month=current_month) }}" data-tip="Habits">
+                <div class="sb-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <span class="sb-item-label">Habits</span>
+                <span class="sb-streak">🔥</span>
+              </a>
+              <a class="sb-item {% if active_page == 'pomodoro' %}active{% endif %}" href="{{ url_for('views.pomodoro') }}" data-tip="Focus timer">
+                <div class="sb-icon"><i class="bi bi-stopwatch"></i></div>
+                <span class="sb-item-label">Focus timer</span>
+              </a>
+            </nav>
+          </div>
+        </div>
+
+        {% if current_user.is_authenticated and current_user.study_enabled != False %}
+        <div class="sb-group">
+          <button class="sb-section" id="stoggle-study" onclick="toggleSection('study')">
+            <span class="sb-section-label">study</span>
+            <i class="bi bi-chevron-down sb-sect-chevron"></i>
+          </button>
+          <div class="sb-sect-body" id="sect-study">
+            <nav class="sb-nav">
+              <a class="sb-item {% if active_page in ['study','exams','timetable'] %}active{% endif %}" href="{{ url_for('views.study_subjects') }}" data-tip="Study">
+                <div class="sb-icon"><i class="bi bi-book-fill"></i></div>
+                <span class="sb-item-label">Study</span>
+              </a>
+
+            </nav>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="sb-group">
+          <button class="sb-section" id="stoggle-connect" onclick="toggleSection('connect')">
+            <span class="sb-section-label">connect</span>
+            <i class="bi bi-chevron-down sb-sect-chevron"></i>
+          </button>
+          <div class="sb-sect-body" id="sect-connect">
+            <nav class="sb-nav">
+              <a class="sb-item {% if active_page == 'communities' %}active{% endif %}" href="{{ url_for('views.communities') }}" data-tip="Communities">
+                <div class="sb-icon"><i class="bi bi-people-fill"></i></div>
+                <span class="sb-item-label">Communities</span>
+              </a>
+              <a class="sb-item {% if active_page == 'connect' %}active{% endif %}" href="{{ url_for('views.connect') }}" data-tip="Connect">
+                <div class="sb-icon"><i class="bi bi-chat-dots-fill"></i></div>
+                <span class="sb-item-label">Connect</span>
+              </a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="sb-group">
+          <button class="sb-section" id="stoggle-reflect" onclick="toggleSection('reflect')">
+            <span class="sb-section-label">reflect</span>
+            <i class="bi bi-chevron-down sb-sect-chevron"></i>
+          </button>
+          <div class="sb-sect-body" id="sect-reflect">
+            <nav class="sb-nav">
+              <a class="sb-item {% if active_page == 'journal' %}active{% endif %}" href="{{ url_for('views.daily_journal') }}" data-tip="Journal">
+                <div class="sb-icon"><i class="bi bi-journal-text"></i></div>
+                <span class="sb-item-label">Journal</span>
+              </a>
+              <a class="sb-item {% if active_page == 'memories' %}active{% endif %}" href="{{ url_for('views.memories') }}" data-tip="Memories">
+                <div class="sb-icon"><i class="bi bi-images"></i></div>
+                <span class="sb-item-label">Memories</span>
+              </a>
+              <a class="sb-item {% if active_page == 'achievements' %}active{% endif %}" href="{{ url_for('views.achievements') }}" data-tip="Achievements">
+                <div class="sb-icon"><i class="bi bi-trophy"></i></div>
+                <span class="sb-item-label">Achievements</span>
+              </a>
+              <a class="sb-item {% if active_page == 'analytics' %}active{% endif %}" href="{{ url_for('views.analytics') }}" data-tip="Analytics">
+                <div class="sb-icon"><i class="bi bi-bar-chart-line"></i></div>
+                <span class="sb-item-label">Analytics</span>
+              </a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="sb-group">
+          <div class="sb-divider"></div>
+          <nav class="sb-nav">
+            <a class="sb-item {% if active_page == 'settings' %}active{% endif %}" href="{{ url_for('views.settings') }}" data-tip="Settings">
+              <div class="sb-icon"><i class="bi bi-gear-fill"></i></div>
+              <span class="sb-item-label">Settings</span>
+            </a>
+          </nav>
+        </div>
+
+      </div><!-- /sb-scroll -->
+
+      <div class="sb-footer">
+        <a class="sb-user" href="{{ url_for('views.settings') }}">
+          <div class="sb-avatar">{{ current_user.name[:2].upper() if current_user.name else 'U' }}</div>
+          <div class="sb-user-info">
+            <div class="sb-user-name">{{ current_user.name }}</div>
+            <div class="sb-user-plan">{% if life_phase and life_phase != 'other' %}{{ life_phase }}{% else %}monad free{% endif %}</div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </aside>
+
+  <div class="main-wrap" id="mainWrap">
+    <div class="topbar"><div style="display:flex; align-items:center;"><div class="mobile-menu-btn" id="mobileMenuBtn"><i class="bi bi-list"></i></div><div class="topbar-title-wrap"><span class="topbar-title">{% block page_title %}monad{% endblock %}</span><span class="topbar-greeting" id="topbarGreeting"></span></div></div><div class="topbar-right"><button class="topbar-btn" id="bellBtn" title="Enable reminders" onclick="enableNotifications()" style="position:relative;"><i class="bi bi-bell" id="bellIcon"></i><span id="bellDot" style="display:none; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#f59e0b;"></span></button><button class="topbar-btn" title="Share my progress" onclick="openShareCard()" style="color:var(--accent-1);"><i class="bi bi-share-fill"></i></button><a href="{{ url_for('views.settings') }}" class="topbar-btn" title="Settings"><i class="bi bi-gear"></i></a><a href="{{ url_for('auth.logout') }}" class="topbar-logout"><i class="bi bi-box-arrow-right"></i> logout</a></div></div>
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-wrap">{% for category, message in messages %}<div class="flash-msg flash-{{ 'error' if category == 'error' else category }}"><i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-triangle{% elif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>{% if category == 'habit_photo' %}📸 <a href="#" onclick="showPhotoPopup('{{ message }}')">Take a photo of your progress?</a>{% else %}{{ message }}{% endif %}<button class="flash-close" onclick="this.parentElement.remove()">×</button></div>{% endfor %}</div>{% endif %}{% endwith %}
+    <div class="page-content">{{ self.content() }}</div>
+    <footer class="app-footer">© {{ current_year }} monad · built for focus, designed for flow</footer>
+  </div>
+</div>
+
+{% else %}
+  {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div style="position:fixed; top:20px; right:20px; z-index:9999; max-width:360px;">{% for category, message in messages %}<div class="flash-msg flash-{{ 'error' if category == 'error' else category }}" style="margin-bottom:8px;"><i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>{{ message }}<button class="flash-close" onclick="this.parentElement.remove()">×</button></div>{% endfor %}</div>{% endif %}{% endwith %}
+  {% block content %}{% endblock %}
+{% endif %}
+
+<!-- Photo Popup Overlay -->
+<div id="photoOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9998;" onclick="hidePhotoPopup()"></div>
+
+<!-- Photo Upload Popup -->
+<div id="photoPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--card-bg,#fff); border:2px solid var(--accent-1,#E07B39); border-radius:16px; padding:24px; z-index:9999; box-shadow:0 20px 60px rgba(0,0,0,0.3); width:90%; max-width:400px; text-align:center; margin:0;">
+  <h4 style="margin-bottom:16px; color:var(--text-primary,#2D2A26);">📸 Capture Your Progress</h4>
+  <form method="POST" action="/upload-photo" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="date" id="popupDate">
+    <input type="file" name="photo" accept="image/*" capture="environment" required style="margin-bottom:12px; width:100%; display:block;">
+    <input type="text" name="caption" placeholder="Quick caption (optional)" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:8px; margin-bottom:12px;">
+    <div style="display:flex; gap:8px;">
+      <button type="submit" style="flex:1; padding:10px; background:var(--accent-1,#E07B39); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Upload</button>
+      <button type="button" onclick="hidePhotoPopup()" style="padding:10px 16px; background:transparent; border:1px solid #ccc; border-radius:8px; cursor:pointer;">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function showPhotoPopup(date) {
+  document.getElementById('popupDate').value = date;
+  document.getElementById('photoOverlay').style.display = 'block';
+  document.getElementById('photoPopup').style.display = 'block';
+}
+function hidePhotoPopup() {
+  document.getElementById('photoOverlay').style.display = 'none';
+  document.getElementById('photoPopup').style.display = 'none';
+}
+
+// ── Topbar greeting ───────────────────────────────────────
+(function() {
+  const el = document.getElementById('topbarGreeting');
+  if (!el) return;
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning ☀️' : h < 17 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
+  {% if current_user and current_user.is_authenticated and current_user.name %}
+  el.textContent = greet + ', {{ current_user.name.split(" ")[0] }}';
+  {% else %}
+  el.textContent = greet;
+  {% endif %}
+})();
+
+// ── Sidebar toggle ────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const mainWrap = document.getElementById('mainWrap');
+  if (!sidebar) return;
+  const collapsed = sidebar.classList.toggle('collapsed');
+  if (mainWrap) mainWrap.classList.toggle('sidebar-collapsed', collapsed);
+  localStorage.setItem('sidebarCollapsed', collapsed);
+}
+
+// ── Section accordion ─────────────────────────────────────
+function toggleSection(name) {
+  const body   = document.getElementById('sect-' + name);
+  const toggle = document.getElementById('stoggle-' + name);
+  if (!body || !toggle) return;
+  const isOpen = body.classList.toggle('open');
+  toggle.classList.toggle('open', isOpen);
+  const states = JSON.parse(localStorage.getItem('sbSections') || '{}');
+  states[name] = isOpen;
+  localStorage.setItem('sbSections', JSON.stringify(states));
+}
+
+function initSections() {
+  const SECTIONS = ['plan', 'build', 'study', 'connect', 'reflect'];
+  const saved    = JSON.parse(localStorage.getItem('sbSections') || '{}');
+  // Find which section contains the active page
+  const activeSect = (function() {
+    for (const name of SECTIONS) {
+      const body = document.getElementById('sect-' + name);
+      if (body && body.querySelector('.sb-item.active')) return name;
+    }
+    return null;
+  })();
+
+  SECTIONS.forEach(function(name) {
+    const body   = document.getElementById('sect-' + name);
+    const toggle = document.getElementById('stoggle-' + name);
+    if (!body || !toggle) return;
+    // Active section always opens; others use saved state (default open on first visit)
+    const shouldOpen = (name === activeSect) ? true : (saved[name] !== undefined ? saved[name] : true);
+    if (shouldOpen) {
+      body.classList.add('open');
+      toggle.classList.add('open');
+    }
+  });
+}
+
+// Restore collapsed state + wire mobile controls on load
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebar  = document.getElementById('sidebar');
+  const mainWrap = document.getElementById('mainWrap');
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const overlay  = document.getElementById('sbOverlay');
+  if (!sidebar) return;
+
+  if (window.innerWidth > 768 && localStorage.getItem('sidebarCollapsed') === 'true') {
+    sidebar.classList.add('collapsed');
+    if (mainWrap) mainWrap.classList.add('sidebar-collapsed');
+  }
+
+  initSections();
+
+  if (mobileBtn) {
+    mobileBtn.addEventListener('click', function() {
+      sidebar.classList.toggle('mobile-open');
+      if (overlay) overlay.classList.toggle('active');
+    });
+  }
+
+  if (overlay) {
+    overlay.addEventListener('click', function() {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+    });
+  }
+});
+</script>
+{% if current_user.is_authenticated %}
+<script>
+// ── Task reminder notifications ──────────────────────────────
+(function() {
+  if (!('Notification' in window)) return;
+
+  const bellBtn  = document.getElementById('bellBtn');
+  const bellIcon = document.getElementById('bellIcon');
+  const bellDot  = document.getElementById('bellDot');
+  let   polling  = false;
+
+  function notifiedKey() {
+    return 'monad_notified_' + new Date().toDateString();
+  }
+  function getNotified() {
+    try { return JSON.parse(sessionStorage.getItem(notifiedKey()) || '[]'); }
+    catch { return []; }
+  }
+  function markNotified(id) {
+    const n = getNotified(); n.push(id);
+    sessionStorage.setItem(notifiedKey(), JSON.stringify(n));
+  }
+
+  function setGrantedUI() {
+    if (bellIcon) bellIcon.className = 'bi bi-bell-fill';
+    if (bellDot)  bellDot.style.display = 'none';
+    if (bellBtn)  { bellBtn.style.color = 'var(--accent-1)'; bellBtn.title = 'Reminders on'; }
+  }
+  function setPendingUI() {
+    if (bellDot) bellDot.style.display = 'block';
+    if (bellBtn) bellBtn.title = 'Click to enable reminders';
+  }
+
+  async function pollReminders() {
+    try {
+      const res  = await fetch('/api/due-reminders');
+      if (!res.ok) return;
+      const data = await res.json();
+      (data.reminders || []).forEach(task => {
+        if (getNotified().includes(task.id)) return;
+        markNotified(task.id);
+        const label = task.offset === 0
+          ? `⏰ Due now: ${task.content}`
+          : `⏰ Due in 5 min: ${task.content}`;
+        const n = new Notification('monad', {
+          body: label,
+          tag:  'task-' + task.id,
+          requireInteraction: true,
+        });
+        n.onclick = () => { window.focus(); n.close(); };
+      });
+    } catch {}
+  }
+
+  function startPolling() {
+    if (polling) return;
+    polling = true;
+    pollReminders();
+    setInterval(pollReminders, 30000);
+  }
+
+  window.enableNotifications = function() {
+    if (Notification.permission === 'granted') {
+      setGrantedUI(); startPolling(); return;
+    }
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') { setGrantedUI(); startPolling(); }
+    });
+  };
+
+  // Init on load
+  if (Notification.permission === 'granted') {
+    setGrantedUI(); startPolling();
+  } else if (Notification.permission !== 'denied') {
+    setPendingUI();
+  }
+})();
+
+// ── Timetable class reminders ─────────────────────────────────
+(function() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const NOTIFIED_KEY = 'tt_notified_' + new Date().toDateString();
+
+  function getNotifiedSlots() {
+    try { return JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '[]'); } catch { return []; }
+  }
+  function markSlotNotified(key) {
+    const arr = getNotifiedSlots(); arr.push(key); localStorage.setItem(NOTIFIED_KEY, JSON.stringify(arr));
+  }
+
+  async function scheduleTimetableReminders() {
+    try {
+      const res = await fetch('/api/timetable-reminders-today');
+      if (!res.ok) return;
+      const { slots } = await res.json();
+      const now = new Date();
+      slots.forEach(sl => {
+        const key = sl.subject + '_' + sl.start_time;
+        if (getNotifiedSlots().includes(key)) return;
+        const [h, m] = sl.reminder_time.split(':').map(Number);
+        const fireMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0).getTime();
+        const delay  = fireMs - now.getTime();
+        function fire() {
+          if (getNotifiedSlots().includes(key)) return;
+          markSlotNotified(key);
+          new Notification('📚 Class reminder – ' + sl.subject, {
+            body: sl.reminder_note + '\n🕐 Class at ' + sl.start_time,
+            tag: 'tt-' + key,
+            requireInteraction: true,
+          });
+        }
+        if (delay <= 0) fire();
+        else setTimeout(fire, delay);
+      });
+    } catch {}
+  }
+
+  scheduleTimetableReminders();
+})();
+</script>
+{% endif %}
+{% block extra_scripts %}{% endblock %}
+
+{% if current_user.is_authenticated %}
+<!-- ── Share Progress Modal ── -->
+<div id="shareOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:24px; padding:28px; max-width:420px; width:90%; position:relative; max-height:90vh; overflow-y:auto;">
+    <button onclick="closeShareCard()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text-secondary);">×</button>
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1rem; margin-bottom:16px; color:var(--text-primary);">Share your progress ✨</h3>
+
+    <!-- The card that gets captured -->
+    <div id="shareCard" style="
+      background: linear-gradient(135deg, #E07B39 0%, #c45e1e 50%, #a04010 100%);
+      border-radius: 20px; padding: 28px; color: white; font-family: 'Space Grotesk', sans-serif;
+      position: relative; overflow: hidden; margin-bottom: 16px;
+    ">
+      <!-- Background circles for decoration -->
+      <div style="position:absolute; top:-30px; right:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.08);"></div>
+      <div style="position:absolute; bottom:-20px; left:-20px; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.06);"></div>
+
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+        <div>
+          <div style="font-size:.7rem; opacity:.7; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px;">monad</div>
+          <div style="font-size:1.15rem; font-weight:700;" id="sc-name">{{ current_user.name }}</div>
+          <div style="font-size:.72rem; opacity:.7;" id="sc-date"></div>
+        </div>
+        <div style="font-size:1.4rem; opacity:.8;">✦</div>
+      </div>
+
+      <!-- Stats grid -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;">
+        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
+          <div style="font-size:1.6rem; font-weight:700;" id="sc-tasks">–</div>
+          <div style="font-size:.7rem; opacity:.8;">tasks done today</div>
+        </div>
+        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
+          <div style="font-size:1.6rem; font-weight:700;" id="sc-habits">–</div>
+          <div style="font-size:.7rem; opacity:.8;">habits done today</div>
+        </div>
+        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
+          <div style="font-size:1.6rem; font-weight:700;" id="sc-stars">–</div>
+          <div style="font-size:.7rem; opacity:.8;">⭐ stars this month</div>
+        </div>
+        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
+          <div style="font-size:1.6rem; font-weight:700;" id="sc-streak">–</div>
+          <div style="font-size:.7rem; opacity:.8;">🔥 day streak</div>
+        </div>
+      </div>
+
+      <!-- Focus bar -->
+      <div style="background:rgba(255,255,255,.12); border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:.8rem; opacity:.85;">⏱ Focus today</span>
+        <span style="font-weight:700;" id="sc-focus">– mins</span>
+      </div>
+
+      <!-- Footer tag -->
+      <div style="text-align:center; margin-top:16px; font-size:.65rem; opacity:.55; letter-spacing:.05em;">built with monad · your calm productivity space</div>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex; gap:10px;">
+      <button onclick="downloadCard()" style="flex:1; padding:11px; border-radius:12px; border:2px solid var(--border-color); background:var(--hover); color:var(--text-primary); font-weight:600; font-size:.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+        <i class="bi bi-download"></i> Save image
+      </button>
+      <button onclick="shareCard()" id="shareNativeBtn" style="flex:1; padding:11px; border-radius:12px; border:none; background:var(--accent-1); color:white; font-weight:600; font-size:.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+        <i class="bi bi-share-fill"></i> Share
+      </button>
+    </div>
+    <p style="font-size:.7rem; color:var(--text-secondary); text-align:center; margin-top:10px; margin-bottom:0;">Share to Instagram, WhatsApp, or any app on your device</p>
+  </div>
+</div>
+
+<script>
+const THEME_GRADIENTS = {
+  default:  ['#E07B39', '#c45e1e', '#8c3e0d'],
+  ocean:    ['#0077b6', '#005f92', '#003f6b'],
+  forest:   ['#2e7d32', '#1b5e20', '#0d3d10'],
+  sunset:   ['#e2725b', '#c04e38', '#9a2e1a'],
+  dark:     ['#7c3aed', '#5b21b6', '#3b0f8c'],
+  haikyuu:  ['#f48120', '#d46010', '#b04000'],
+};
+const userTheme = '{{ user_theme }}';
+
+function openShareCard() {
+  document.getElementById('shareOverlay').style.display = 'flex';
+  document.getElementById('sc-date').textContent = new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+  // Apply theme gradient
+  const g = THEME_GRADIENTS[userTheme] || THEME_GRADIENTS['default'];
+  document.getElementById('shareCard').style.background = `linear-gradient(135deg, ${g[0]} 0%, ${g[1]} 50%, ${g[2]} 100%)`;
+  fetch('/api/share-stats').then(r => r.json()).then(d => {
+    document.getElementById('sc-tasks').textContent  = d.tasks_done + '/' + d.tasks_total;
+    document.getElementById('sc-habits').textContent = d.habits_done + '/' + d.habits_total;
+    document.getElementById('sc-stars').textContent  = d.stars_month;
+    document.getElementById('sc-streak').textContent = d.streak;
+    document.getElementById('sc-focus').textContent  = d.focus_mins + ' mins';
+  });
+}
+
+function closeShareCard() {
+  document.getElementById('shareOverlay').style.display = 'none';
+}
+
+function getCardCanvas() {
+  return html2canvas(document.getElementById('shareCard'), {
+    scale: 2, useCORS: true, backgroundColor: null,
+    logging: false, allowTaint: true
+  });
+}
+
+function downloadCard() {
+  getCardCanvas().then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'monad-progress.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+
+function shareCard() {
+  getCardCanvas().then(canvas => {
+    canvas.toBlob(blob => {
+      const file = new File([blob], 'monad-progress.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+          files: [file],
+          title: 'My monad progress',
+          text: 'Check out my productivity stats on monad! 🚀'
+        }).catch(() => {});
+      } else {
+        // Fallback: download the image
+        const link = document.createElement('a');
+        link.download = 'monad-progress.png';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        alert('Image saved! Open it from your Downloads and share to any app.');
+      }
+    });
+  });
+}
+
+document.getElementById('shareOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeShareCard();
+});
+</script>
+{% endif %}
+
+<script>
+  // Auto-inject CSRF token into every fetch POST request
+  (function() {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!token) return;
+    const origFetch = window.fetch;
+    window.fetch = function(url, options) {
+      options = options || {};
+      if (options.method && options.method.toUpperCase() === 'POST') {
+        if (options.headers && options.headers instanceof Headers) {
+          options.headers.set('X-CSRFToken', token);
+        } else {
+          options.headers = Object.assign({}, options.headers, { 'X-CSRFToken': token });
+        }
+      }
+      return origFetch.call(this, url, options);
+    };
+  })();
+</script>
+</body>
+</html>

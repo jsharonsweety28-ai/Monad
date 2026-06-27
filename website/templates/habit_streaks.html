@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Habit Streaks · monad{% endblock %}
+{% block page_title %}streaks{% endblock %}
+{% block content %}
+
+<style>
+  .streaks-page { max-width: 900px; margin: 0 auto; }
+
+  .streaks-header {
+    background: var(--header-gradient);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 25px var(--glow-color);
+  }
+  .streaks-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .streaks-nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .streaks-nav a {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .streak-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .streak-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .streak-card:hover { border-color: var(--accent-1); box-shadow: 0 8px 25px var(--glow-color); transform: translateY(-3px); }
+  .streak-card.fire { border-color: #f59e0b; background: linear-gradient(135deg, var(--card-bg), rgba(245,158,11,0.05)); }
+  .streak-emoji { font-size: 50px; display: block; margin-bottom: 8px; }
+  .streak-num { font-size: 3rem; font-weight: 800; color: var(--accent-1); font-family: 'Space Grotesk', sans-serif; }
+  .streak-card.fire .streak-num { color: #f59e0b; }
+  .streak-label { font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+  .streak-name { font-weight: 700; color: var(--text-primary); margin-top: 8px; font-size: 1rem; }
+  .streak-badge {
+    display: inline-block; padding: 6px 16px; border-radius: 20px;
+    font-weight: 700; font-size: 0.75rem; margin-top: 10px;
+  }
+  .badge-fire { background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; }
+  .badge-great { background: rgba(16,185,129,0.15); color: #10b981; }
+  .badge-good { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .badge-start { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+  .milestones {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 24px;
+    text-align: center;
+  }
+  .milestones h5 { font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+  .ms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+  .ms-item { padding: 12px; border-radius: 10px; background: var(--input-bg); }
+  .ms-emoji { font-size: 24px; }
+  .ms-days { font-weight: 700; color: var(--text-primary); font-size: 0.9rem; }
+  .ms-label { font-size: 0.7rem; color: var(--text-secondary); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+
+  @media (max-width: 600px) {
+    .streaks-header { padding: 16px; border-radius: 14px; }
+    .streaks-header h2 { font-size: 1.25rem; }
+    .streaks-nav a { padding: 6px 12px; font-size: 0.78rem; }
+    .streak-card { padding: 18px 14px; }
+    .streak-emoji { font-size: 36px; }
+    .streak-num { font-size: 2.2rem; }
+    .ms-card { padding: 16px; }
+  }
+</style>
+
+<div class="streaks-page">
+  
+  <div class="streaks-header">
+    <h2>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="vertical-align:middle; margin-right:8px;">
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+      </svg>
+      Habit Streaks — {{ month }}/{{ year }}
+    </h2>
+    <div style="font-size:0.72rem;font-weight:600;opacity:0.75;letter-spacing:0.05em;margin:4px 0 8px;">reflect and rise</div>
+    <div class="streaks-nav">
+      {% if month == 1 %}
+        <a href="{{ url_for('views.habit_streaks', year=year-1, month=12) }}">← Dec {{ year-1 }}</a>
+      {% else %}
+        <a href="{{ url_for('views.habit_streaks', year=year, month=month-1) }}">← Previous</a>
+      {% endif %}
+      <a href="{{ url_for('views.habits_monthly', year=year, month=month) }}">Tracker</a>
+      {% if month == 12 %}
+        <a href="{{ url_for('views.habit_streaks', year=year+1, month=1) }}">Jan {{ year+1 }} →</a>
+      {% else %}
+        <a href="{{ url_for('views.habit_streaks', year=year, month=month+1) }}">Next →</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if streaks %}
+    <div class="streak-grid">
+      {% for name, streak in streaks.items() %}
+        <div class="streak-card {% if streak >= 21 %}fire{% endif %}">
+          <span class="streak-emoji">
+            {% if streak >= 30 %}🔥{% elif streak >= 21 %}⚡{% elif streak >= 14 %}💪{% elif streak >= 7 %}🌟{% elif streak >= 3 %}🌱{% else %}🎯{% endif %}
+          </span>
+          <div class="streak-num">{{ streak }}</div>
+          <div class="streak-label">Day Streak</div>
+          <div class="streak-name">{{ name }}</div>
+          {% if streak >= 30 %}<span class="streak-badge badge-fire">🔥 LEGENDARY</span>
+          {% elif streak >= 21 %}<span class="streak-badge badge-fire">🔥 On Fire</span>
+          {% elif streak >= 14 %}<span class="streak-badge badge-great">💪 Strong</span>
+          {% elif streak >= 7 %}<span class="streak-badge badge-good">⭐ Building</span>
+          {% elif streak >= 3 %}<span class="streak-badge badge-start">🌱 Starting</span>
+          {% else %}<span class="streak-badge badge-start">🎯 Keep Going</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="milestones">
+      <h5>🏆 Streak Milestones</h5>
+      <div class="ms-grid">
+        <div class="ms-item"><div class="ms-emoji">🎯</div><div class="ms-days">3 Days</div><div class="ms-label">Getting Started</div></div>
+        <div class="ms-item"><div class="ms-emoji">🌟</div><div class="ms-days">7 Days</div><div class="ms-label">1 Week</div></div>
+        <div class="ms-item"><div class="ms-emoji">💪</div><div class="ms-days">14 Days</div><div class="ms-label">2 Weeks</div></div>
+        <div class="ms-item"><div class="ms-emoji">🔥</div><div class="ms-days">21 Days</div><div class="ms-label">Habit Formed</div></div>
+        <div class="ms-item"><div class="ms-emoji">⚡</div><div class="ms-days">30 Days</div><div class="ms-label">1 Month</div></div>
+        <div class="ms-item"><div class="ms-emoji">👑</div><div class="ms-days">60 Days</div><div class="ms-label">Legend</div></div>
+      </div>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div style="font-size:60px;">📊</div>
+      <h4>No streaks yet</h4>
+      <p>Start tracking habits daily to build streaks!</p>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

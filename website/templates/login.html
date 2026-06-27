@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}Welcome back · monad{% endblock %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:        #FFFDF9;
+    --card:      #FDF6F0;
+    --accent:    #E07B39;
+    --accent2:   #F5A623;
+    --text:      #2D2A26;
+    --muted:     #8B7E74;
+    --border:    #F0E8DF;
+    --white:     #FFFFFF;
+    --hover:     #FEF3E8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(170deg, #FDF6F0 0%, #FFFDF9 40%, #FDF6F0 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-page::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(224,123,57,0.05) 0%, transparent 70%);
+    top: -200px; right: -200px;
+    border-radius: 50%;
+  }
+
+  .auth-page::after {
+    content: '';
+    position: absolute;
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(245,166,35,0.04) 0%, transparent 70%);
+    bottom: -150px; left: -150px;
+    border-radius: 50%;
+  }
+
+  .auth-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.03);
+    border: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+    animation: slideUp 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .auth-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: var(--hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+    font-size: 24px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .auth-card h2 {
+    font-size: 26px;
+    font-weight: 750;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .auth-card .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 32px;
+  }
+
+  .input-group {
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .input-group .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    z-index: 1;
+    transition: all 0.3s ease;
+  }
+
+  .input-group input {
+    width: 100%;
+    padding: 15px 16px 15px 48px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: var(--card);
+    color: var(--text);
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .input-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--white);
+    box-shadow: 0 0 0 4px rgba(224,123,57,0.08);
+  }
+
+  .input-group input::placeholder {
+    color: #c4b8a8;
+    font-weight: 400;
+  }
+
+  .input-group input:focus + .input-icon,
+  .input-group input:focus ~ .input-icon {
+    color: var(--accent);
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+    box-shadow: 0 6px 20px rgba(224,123,57,0.25);
+    letter-spacing: 0.3px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(224,123,57,0.35);
+  }
+
+  .btn-login:active {
+    transform: translateY(0);
+  }
+
+  .bottom-link {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .bottom-link a {
+    color: var(--accent);
+    font-weight: 650;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .bottom-link a:hover {
+    color: #c96a2e;
+  }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 24px 0; color: var(--muted); font-size: 0.82rem;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .btn-google {
+    width: 100%; padding: 13px 16px;
+    background: var(--white); border: 2px solid var(--border);
+    border-radius: 14px; font-size: 0.95rem; font-weight: 600;
+    color: var(--text); cursor: pointer; transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-google:hover { border-color: #c4b8a8; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transform: translateY(-1px); }
+  .btn-google img { width: 20px; height: 20px; }
+
+  .features-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .feature-mini {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .feature-mini .fi {
+    display: block;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  @media (max-width: 480px) {
+    .auth-card { padding: 32px 20px; }
+    .features-row { gap: 16px; }
+    .auth-card h2 { font-size: 22px; }
+  }
+</style>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-icon">🌙</div>
+    
+    <h2>Welcome back</h2>
+    <p class="subtitle">plan and pursue · reflect and rise · gather and grow · live the legacy</p>
+    
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="input-group">
+        <span class="input-icon">✉️</span>
+        <input type="email" name="email" placeholder="Your email address" required>
+      </div>
+      
+      <div class="input-group">
+        <span class="input-icon">🔐</span>
+        <input type="password" name="password" placeholder="Your password" required>
+      </div>
+      
+      <button type="submit" class="btn-login">
+        Sign in ✦
+      </button>
+
+      <div style="text-align:center;margin-top:14px">
+        <a href="{{ url_for('auth.forgot_password') }}" style="font-size:0.85rem;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Forgot password?</a>
+      </div>
+    </form>
+
+    <div class="divider">or</div>
+
+    <a href="{{ url_for('auth.google_login') }}" class="btn-google">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Continue with Google
+    </a>
+
+    <div class="bottom-link">
+      New here? <a href="{{ url_for('auth.sign_up') }}">Create an account</a>
+    </div>
+    
+    <div class="features-row">
+      <div class="feature-mini">
+        <span class="fi">📋</span> Tasks
+      </div>
+      <div class="feature-mini">
+        <span class="fi">🎯</span> Habits
+      </div>
+      <div class="feature-mini">
+        <span class="fi">🍅</span> Focus
+      </div>
+      <div class="feature-mini">
+        <span class="fi">🐾</span> Pet
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

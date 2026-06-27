@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Communities · monad{% endblock %}
+{% block page_title %}communities{% endblock %}
+{% block content %}
+
+<style>
+  .comm-page { max-width: 800px; margin: 0 auto; }
+
+  .comm-header {
+    background: var(--header-gradient);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 25px var(--glow-color);
+  }
+  .comm-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card h4 { font-weight: 700; color: var(--text-primary); margin-bottom: 14px; font-size: 1rem; }
+
+  .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .form-row input, .form-row select {
+    flex: 1; min-width: 150px;
+    padding: 12px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+  .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent-1); }
+  
+  .btn-primary {
+    padding: 12px 24px;
+    background: var(--accent-1);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+
+  .comm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .comm-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 18px;
+    text-decoration: none;
+    color: var(--text-primary);
+    display: block;
+    transition: all 0.2s;
+  }
+  .comm-card:hover { border-color: var(--accent-1); box-shadow: 0 4px 15px var(--glow-color); }
+  .comm-card h5 { font-weight: 700; margin-bottom: 4px; }
+  .comm-card .desc { color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 8px; }
+  .comm-card .code { font-family: 'Space Grotesk', monospace; font-size: 0.75rem; color: var(--accent-1); font-weight: 600; }
+  .comm-card .meta { font-size: 0.75rem; color: var(--text-secondary); }
+  .comm-card .invite-link {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.7rem;
+    color: var(--accent-1);
+    word-break: break-all;
+  }
+
+  .category-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .cat-study { background: rgba(59,130,246,0.1); color: #3b82f6; }
+  .cat-fitness { background: rgba(239,68,68,0.1); color: #ef4444; }
+  .cat-faith { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+  .cat-other { background: rgba(245,158,11,0.1); color: #f59e0b; }
+
+  @media (max-width: 600px) {
+    .comm-page { padding: 0 2px; }
+    .comm-header { padding: 18px 16px; border-radius: 14px; }
+    .card { padding: 16px; }
+    .form-row { flex-direction: column; }
+    .form-row input, .form-row select { min-width: unset; width: 100%; }
+    .btn-primary { width: 100%; }
+    .comm-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="comm-page">
+  
+  <div class="comm-header">
+    <h2>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="vertical-align:middle; margin-right:8px;">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+      </svg>
+      Communities
+    </h2>
+    <p style="opacity:0.8; margin-top:4px;">Study together, stay accountable, grow as a team</p>
+  </div>
+
+  <!-- Join by Code -->
+  <div class="card">
+    <h4>🔗 Join a Community</h4>
+    <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:12px;">Enter the invite code or click a shared link.</p>
+    <form method="POST" action="{{ url_for('views.join_community_by_code') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <input type="text" name="invite_code" placeholder="Enter invite code (e.g., ABC12345)" required style="text-transform:uppercase; letter-spacing:2px;">
+        <button type="submit" class="btn-primary">Join</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Create Community -->
+  <div class="card">
+    <h4>✨ Create a Community</h4>
+    <form method="POST" action="{{ url_for('views.create_community') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <input type="text" name="name" placeholder="Community name" required>
+        <select name="category">
+          <option value="study">📚 Study</option>
+          <option value="fitness">💪 Fitness</option>
+          <option value="faith">🙏 Faith</option>
+          <option value="other">🌟 Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <input type="text" name="description" placeholder="What's this about? (optional)">
+        <input type="text" name="invite_code" placeholder="Custom code (optional)" style="text-transform:uppercase; letter-spacing:2px;">
+      </div>
+      <button type="submit" class="btn-primary">Create Community</button>
+    </form>
+  </div>
+
+  <!-- My Communities -->
+  {% if my_communities %}
+    <h3 style="font-weight:700; color:var(--text-primary); margin-bottom:14px;">My Communities</h3>
+    <div class="comm-grid">
+      {% for comm in my_communities %}
+        <a href="{{ url_for('views.community_detail', community_id=comm.id) }}" class="comm-card">
+          <h5>{{ comm.name }}</h5>
+          <p class="desc">{{ comm.description or 'No description' }}</p>
+          <span class="code">🔑 {{ comm.invite_code }}</span>
+          <div class="meta" style="margin-top:6px;">
+            <span class="category-badge cat-{{ comm.category }}">{{ comm.category }}</span>
+            <span>{{ comm.members|length }} members</span>
+          </div>
+          <span class="invite-link">🔗 {{ request.host_url }}join/{{ comm.invite_code }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

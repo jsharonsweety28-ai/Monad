@@ -1,0 +1,1045 @@
+{% extends "base.html" %}
+{% block title %}monad — Build Your Legacy, One Day at a Time{% endblock %}
+{% block content %}
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #FFFDF9;
+    --bg2:     #FDF6F0;
+    --accent:  #E07B39;
+    --accent2: #F5A623;
+    --text:    #2D2A26;
+    --muted:   #8B7E74;
+    --border:  #F0E8DF;
+    --glow:    rgba(224,123,57,0.28);
+    --clay-sm: 5px 5px 12px rgba(160,115,70,0.28),-4px -4px 9px rgba(255,255,255,0.95),inset 2px 2px 4px rgba(255,255,255,0.85),inset -2px -2px 4px rgba(160,115,70,0.20);
+    --clay-md: 8px 8px 20px rgba(160,115,70,0.32),-6px -6px 14px rgba(255,255,255,0.97),inset 3px 3px 7px rgba(255,255,255,0.9),inset -3px -3px 6px rgba(160,115,70,0.22);
+    --clay-lg: 14px 14px 32px rgba(160,115,70,0.36),-8px -8px 20px rgba(255,255,255,0.98),inset 4px 4px 10px rgba(255,255,255,0.92),inset -4px -4px 8px rgba(160,115,70,0.24);
+    --clay-acc: 8px 8px 22px rgba(224,123,57,0.55),-4px -4px 10px rgba(255,220,170,0.75),inset 3px 3px 8px rgba(255,210,150,0.75),inset -3px -3px 6px rgba(170,70,10,0.25);
+  }
+
+  .landing { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; overflow-x:hidden; }
+  a { text-decoration:none; color:inherit; }
+
+  @keyframes fadeUp     { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes float      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes bounceDown { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(10px)} }
+  @keyframes pulse      { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.8)} }
+  @keyframes fillBar    { from{width:0} to{width:var(--w,78%)} }
+  @keyframes spin       { to{transform:rotate(360deg)} }
+
+  .reveal { opacity:0; transform:translateY(30px); transition:opacity .7s ease,transform .7s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .r1 { transition-delay:.08s } .r2 { transition-delay:.18s } .r3 { transition-delay:.28s }
+
+  .clay-sep { height:14px; background:linear-gradient(to bottom,#F5EBE0 0%,#FEF8F3 50%,#F5EBE0 100%); box-shadow:inset 0 4px 8px rgba(140,100,60,.22),inset 0 -4px 8px rgba(255,255,255,.92),0 1px 0 rgba(255,255,255,.7),0 -1px 0 rgba(140,100,60,.12); }
+
+  /* ═══ NAVBAR ═══ */
+  .nav {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 48px; height:68px;
+    background:rgba(253,246,240,.85); backdrop-filter:blur(20px);
+    border-bottom:1.5px solid rgba(255,255,255,.8);
+    box-shadow:0 4px 20px rgba(180,140,100,.10),0 1px 0 rgba(255,255,255,.9) inset;
+  }
+  .nav-logo { display:flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-size:1.12rem; font-weight:700; color:var(--text); }
+  .nav-logo-icon { width:34px; height:34px; background:linear-gradient(145deg,#F5A623,#E07B39); border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-size:.95rem; font-weight:800; box-shadow:var(--clay-acc); }
+  .nav-links { display:flex; align-items:center; gap:4px; }
+  .nav-link { padding:8px 16px; border-radius:99px; font-size:.87rem; font-weight:500; color:var(--muted); transition:all .2s; }
+  .nav-link:hover { color:var(--accent); background:rgba(224,123,57,.07); }
+  .nav-cta { padding:9px 22px; background:linear-gradient(145deg,#F5A623,#E07B39); color:white; border-radius:99px; font-size:.87rem; font-weight:700; box-shadow:var(--clay-acc); transition:all .22s; }
+  .nav-cta:hover { transform:translateY(-2px); color:white; }
+
+  /* ═══ HERO ═══ */
+  .hero-outer {
+    background:radial-gradient(ellipse at 70% 30%,#FEF0E2 0%,#FFFDF9 60%),
+               radial-gradient(ellipse at 20% 80%,#FDF6F0 0%,transparent 50%);
+    position:relative; padding-top:68px;
+  }
+  .hero {
+    max-width:1200px; margin:0 auto;
+    display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center;
+    padding:80px 60px 100px;
+  }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(145deg,#fff,#fef3e8); padding:7px 18px; border-radius:99px; font-size:.82rem; color:var(--accent); font-weight:700; margin-bottom:26px; box-shadow:var(--clay-sm); animation:fadeUp .6s ease .1s both; }
+  .hero-badge .dot { width:7px; height:7px; background:var(--accent); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+  .hero h1 { font-family:'Space Grotesk',sans-serif; font-size:3.8rem; font-weight:800; line-height:1.08; letter-spacing:-1.5px; margin-bottom:20px; color:var(--text); animation:fadeUp .6s ease .2s both; }
+  .hero h1 .grad { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-sub { font-size:1.02rem; color:var(--muted); line-height:1.78; margin-bottom:36px; max-width:440px; animation:fadeUp .6s ease .3s both; }
+  .hero-btns { display:flex; gap:12px; flex-wrap:wrap; animation:fadeUp .6s ease .4s both; }
+  .btn-clay { padding:14px 34px; background:linear-gradient(145deg,#F5A623,#E07B39); color:white; border-radius:14px; font-weight:700; font-size:.97rem; box-shadow:var(--clay-acc); transition:all .25s; display:inline-block; }
+  .btn-clay:hover { transform:translateY(-3px); color:white; }
+  .btn-ghost { padding:14px 34px; background:linear-gradient(145deg,#fff,#fdf6f0); color:var(--text); border-radius:14px; font-weight:600; font-size:.97rem; box-shadow:var(--clay-md); transition:all .25s; display:inline-block; }
+  .btn-ghost:hover { transform:translateY(-3px); color:var(--accent); }
+
+  /* Dashboard mockup */
+  .hero-right { animation:fadeUp .8s ease .5s both; }
+  .dash-mock {
+    background:linear-gradient(150deg,#fff 0%,#fdf6f0 100%);
+    border-radius:28px; padding:24px; box-shadow:var(--clay-lg);
+    max-width:360px; margin:0 auto; user-select:none;
+  }
+  .dm-top { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:14px; border-bottom:1.5px solid var(--border); margin-bottom:14px; }
+  .dm-title { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:1rem; color:var(--text); }
+  .dm-date  { font-size:.68rem; color:var(--muted); }
+  .dm-row {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 12px; border-radius:12px; margin-bottom:7px;
+    background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-sm);
+    font-size:.79rem; color:var(--text);
+  }
+  .dm-row.done { opacity:.4; }
+  .dm-chk { width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; }
+  .dm-chk.off { background:linear-gradient(145deg,#fff,#f0e8df); box-shadow:var(--clay-sm); }
+  .dm-chk.on  { background:linear-gradient(145deg,#F5A623,#E07B39); color:white; font-weight:800; box-shadow:var(--clay-acc); }
+  .dm-badge { margin-left:auto; padding:2px 9px; border-radius:99px; font-size:.62rem; font-weight:700; white-space:nowrap; }
+  .dm-fire { background:rgba(224,123,57,.12); color:var(--accent); }
+  .dm-blue { background:rgba(59,130,246,.1); color:#3b82f6; }
+  .dm-div { height:1px; background:var(--border); margin:12px 0; }
+  .dm-pet { display:flex; align-items:center; gap:12px; padding:10px 12px; background:linear-gradient(145deg,#fff,#fdf6f0); border-radius:14px; box-shadow:var(--clay-sm); margin-bottom:12px; }
+  .dm-pet-emoji { font-size:1.8rem; animation:float 3s ease-in-out infinite; display:block; line-height:1; }
+  .dm-pet-info { flex:1; }
+  .dm-pet-name { font-weight:700; font-size:.76rem; color:var(--text); margin-bottom:5px; }
+  .dm-pet-track { height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .dm-pet-fill  { height:100%; background:linear-gradient(90deg,#F5A623,#E07B39); border-radius:99px; width:65%; }
+  .dm-focus-btn { display:block; text-align:center; padding:11px; background:linear-gradient(145deg,#F5A623,#E07B39); color:white; border-radius:12px; font-weight:700; font-size:.82rem; box-shadow:var(--clay-acc); transition:transform .2s; }
+  .dm-focus-btn:hover { transform:translateY(-2px); color:white; }
+
+  .scroll-hint { position:absolute; bottom:28px; left:50%; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--muted); font-size:.74rem; animation:bounceDown 2s ease-in-out infinite; }
+  .scroll-arrow { width:18px; height:18px; border-right:2.5px solid var(--muted); border-bottom:2.5px solid var(--muted); border-radius:2px; transform:rotate(45deg); opacity:.5; }
+
+  /* ═══ SECTION SHARED ═══ */
+  .sec-inner { max-width:1100px; margin:0 auto; }
+  .sec-label { display:inline-flex; align-items:center; gap:7px; background:linear-gradient(145deg,#fff,#fef3e8); color:var(--accent); padding:6px 16px; border-radius:99px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; box-shadow:var(--clay-sm); }
+  .sec-title { font-family:'Space Grotesk',sans-serif; font-size:2.2rem; font-weight:800; color:var(--text); margin-bottom:10px; letter-spacing:-.7px; line-height:1.2; }
+  .sec-sub   { color:var(--muted); font-size:.97rem; line-height:1.7; }
+
+  /* ═══ DAY IN MONAD ═══ */
+  .day-section { padding:100px 60px; background:var(--bg2); }
+  .day-flow { display:flex; flex-direction:column; gap:90px; margin-top:60px; }
+  .flow-step { display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
+  .flow-step.flip .flow-visual { order:-1; }
+
+  .time-tag { display:inline-flex; align-items:center; gap:8px; padding:5px 14px; border-radius:99px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; box-shadow:var(--clay-sm); }
+  .t-morning   { background:linear-gradient(145deg,#fff8f0,#fef3e4); color:#E07B39; }
+  .t-afternoon { background:linear-gradient(145deg,#f0f7ff,#e6f2ff); color:#3b82f6; }
+  .t-evening   { background:linear-gradient(145deg,#f5f0ff,#ede8ff); color:#8b5cf6; }
+  .t-night     { background:linear-gradient(145deg,#f0f4f8,#e8ecf0); color:#64748b; }
+
+  .flow-text h3 { font-family:'Space Grotesk',sans-serif; font-size:1.75rem; font-weight:800; color:var(--text); margin-bottom:12px; letter-spacing:-.5px; line-height:1.2; }
+  .flow-text p  { font-size:.97rem; color:var(--muted); line-height:1.78; }
+
+  .flow-visual { display:flex; justify-content:center; }
+  .flow-card {
+    background:linear-gradient(150deg,#fff 0%,#fdf6f0 100%);
+    border-radius:24px; padding:22px; width:100%; max-width:320px;
+    box-shadow:var(--clay-lg); transition:transform .3s ease;
+  }
+  .flow-card:hover { transform:translateY(-8px); }
+  .fc-head { font-weight:700; font-size:.82rem; color:var(--text); margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }
+  .fc-item { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:11px; margin-bottom:6px; background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-sm); font-size:.76rem; color:var(--text); }
+  .fc-item.done { opacity:.4; }
+  .fc-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .fc-bar-wrap { height:5px; background:var(--border); border-radius:99px; overflow:hidden; margin-top:4px; }
+  .fc-bar { height:100%; border-radius:99px; }
+  .fc-mood-row { display:flex; gap:6px; justify-content:center; margin:8px 0; font-size:1.3rem; }
+  .fc-mood-opt { padding:6px 10px; border-radius:10px; background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-sm); cursor:default; transition:transform .2s; font-size:1rem; }
+  .fc-mood-opt.sel { background:linear-gradient(145deg,#F5A623,#E07B39); box-shadow:var(--clay-acc); transform:scale(1.15); }
+  .fc-exam-row { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; border-radius:11px; margin-bottom:6px; background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-sm); font-size:.74rem; }
+  .fc-days-badge { padding:2px 8px; border-radius:99px; font-weight:700; font-size:.62rem; }
+
+  /* ═══ COMPANION ═══ */
+  .companion-section { padding:100px 60px; background:var(--bg); text-align:center; }
+  .evo-track { display:flex; align-items:center; justify-content:center; gap:0; margin:56px auto 0; max-width:860px; flex-wrap:wrap; }
+  .evo-stage {
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    padding:28px 20px; border-radius:24px; min-width:150px;
+    background:linear-gradient(150deg,#fff,#fdf6f0); box-shadow:var(--clay-md);
+    transition:transform .3s ease; opacity:0; transform:translateY(30px);
+  }
+  .evo-stage.visible { opacity:1; transform:translateY(0); }
+  .evo-stage:hover { transform:translateY(-10px); }
+  .evo-emoji { font-size:2.8rem; animation:float 3s ease-in-out infinite; display:block; line-height:1; }
+  .evo-stage:nth-child(3) .evo-emoji { animation-delay:.5s; }
+  .evo-stage:nth-child(5) .evo-emoji { animation-delay:1s; }
+  .evo-stage:nth-child(7) .evo-emoji { animation-delay:1.5s; }
+  .evo-label { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:.85rem; color:var(--text); }
+  .evo-hint  { font-size:.69rem; color:var(--muted); }
+  .evo-arrow { font-size:1.3rem; color:var(--muted); padding:0 6px; align-self:center; opacity:.35; }
+  .evo-note { margin-top:36px; font-size:.9rem; color:var(--muted); max-width:480px; margin-left:auto; margin-right:auto; line-height:1.7; }
+
+  /* ═══ BENTO GRID ═══ */
+  .bento-section { padding:100px 60px; background:var(--bg2); }
+  .bento-grid { display:grid; grid-template-columns:2fr 1fr 1fr; grid-auto-rows:220px; gap:18px; margin-top:52px; }
+  .bc {
+    background:linear-gradient(150deg,#fff 0%,#fdf6f0 100%);
+    border-radius:24px; padding:28px; box-shadow:var(--clay-md);
+    display:flex; flex-direction:column; justify-content:space-between;
+    transition:transform .3s ease; overflow:hidden; position:relative;
+    opacity:0; transform:translateY(22px);
+  }
+  .bc.visible { opacity:1; transform:translateY(0); }
+  .bc:hover { transform:translateY(-8px); }
+  .bc.s2 { grid-column:span 2; }
+  .bc-icon { font-size:1.9rem; margin-bottom:10px; display:block; }
+  .bc-title { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:1rem; color:var(--text); margin-bottom:5px; }
+  .bc-desc  { font-size:.78rem; color:var(--muted); line-height:1.6; }
+  .bc-bg    { position:absolute; bottom:-8px; right:-4px; font-size:5.5rem; opacity:.05; pointer-events:none; line-height:1; }
+
+  /* ═══ SHARE PROGRESS ═══ */
+  .share-section { padding:100px 60px; background:var(--bg); }
+  .share-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:52px; }
+  .share-card {
+    background:linear-gradient(150deg,#fff 0%,#fdf6f0 100%);
+    border-radius:24px; padding:28px; box-shadow:var(--clay-lg);
+    transition:transform .3s ease; opacity:0; transform:translateY(22px);
+  }
+  .share-card.visible { opacity:1; transform:translateY(0); }
+  .share-card:hover { transform:translateY(-8px); }
+  .sc-head { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:.97rem; color:var(--text); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+  .sc-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:.82rem; }
+  .sc-row:last-child { border-bottom:none; }
+  .sc-lbl { color:var(--muted); }
+  .sc-val { font-weight:700; color:var(--text); }
+  .sc-bar-wrap { height:10px; background:var(--border); border-radius:99px; overflow:hidden; margin:14px 0 6px; }
+  .sc-bar-fill { height:100%; background:linear-gradient(90deg,#F5A623,#E07B39); border-radius:99px; width:0; --w:78%; }
+  .sc-bar-fill.go { animation:fillBar 1.2s ease .3s forwards; }
+  .sc-stars { display:flex; gap:4px; font-size:1.1rem; margin:10px 0 4px; }
+  .sc-plus  { font-size:1.6rem; font-weight:800; color:var(--accent); font-family:'Space Grotesk',sans-serif; margin-top:4px; }
+  .sc-plus-lbl { font-size:.72rem; color:var(--muted); }
+  .sj-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .sj-dot  { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .sj-name { font-size:.79rem; font-weight:600; color:var(--text); flex:1; }
+  .sj-bw   { width:80px; height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .sj-bf   { height:100%; border-radius:99px; width:0; }
+  .sj-bf.go { animation:fillBar 1s ease forwards; }
+  .sj-pct  { font-size:.68rem; color:var(--muted); min-width:28px; text-align:right; }
+
+  /* ═══ LEGACY JOURNEY ═══ */
+  .journey-section { padding:100px 60px; background:var(--bg2); overflow:hidden; }
+  .journey-track { display:flex; flex-direction:column; position:relative; margin-top:60px; }
+  .journey-track::before { content:''; position:absolute; left:50%; top:0; bottom:0; width:2px; background:linear-gradient(to bottom,var(--border),var(--accent),var(--border)); transform:translateX(-50%); z-index:0; }
+  .j-stage {
+    display:grid; grid-template-columns:1fr 72px 1fr; gap:24px; align-items:center;
+    padding:32px 0; opacity:.3; transform:translateY(50px);
+    transition:opacity .8s ease,transform .8s ease;
+  }
+  .j-stage.visible { opacity:1; transform:translateY(0); }
+  .j-stage:nth-child(odd)  .j-text { text-align:right; }
+  .j-stage:nth-child(even) .j-text { text-align:left; order:3; }
+  .j-stage:nth-child(even) .j-card { order:1; }
+  .j-stage:nth-child(even) .j-node { order:2; }
+  .j-node { width:72px; height:72px; border-radius:50%; background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-md); display:flex; align-items:center; justify-content:center; font-size:1.9rem; z-index:1; transition:transform .3s ease; }
+  .j-stage.visible .j-node { transform:scale(1.12); box-shadow:var(--clay-lg); }
+  .j-text h3 { font-family:'Space Grotesk',sans-serif; font-size:1.6rem; font-weight:800; color:var(--text); margin-bottom:8px; letter-spacing:-.4px; }
+  .j-text p  { font-size:.88rem; color:var(--muted); line-height:1.72; display:inline-block; max-width:260px; }
+  .j-card { background:linear-gradient(150deg,#fff,#fdf6f0); border-radius:20px; padding:20px 22px; box-shadow:var(--clay-md); }
+  .j-stat { font-family:'Space Grotesk',sans-serif; font-size:1.7rem; font-weight:800; color:var(--accent); }
+  .j-stat-lbl { font-size:.76rem; color:var(--muted); margin-top:2px; }
+
+  /* ═══ CTA ═══ */
+  .cta-section { padding:100px 40px; text-align:center; background:radial-gradient(ellipse at 50% 0%,rgba(224,123,57,.08) 0%,transparent 65%),linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%); }
+  .cta-card { max-width:640px; margin:0 auto; background:linear-gradient(150deg,#fff 0%,#fdf6f0 100%); border-radius:32px; padding:56px 48px; box-shadow:var(--clay-lg); }
+  .cta-card h2 { font-family:'Space Grotesk',sans-serif; font-size:2.6rem; font-weight:800; color:var(--text); margin-bottom:14px; letter-spacing:-1px; }
+  .cta-card p  { font-size:1.05rem; color:var(--muted); margin-bottom:12px; }
+  .cta-trust { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:36px; flex-wrap:wrap; }
+  .trust-chip { background:linear-gradient(145deg,#fff,#fdf6f0); padding:6px 14px; border-radius:99px; font-size:.78rem; font-weight:600; color:var(--text); box-shadow:var(--clay-sm); display:flex; align-items:center; gap:5px; }
+  .trust-chip b { color:#10b981; }
+
+  /* ═══ FOOTER ═══ */
+  .footer-bar { text-align:center; padding:26px; font-size:.79rem; color:var(--muted); background:#fff; border-top:1.5px solid rgba(255,255,255,.8); box-shadow:0 -2px 12px rgba(180,140,100,.07); }
+
+  /* ═══ AI SECTION ═══ */
+  .ai-section { padding:100px 60px; background:var(--bg2); }
+  .ai-grid { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; margin-top:52px; }
+  .ai-chips-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
+  .ai-chip { padding:6px 14px; border-radius:99px; font-size:.74rem; font-weight:700; box-shadow:var(--clay-sm); }
+  .ai-chip.accent { background:linear-gradient(145deg,#F5A623,#E07B39); color:white; box-shadow:var(--clay-acc); }
+  .ai-chip.muted  { background:linear-gradient(145deg,#fff,#fdf6f0); color:var(--muted); }
+
+  .mi-mock { background:linear-gradient(150deg,#fff,#fdf6f0); border-radius:20px; padding:20px; box-shadow:var(--clay-lg); margin-bottom:14px; }
+  .mi-mock-hdr { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:.88rem; color:var(--text); margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+  .mi-mock-dot { width:7px; height:7px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:inline-block; }
+  .mi-mock-body { display:flex; align-items:center; gap:14px; }
+  .mi-ring-w { width:72px; height:72px; border-radius:50%; background:conic-gradient(#E07B39 0% 84%, #f0e8df 84% 100%); display:flex; align-items:center; justify-content:center; box-shadow:var(--clay-sm); flex-shrink:0; }
+  .mi-ring-inner { width:54px; height:54px; border-radius:50%; background:linear-gradient(145deg,#fff,#fdf6f0); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .mi-ring-n { font-family:'Space Grotesk',sans-serif; font-size:1.25rem; font-weight:900; color:var(--text); line-height:1; }
+  .mi-ring-s { font-size:.44rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .mi-meta { flex:1; min-width:0; }
+  .mi-lbl { font-size:.62rem; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase; margin-bottom:6px; }
+  .mi-cs { display:flex; flex-wrap:wrap; gap:4px; }
+  .mi-c { padding:3px 8px; border-radius:8px; background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-sm); font-size:.63rem; font-weight:600; color:var(--muted); }
+  .mi-c.ok { color:#059669; }
+  .mi-ins { margin-top:9px; font-size:.7rem; padding:6px 9px; border-radius:9px; background:rgba(16,185,129,.08); color:#059669; font-weight:500; }
+
+  .sched-mock { background:linear-gradient(150deg,#fff,#fdf6f0); border-radius:20px; padding:18px; box-shadow:var(--clay-lg); }
+  .sched-hdr { font-size:.74rem; font-weight:700; color:var(--text); margin-bottom:11px; display:flex; justify-content:space-between; align-items:center; }
+  .sb { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px; margin-bottom:5px; border-left:3px solid; }
+  .sb .sb-t { font-size:.7rem; font-weight:700; flex:1; }
+  .sb .sb-tm { font-size:.62rem; opacity:.65; }
+  .sb.pers { background:rgba(16,185,129,.1); border-color:#10b981; color:#065f46; }
+  .sb.hlth { background:rgba(249,115,22,.1); border-color:#f97316; color:#9a3412; }
+  .sb.stdy { background:rgba(59,130,246,.1); border-color:#3b82f6; color:#1e40af; }
+  .sb.brk  { background:rgba(148,163,184,.1); border-color:#94a3b8; color:#475569; }
+  .sb.work { background:rgba(139,92,246,.1); border-color:#8b5cf6; color:#4c1d95; }
+  .sched-gen { margin-top:10px; padding:7px; text-align:center; border-radius:10px; background:linear-gradient(145deg,#F5A623,#E07B39); color:white; font-size:.68rem; font-weight:700; box-shadow:var(--clay-acc); }
+
+  /* ═══ COMMUNITY SECTION ═══ */
+  .comm-section { padding:100px 60px; background:var(--bg); }
+  .comm-grid { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; margin-top:52px; }
+  .comm-mock { background:linear-gradient(150deg,#fff,#fdf6f0); border-radius:24px; padding:22px; box-shadow:var(--clay-lg); }
+  .comm-ttl { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:.9rem; color:var(--text); margin-bottom:16px; }
+  .lb-r { display:flex; align-items:center; gap:9px; padding:10px 0; border-bottom:1px solid var(--border); font-size:.74rem; }
+  .lb-r:last-of-type { border-bottom:none; }
+  .lb-rk { font-size:1rem; width:20px; text-align:center; flex-shrink:0; }
+  .lb-av { width:30px; height:30px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-size:.6rem; font-weight:800; flex-shrink:0; border:2px solid #10b981; }
+  .lb-nm { flex:1; font-weight:600; color:var(--text); }
+  .lb-st { font-size:.66rem; font-weight:700; color:var(--accent); background:rgba(224,123,57,.1); padding:2px 7px; border-radius:99px; }
+  .lb-ck { width:20px; height:20px; border-radius:6px; background:linear-gradient(145deg,#F5A623,#E07B39); color:white; display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:800; flex-shrink:0; box-shadow:var(--clay-acc); }
+  .crown-ban { margin-top:14px; background:linear-gradient(135deg,#fef9c3,#fde68a); border:1.5px solid #f59e0b; border-radius:14px; padding:12px 15px; display:flex; align-items:center; gap:10px; }
+  .crown-ico { font-size:1.5rem; }
+  .crown-t { font-family:'Space Grotesk',sans-serif; font-size:.8rem; font-weight:800; color:#92400e; }
+  .crown-s { font-size:.66rem; color:#92400e; opacity:.8; margin-top:1px; }
+  .comm-steps { margin-top:28px; display:flex; flex-direction:column; gap:16px; }
+  .comm-step { display:flex; gap:12px; align-items:flex-start; }
+  .c-num { width:26px; height:26px; border-radius:50%; background:linear-gradient(145deg,#F5A623,#E07B39); color:white; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:800; flex-shrink:0; margin-top:2px; box-shadow:var(--clay-acc); }
+  .c-txt h4 { font-family:'Space Grotesk',sans-serif; font-size:.86rem; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .c-txt p  { font-size:.78rem; color:var(--muted); line-height:1.6; }
+
+  /* ═══ STUDENT SECTION ═══ */
+  .student-section { padding:100px 60px; background:var(--bg2); }
+  .student-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:52px; }
+  .stud-card { background:linear-gradient(150deg,#fff,#fdf6f0); border-radius:24px; padding:24px; box-shadow:var(--clay-lg); transition:transform .3s ease; opacity:0; transform:translateY(22px); }
+  .stud-card.visible { opacity:1; transform:translateY(0); }
+  .stud-card:hover { transform:translateY(-8px); }
+  .stud-hd { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:.88rem; color:var(--text); margin-bottom:14px; }
+  .tt-row { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px; margin-bottom:5px; background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-sm); font-size:.7rem; }
+  .tt-time { color:var(--accent); font-weight:700; min-width:42px; }
+  .tt-sub  { color:var(--text); font-weight:600; flex:1; }
+  .tt-rm   { color:var(--muted); font-size:.6rem; }
+  .ex-row { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-radius:10px; margin-bottom:5px; background:linear-gradient(145deg,#fff,#fdf6f0); box-shadow:var(--clay-sm); font-size:.72rem; }
+  .ex-sub { color:var(--text); font-weight:600; }
+  .ex-badge { padding:2px 9px; border-radius:99px; font-weight:700; font-size:.62rem; }
+  .sid-card { background:linear-gradient(135deg,#E07B39,#F5A623); border-radius:14px; padding:16px; color:white; margin-bottom:12px; box-shadow:var(--clay-acc); }
+  .sid-inst { font-size:.6rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; opacity:.85; margin-bottom:6px; }
+  .sid-name { font-family:'Space Grotesk',sans-serif; font-size:1.05rem; font-weight:800; margin-bottom:2px; }
+  .sid-roll { font-size:.66rem; opacity:.8; }
+  .sid-bot { display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px; }
+  .sid-yr { font-size:.62rem; opacity:.8; }
+
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 960px) {
+    .nav { padding:0 20px; }
+    .hero { grid-template-columns:1fr; gap:0; padding:72px 32px 60px; }
+    .hero h1 { font-size:2.7rem; }
+    .hero-right { display:none; }
+    .day-section,.companion-section,.bento-section,.share-section,.journey-section { padding:72px 28px; }
+    .ai-section,.comm-section,.student-section { padding:72px 28px; }
+    .ai-grid,.comm-grid { grid-template-columns:1fr; gap:36px; }
+    .student-grid { grid-template-columns:1fr; }
+    .flow-step,.flow-step.flip { grid-template-columns:1fr; }
+    .flow-step.flip .flow-visual { order:0; }
+    .bento-grid { grid-template-columns:1fr 1fr; grid-auto-rows:200px; }
+    .bc.s2 { grid-column:span 2; }
+    .share-grid { grid-template-columns:1fr; }
+    .journey-track::before { left:36px; }
+    .j-stage { grid-template-columns:72px 1fr; gap:16px; }
+    .j-stage:nth-child(odd)  .j-text { text-align:left; }
+    .j-stage:nth-child(even) .j-text { order:2; text-align:left; }
+    .j-stage:nth-child(even) .j-card { display:none; }
+    .j-stage:nth-child(odd)  .j-card { display:none; }
+    .j-stage:nth-child(even) .j-node { order:1; }
+    .evo-stage { min-width:120px; padding:20px 14px; }
+  }
+  @media (max-width: 600px) {
+    .hero h1 { font-size:2.1rem; }
+    .bento-grid { grid-template-columns:1fr; }
+    .bc.s2 { grid-column:span 1; }
+    .evo-arrow { display:none; }
+    .cta-card { padding:36px 24px; }
+    .cta-card h2 { font-size:2rem; }
+  }
+</style>
+
+<div class="landing">
+
+<!-- ─── NAVBAR ─── -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">m</div>
+    monad
+  </div>
+  <div class="nav-links">
+    <a href="#day"       class="nav-link">How it works</a>
+    <a href="#features"  class="nav-link">Features</a>
+    <a href="/login"     class="nav-link">Sign in</a>
+    <a href="/sign-up"   class="nav-cta">Get started free</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<div class="hero-outer">
+  <section class="hero">
+    <!-- Left -->
+    <div class="hero-left">
+      <div class="hero-badge"><span class="dot"></span> ✦ AI-powered · Community-first · Built for students</div>
+      <h1>Build Your Legacy,<br><span class="grad">One Day at a Time.</span></h1>
+      <p class="hero-sub">The only productivity app with an AI coach, a growing pet companion, and a community that earns crowns together — built for students who mean it.</p>
+      <div class="hero-btns">
+        <a href="/sign-up" class="btn-clay">Start for free →</a>
+        <a href="/login"   class="btn-ghost">Sign in</a>
+      </div>
+    </div>
+    <!-- Right: dashboard mockup -->
+    <div class="hero-right" id="heroDash">
+      <div class="dash-mock">
+        <div class="dm-top">
+          <div class="dm-title">Today</div>
+          <div class="dm-date">{{ current_date if current_date else 'Wednesday' }}</div>
+        </div>
+        <div class="dm-row done"><div class="dm-chk on">✓</div> Morning workout <span class="dm-badge dm-fire">🔥 18 days</span></div>
+        <div class="dm-row done"><div class="dm-chk on">✓</div> Read Chapter 4</div>
+        <div class="dm-row"><div class="dm-chk off"></div> Review physics notes</div>
+        <div class="dm-row"><div class="dm-chk off"></div> Physics Exam prep <span class="dm-badge dm-blue">📚 3 days</span></div>
+        <div class="dm-div"></div>
+        <div class="dm-pet">
+          <span class="dm-pet-emoji">🐥</span>
+          <div class="dm-pet-info">
+            <div class="dm-pet-name">Buddy · Level 7</div>
+            <div class="dm-pet-track"><div class="dm-pet-fill"></div></div>
+          </div>
+        </div>
+        <a href="/sign-up" class="dm-focus-btn">▶ Start Focus Session</a>
+      </div>
+    </div>
+  </section>
+  <div class="scroll-hint" style="transform:translateX(-50%)">
+    <span>Explore</span><div class="scroll-arrow"></div>
+  </div>
+</div>
+
+<div class="clay-sep"></div>
+
+<!-- ─── AI PRODUCTIVITY COACH ─── -->
+<section class="ai-section" id="ai">
+  <div class="sec-inner">
+    <div class="sec-label">🤖 AI-Powered</div>
+    <div class="ai-grid">
+      <div>
+        <h2 class="sec-title reveal">Your AI Productivity<br>Coach. Not Just a Task List.</h2>
+        <p class="sec-sub reveal r1" style="margin-top:14px">One tap. Gemini analyzes your tasks, habits, sleep pattern, and goals — then builds your entire day. At night, Monad Intelligence tells you what worked, your momentum score, and your burnout risk.</p>
+        <div class="ai-chips-row reveal r2">
+          <span class="ai-chip accent">✨ AI Schedule Generator</span>
+          <span class="ai-chip muted">📊 Momentum Score</span>
+          <span class="ai-chip muted">🔥 Burnout Risk</span>
+          <span class="ai-chip muted">⚡ Peak Hour Insights</span>
+        </div>
+      </div>
+      <div class="reveal r1">
+        <!-- Monad Intelligence mockup -->
+        <div class="mi-mock">
+          <div class="mi-mock-hdr"><span class="mi-mock-dot"></span> Monad Intelligence</div>
+          <div class="mi-mock-body">
+            <div class="mi-ring-w">
+              <div class="mi-ring-inner">
+                <span class="mi-ring-n">84</span>
+                <span class="mi-ring-s">score</span>
+              </div>
+            </div>
+            <div class="mi-meta">
+              <div class="mi-lbl">In the Zone ✦</div>
+              <div class="mi-cs">
+                <span class="mi-c ok">✓ On Track</span>
+                <span class="mi-c ok">Burnout: Low</span>
+                <span class="mi-c">Peak: Evenings</span>
+                <span class="mi-c">4h focus/wk</span>
+              </div>
+              <div class="mi-ins">✓ Exercise days boost completion by 24%</div>
+            </div>
+          </div>
+        </div>
+        <!-- AI Schedule mockup -->
+        <div class="sched-mock">
+          <div class="sched-hdr"><span>✨ AI Generated Schedule</span><span style="font-size:.6rem;color:var(--muted)">Today · Gemini</span></div>
+          <div class="sb pers"><span class="sb-t">Morning Routine</span><span class="sb-tm">7:00 – 7:30</span></div>
+          <div class="sb hlth"><span class="sb-t">Morning Exercise</span><span class="sb-tm">7:30 – 8:30</span></div>
+          <div class="sb stdy"><span class="sb-t">Physics Revision</span><span class="sb-tm">9:00 – 11:00</span></div>
+          <div class="sb brk"><span class="sb-t">Lunch Break</span><span class="sb-tm">1:00 – 1:30</span></div>
+          <div class="sb work"><span class="sb-t">Chemistry Notes</span><span class="sb-tm">2:00 – 4:00</span></div>
+          <div class="sched-gen">✨ Generate my schedule → powered by Gemini</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── A DAY IN MONAD ─── -->
+<section class="day-section" id="day">
+  <div class="sec-inner">
+    <div class="sec-label">✦ A day in monad</div>
+    <h2 class="sec-title reveal">Your entire day, beautifully structured.</h2>
+    <p class="sec-sub reveal r1">From the first task of the morning to the last reflection at night.</p>
+
+    <div class="day-flow">
+
+      <!-- Morning: Plan -->
+      <div class="flow-step reveal">
+        <div class="flow-text">
+          <div class="time-tag t-morning">🌅 Morning</div>
+          <h3>Plan with clarity.</h3>
+          <p>Start every morning knowing exactly what matters. Add tasks, set priorities, and let AI suggest the perfect day plan based on your schedule and energy.</p>
+        </div>
+        <div class="flow-visual">
+          <div class="flow-card">
+            <div class="fc-head"><span>✅ Today's Tasks</span><span style="font-size:.68rem;color:var(--muted)">3 / 4 done</span></div>
+            <div class="fc-item done"><div class="fc-dot" style="background:#E07B39"></div> Morning run</div>
+            <div class="fc-item done"><div class="fc-dot" style="background:#3b82f6"></div> Read 20 pages</div>
+            <div class="fc-item done"><div class="fc-dot" style="background:#8b5cf6"></div> Team standup</div>
+            <div class="fc-item"><div class="fc-dot" style="background:#10b981"></div> Review notes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Afternoon: Build -->
+      <div class="flow-step flip reveal r1">
+        <div class="flow-text">
+          <div class="time-tag t-afternoon">☀️ Afternoon</div>
+          <h3>Build habits that stick.</h3>
+          <p>Track your daily habits visually. Watch your streaks grow, earn fire badges, and feel the momentum of a consistent life compound over time.</p>
+        </div>
+        <div class="flow-visual">
+          <div class="flow-card">
+            <div class="fc-head"><span>🎯 Habits</span><span style="font-size:.68rem;color:var(--accent)">🔥 18-day streak</span></div>
+            <div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px"><span style="color:var(--text);font-weight:600">Gym</span><span style="color:var(--muted)">5/7 days</span></div>
+              <div class="fc-bar-wrap"><div class="fc-bar" style="background:linear-gradient(90deg,#F5A623,#E07B39);width:72%"></div></div>
+            </div>
+            <div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px"><span style="color:var(--text);font-weight:600">Read</span><span style="color:var(--muted)">7/7 days</span></div>
+              <div class="fc-bar-wrap"><div class="fc-bar" style="background:linear-gradient(90deg,#3b82f6,#6366f1);width:100%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px"><span style="color:var(--text);font-weight:600">Meditate</span><span style="color:var(--muted)">4/7 days</span></div>
+              <div class="fc-bar-wrap"><div class="fc-bar" style="background:linear-gradient(90deg,#8b5cf6,#a78bfa);width:57%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evening: Study -->
+      <div class="flow-step reveal">
+        <div class="flow-text">
+          <div class="time-tag t-evening">🌆 Evening</div>
+          <h3>Study smarter, not harder.</h3>
+          <p>Your personal study hub — timetable, subject notes, exam countdowns, and a Pomodoro room with ambient sounds and your evolving companion by your side.</p>
+        </div>
+        <div class="flow-visual">
+          <div class="flow-card">
+            <div class="fc-head"><span>📚 Study</span></div>
+            <div class="fc-exam-row">
+              <span style="font-weight:600;color:var(--text);font-size:.76rem">Physics</span>
+              <span class="fc-days-badge" style="background:rgba(239,68,68,.1);color:#ef4444">3 days</span>
+            </div>
+            <div class="fc-exam-row">
+              <span style="font-weight:600;color:var(--text);font-size:.76rem">Chemistry</span>
+              <span class="fc-days-badge" style="background:rgba(245,158,11,.1);color:#d97706">8 days</span>
+            </div>
+            <div class="fc-exam-row">
+              <span style="font-weight:600;color:var(--text);font-size:.76rem">Maths</span>
+              <span class="fc-days-badge" style="background:rgba(16,185,129,.1);color:#10b981">14 days</span>
+            </div>
+            <div style="margin-top:10px;padding:8px 10px;border-radius:11px;background:linear-gradient(145deg,#F5A623,#E07B39);text-align:center;font-size:.72rem;font-weight:700;color:white;box-shadow:var(--clay-acc)">🍅 Start Focus Session</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Night: Reflect -->
+      <div class="flow-step flip reveal r1">
+        <div class="flow-text">
+          <div class="time-tag t-night">🌙 Night</div>
+          <h3>Reflect and earn your star.</h3>
+          <p>End every day with a moment of gratitude. Journal your mood, wins, and learnings. Complete the day and earn your ⭐ — building a legacy of perfect days.</p>
+        </div>
+        <div class="flow-visual">
+          <div class="flow-card">
+            <div class="fc-head"><span>📖 Daily Journal</span></div>
+            <p style="font-size:.72rem;color:var(--muted);margin-bottom:12px">How are you feeling today?</p>
+            <div class="fc-mood-row">
+              <div class="fc-mood-opt">😞</div>
+              <div class="fc-mood-opt">😐</div>
+              <div class="fc-mood-opt sel">😊</div>
+              <div class="fc-mood-opt">😄</div>
+              <div class="fc-mood-opt">🤩</div>
+            </div>
+            <div style="margin-top:12px;padding:8px 10px;border-radius:10px;background:linear-gradient(145deg,#fff,#fdf6f0);box-shadow:var(--clay-sm);font-size:.7rem;color:var(--muted)">
+              Grateful for… <span style="color:var(--text);font-style:italic">a productive focus session today ✨</span>
+            </div>
+            <div style="margin-top:10px;text-align:right;font-size:.72rem;font-weight:700;color:var(--accent)">Earn today's ⭐ →</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── COMMUNITY + CROWNS ─── -->
+<section class="comm-section" id="community">
+  <div class="sec-inner">
+    <div class="sec-label">👑 Community accountability</div>
+    <div class="comm-grid">
+      <div class="reveal">
+        <div class="comm-mock">
+          <div class="comm-ttl">👥 Study Squad</div>
+          <div class="lb-r">
+            <div class="lb-rk">🥇</div>
+            <div class="lb-av" style="background:#E07B39">AI</div>
+            <div class="lb-nm">Aisha</div>
+            <span class="lb-st">🔥 15d</span>
+            <div class="lb-ck">✓</div>
+          </div>
+          <div class="lb-r">
+            <div class="lb-rk">🥈</div>
+            <div class="lb-av" style="background:#8b5cf6">RO</div>
+            <div class="lb-nm">Rosy <span style="font-size:.58rem;color:var(--accent);font-weight:700">you</span></div>
+            <span class="lb-st">🔥 12d</span>
+            <div class="lb-ck">✓</div>
+          </div>
+          <div class="lb-r">
+            <div class="lb-rk">🥉</div>
+            <div class="lb-av" style="background:#10b981">SA</div>
+            <div class="lb-nm">Sam</div>
+            <span class="lb-st">🔥 8d</span>
+            <div class="lb-ck">✓</div>
+          </div>
+          <div class="crown-ban">
+            <div class="crown-ico">👑</div>
+            <div>
+              <div class="crown-t">Crown Day!</div>
+              <div class="crown-s">Every member checked in — the whole crew showed up!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="sec-title reveal">Your Crew Keeps<br>You Honest.</h2>
+        <p class="sec-sub reveal r1" style="margin-top:14px">Not just your streak — your crew's streak. Create a private community, share a daily habit, and earn a 👑 Crown when every single member shows up. Miss one person — no crown.</p>
+        <div class="comm-steps reveal r2">
+          <div class="comm-step">
+            <div class="c-num">1</div>
+            <div class="c-txt">
+              <h4>Create a private community</h4>
+              <p>Invite your friends, classmates, or study group with a code.</p>
+            </div>
+          </div>
+          <div class="comm-step">
+            <div class="c-num">2</div>
+            <div class="c-txt">
+              <h4>Set a shared daily habit</h4>
+              <p>Everyone commits to the same habit — gym, study, read, anything.</p>
+            </div>
+          </div>
+          <div class="comm-step">
+            <div class="c-num">3</div>
+            <div class="c-txt">
+              <h4>Earn a 👑 crown together</h4>
+              <p>All members check in → whole group earns a Crown. One person misses → no crown. That's accountability.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── COMPANION EVOLUTION ─── -->
+<section class="companion-section" id="companion">
+  <div class="sec-inner">
+    <div class="sec-label">🐾 Your focus companion</div>
+    <h2 class="sec-title reveal">Your Companion Grows With You.</h2>
+    <p class="sec-sub reveal r1">Every focus session feeds your companion. Watch them evolve from a tiny egg into a legend.</p>
+
+    <div class="evo-track">
+      <div class="evo-stage" data-evo>
+        <span class="evo-emoji">🥚</span>
+        <div class="evo-label">Hatchling</div>
+        <div class="evo-hint">Just starting</div>
+      </div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage" data-evo style="transition-delay:.1s">
+        <span class="evo-emoji">🐣</span>
+        <div class="evo-label">Chick</div>
+        <div class="evo-hint">5 sessions</div>
+      </div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage" data-evo style="transition-delay:.2s">
+        <span class="evo-emoji">🐥</span>
+        <div class="evo-label">Fledgling</div>
+        <div class="evo-hint">20 sessions</div>
+      </div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage" data-evo style="transition-delay:.3s">
+        <span class="evo-emoji">🦅</span>
+        <div class="evo-label">Legend</div>
+        <div class="evo-hint">50+ sessions</div>
+      </div>
+    </div>
+    <p class="evo-note reveal r2">8 companions to choose from — Dog, Cat, Chick, Bunny, Hamster, Fox, Seal, Penguin. Each with its own personality and evolution arc.</p>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── EVERYTHING YOU NEED ─── -->
+<section class="bento-section" id="features">
+  <div class="sec-inner">
+    <div class="sec-label">✦ The full ecosystem</div>
+    <h2 class="sec-title reveal">Everything You Need.</h2>
+    <p class="sec-sub reveal r1">One space. Five pillars. Your entire productive life — organized.</p>
+
+    <div class="bento-grid">
+      <!-- PLAN — wide -->
+      <div class="bc s2" data-bc>
+        <div>
+          <span class="bc-icon">✅</span>
+          <div class="bc-title">Plan</div>
+          <div class="bc-desc">Daily tasks, weekly views, AI day planning, recurring schedules, and one-click Pomodoro sessions. Never miss what matters.</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <div style="padding:4px 10px;border-radius:8px;background:linear-gradient(145deg,#F5A623,#E07B39);color:white;font-size:.65rem;font-weight:700;box-shadow:var(--clay-acc)">🗂 Tasks</div>
+          <div style="padding:4px 10px;border-radius:8px;background:linear-gradient(145deg,#fff,#fdf6f0);color:var(--muted);font-size:.65rem;font-weight:600;box-shadow:var(--clay-sm)">📅 Calendar</div>
+          <div style="padding:4px 10px;border-radius:8px;background:linear-gradient(145deg,#fff,#fdf6f0);color:var(--muted);font-size:.65rem;font-weight:600;box-shadow:var(--clay-sm)">🤖 AI Plan</div>
+        </div>
+        <span class="bc-bg">✅</span>
+      </div>
+
+      <!-- BUILD -->
+      <div class="bc" data-bc style="transition-delay:.08s">
+        <div>
+          <span class="bc-icon">🌱</span>
+          <div class="bc-title">Build</div>
+          <div class="bc-desc">Habit tracker with streak counting, monthly grids, and milestone badges.</div>
+        </div>
+        <span class="bc-bg">🌱</span>
+      </div>
+
+      <!-- STUDY -->
+      <div class="bc" data-bc style="transition-delay:.16s">
+        <div>
+          <span class="bc-icon">📚</span>
+          <div class="bc-title">Study</div>
+          <div class="bc-desc">Subjects, timetable, exam countdowns, notes, and your student profile ID card.</div>
+        </div>
+        <span class="bc-bg">📚</span>
+      </div>
+
+      <!-- CONNECT -->
+      <div class="bc" data-bc style="transition-delay:.24s">
+        <div>
+          <span class="bc-icon">👥</span>
+          <div class="bc-title">Connect</div>
+          <div class="bc-desc">Private communities. Shared habits and goals with friends, classmates, or family.</div>
+        </div>
+        <span class="bc-bg">👥</span>
+      </div>
+
+      <!-- REFLECT — wide -->
+      <div class="bc s2" data-bc style="transition-delay:.32s">
+        <div>
+          <span class="bc-icon">🌙</span>
+          <div class="bc-title">Reflect</div>
+          <div class="bc-desc">Daily mood journal, photo memories, gratitude logs, and a star calendar that shows every perfect day — building your legacy one evening at a time.</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <div style="padding:4px 10px;border-radius:8px;background:linear-gradient(145deg,#fff,#fdf6f0);color:var(--muted);font-size:.65rem;font-weight:600;box-shadow:var(--clay-sm)">📖 Journal</div>
+          <div style="padding:4px 10px;border-radius:8px;background:linear-gradient(145deg,#fff,#fdf6f0);color:var(--muted);font-size:.65rem;font-weight:600;box-shadow:var(--clay-sm)">📸 Memories</div>
+          <div style="padding:4px 10px;border-radius:8px;background:linear-gradient(145deg,#F5A623,#E07B39);color:white;font-size:.65rem;font-weight:700;box-shadow:var(--clay-acc)">⭐ Stars</div>
+        </div>
+        <span class="bc-bg">🌙</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── BUILT FOR STUDENTS ─── -->
+<section class="student-section" id="students">
+  <div class="sec-inner">
+    <div class="sec-label">🎓 Student-first</div>
+    <h2 class="sec-title reveal">Built for Students.<br>Actually.</h2>
+    <p class="sec-sub reveal r1">Every other productivity app was built for office workers. monad was built for you — exams, timetables, subject notes, and all.</p>
+    <div class="student-grid">
+      <!-- Timetable card -->
+      <div class="stud-card" data-sc>
+        <div class="stud-hd">📅 Today's Timetable</div>
+        <div class="tt-row"><span class="tt-time">8:00</span><span class="tt-sub">Mathematics</span><span class="tt-rm">Rm 204</span></div>
+        <div class="tt-row"><span class="tt-time">10:00</span><span class="tt-sub">Physics</span><span class="tt-rm">Lab 3</span></div>
+        <div class="tt-row"><span class="tt-time">1:00</span><span class="tt-sub">Chemistry</span><span class="tt-rm">Rm 108</span></div>
+        <div class="tt-row"><span class="tt-time">3:00</span><span class="tt-sub">English</span><span class="tt-rm">Rm 301</span></div>
+        <div style="margin-top:12px;font-size:.68rem;color:var(--muted)">📣 Reminder 10 min before each class</div>
+      </div>
+      <!-- Exam countdown card -->
+      <div class="stud-card" data-sc style="transition-delay:.1s">
+        <div class="stud-hd">📝 Upcoming Exams</div>
+        <div class="ex-row"><span class="ex-sub">Physics</span><span class="ex-badge" style="background:rgba(239,68,68,.1);color:#ef4444">3 days</span></div>
+        <div class="ex-row"><span class="ex-sub">Chemistry</span><span class="ex-badge" style="background:rgba(245,158,11,.1);color:#d97706">8 days</span></div>
+        <div class="ex-row"><span class="ex-sub">Mathematics</span><span class="ex-badge" style="background:rgba(16,185,129,.1);color:#10b981">14 days</span></div>
+        <div class="ex-row"><span class="ex-sub">English</span><span class="ex-badge" style="background:rgba(59,130,246,.1);color:#3b82f6">21 days</span></div>
+        <div style="margin-top:10px;padding:7px;border-radius:10px;background:linear-gradient(145deg,#F5A623,#E07B39);text-align:center;font-size:.66rem;font-weight:700;color:white;box-shadow:var(--clay-acc)">+ Add exam &amp; link tasks</div>
+      </div>
+      <!-- Student profile card -->
+      <div class="stud-card" data-sc style="transition-delay:.2s">
+        <div class="stud-hd">🪪 Study Profile</div>
+        <div class="sid-card">
+          <div class="sid-inst">State University · CSE Dept.</div>
+          <div class="sid-name">Rosy</div>
+          <div class="sid-roll">Roll No: 21CS045</div>
+          <div class="sid-bot">
+            <div class="sid-yr">3rd Year · Semester 5</div>
+            <div style="font-size:1.4rem">🐥</div>
+          </div>
+        </div>
+        <div style="font-size:.7rem;color:var(--muted);line-height:1.65">Your digital study identity — institution, year, subjects, and companion all in one place.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── SHARE PROGRESS ─── -->
+<section class="share-section" id="share">
+  <div class="sec-inner">
+    <div class="sec-label">📤 Share your growth</div>
+    <h2 class="sec-title reveal">Share Your Progress.</h2>
+    <p class="sec-sub reveal r1">Your wins deserve to be seen. Beautiful shareable cards for every milestone.</p>
+
+    <div class="share-grid">
+
+      <!-- Instagram-style streak card -->
+      <div class="share-card" data-share>
+        <div class="sc-head">🔥 Streak Card</div>
+        <div style="text-align:center;margin-bottom:14px">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:2.8rem;font-weight:800;color:var(--accent);line-height:1">30</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:2px">Day Streak</div>
+        </div>
+        <div class="sc-bar-wrap"><div class="sc-bar-fill" data-bar></div></div>
+        <div style="font-size:.68rem;color:var(--muted);margin-bottom:12px">78% to next milestone</div>
+        <div class="sc-stars">⭐⭐⭐⭐⭐⭐⭐</div>
+        <div class="sc-plus">+12</div>
+        <div class="sc-plus-lbl">Stars this month</div>
+      </div>
+
+      <!-- Weekly report card -->
+      <div class="share-card" data-share style="transition-delay:.1s">
+        <div class="sc-head">📊 Weekly Report</div>
+        <div class="sc-row"><span class="sc-lbl">Tasks done</span><span class="sc-val">23 / 25</span></div>
+        <div class="sc-row"><span class="sc-lbl">Focus hours</span><span class="sc-val">14.5 hrs</span></div>
+        <div class="sc-row"><span class="sc-lbl">Habits kept</span><span class="sc-val">91%</span></div>
+        <div class="sc-row"><span class="sc-lbl">Journal entries</span><span class="sc-val">6 days</span></div>
+        <div class="sc-row"><span class="sc-lbl">Stars earned</span><span class="sc-val">⭐ × 5</span></div>
+        <div style="margin-top:14px;padding:8px 12px;border-radius:12px;background:linear-gradient(145deg,#fff8f0,#fef3e4);font-size:.74rem;color:var(--accent);font-weight:600;text-align:center">Your best week yet 🎉</div>
+      </div>
+
+      <!-- Study progress card -->
+      <div class="share-card" data-share style="transition-delay:.2s">
+        <div class="sc-head">📚 Study Progress</div>
+        <div class="sj-row">
+          <div class="sj-dot" style="background:#ef4444"></div>
+          <div class="sj-name">Physics</div>
+          <div class="sj-bw"><div class="sj-bf" style="background:#ef4444;--w:82%" data-bar></div></div>
+          <div class="sj-pct">82%</div>
+        </div>
+        <div class="sj-row">
+          <div class="sj-dot" style="background:#3b82f6"></div>
+          <div class="sj-name">Chemistry</div>
+          <div class="sj-bw"><div class="sj-bf" style="background:#3b82f6;--w:65%" data-bar></div></div>
+          <div class="sj-pct">65%</div>
+        </div>
+        <div class="sj-row">
+          <div class="sj-dot" style="background:#10b981"></div>
+          <div class="sj-name">Maths</div>
+          <div class="sj-bw"><div class="sj-bf" style="background:#10b981;--w:90%" data-bar></div></div>
+          <div class="sj-pct">90%</div>
+        </div>
+        <div class="sj-row">
+          <div class="sj-dot" style="background:#8b5cf6"></div>
+          <div class="sj-name">Biology</div>
+          <div class="sj-bw"><div class="sj-bf" style="background:#8b5cf6;--w:48%" data-bar></div></div>
+          <div class="sj-pct">48%</div>
+        </div>
+        <div style="margin-top:14px;font-size:.72rem;color:var(--muted)">4 subjects · 14 upcoming exams tracked</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── LEGACY JOURNEY ─── -->
+<section class="journey-section" id="legacy">
+  <div class="sec-inner">
+    <div class="sec-label">🌳 Your legacy</div>
+    <h2 class="sec-title reveal">The Journey of a Lifetime.</h2>
+    <p class="sec-sub reveal r1">Every habit checked, every star earned, every session completed — it all adds up to something extraordinary.</p>
+
+    <div class="journey-track">
+
+      <div class="j-stage" data-js>
+        <div class="j-text">
+          <h3>Plant the seed.</h3>
+          <p>Show up on day one. Add your first task, check your first habit. The journey begins with a single, quiet act of commitment.</p>
+        </div>
+        <div class="j-node">🌱</div>
+        <div class="j-card">
+          <div class="j-stat">Day 1</div>
+          <div class="j-stat-lbl">First task checked</div>
+        </div>
+      </div>
+
+      <div class="j-stage" data-js>
+        <div class="j-text">
+          <h3>Find your rhythm.</h3>
+          <p>Streaks start forming. Your companion evolves. Focus sessions stack up. You begin to trust yourself to show up — every single day.</p>
+        </div>
+        <div class="j-node">🌿</div>
+        <div class="j-card">
+          <div class="j-stat">30 days</div>
+          <div class="j-stat-lbl">First streak milestone</div>
+        </div>
+      </div>
+
+      <div class="j-stage" data-js>
+        <div class="j-text">
+          <h3>Grow into your potential.</h3>
+          <p>Stars light up your calendar. Your study game sharpens. Communities form around shared goals. You're no longer building habits — you've become them.</p>
+        </div>
+        <div class="j-node">🌳</div>
+        <div class="j-card">
+          <div class="j-stat">100 stars</div>
+          <div class="j-stat-lbl">100 perfect days</div>
+        </div>
+      </div>
+
+      <div class="j-stage" data-js>
+        <div class="j-text">
+          <h3>Leave a legacy.</h3>
+          <p>Your journey becomes a story worth telling. Every reflection, every photo memory, every completed goal — this is who you built yourself to be.</p>
+        </div>
+        <div class="j-node">🏆</div>
+        <div class="j-card">
+          <div class="j-stat">∞</div>
+          <div class="j-stat-lbl">Your legacy, written daily</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="clay-sep"></div>
+
+<!-- ─── FINAL CTA ─── -->
+<section class="cta-section">
+  <div class="cta-card reveal">
+    <h2>Your legacy starts today.</h2>
+    <p>Join thousands of students, creators, and dreamers building something worth looking back on.</p>
+    <div class="cta-trust">
+      <div class="trust-chip"><b>✓</b> Free forever</div>
+      <div class="trust-chip"><b>✓</b> No credit card</div>
+      <div class="trust-chip"><b>✓</b> 60-second setup</div>
+    </div>
+    <a href="/sign-up" class="btn-clay" style="font-size:1.05rem;padding:17px 48px">
+      Start building your legacy →
+    </a>
+  </div>
+</section>
+
+<div class="footer-bar">© {{ current_year }} monad · Built with warmth, designed for flow</div>
+
+</div><!-- .landing -->
+
+<script>
+(function() {
+
+  /* ── Scroll reveal ── */
+  const revObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('visible');
+      revObs.unobserve(e.target);
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+
+  /* ── Companion evo stages ── */
+  const evoObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); evoObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('[data-evo]').forEach(el => evoObs.observe(el));
+
+  /* ── Bento cards ── */
+  const bcObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); bcObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('[data-bc]').forEach(el => bcObs.observe(el));
+
+  /* ── Student cards ── */
+  const scObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); scObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('[data-sc]').forEach(el => scObs.observe(el));
+
+  /* ── Share cards + progress bar animation ── */
+  const shareObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('visible');
+      e.target.querySelectorAll('[data-bar]').forEach(b => b.classList.add('go'));
+      shareObs.unobserve(e.target);
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('[data-share]').forEach(el => shareObs.observe(el));
+
+  /* ── Journey stages ── */
+  const jsObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); jsObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.25 });
+  document.querySelectorAll('[data-js]').forEach(el => jsObs.observe(el));
+
+  /* ── Hero mouse parallax ── */
+  const dash = document.getElementById('heroDash');
+  if (dash) {
+    document.addEventListener('mousemove', ev => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const dx = (ev.clientX - cx) / cx;
+      const dy = (ev.clientY - cy) / cy;
+      dash.style.transform = `translateX(${dx * 10}px) translateY(${dy * 7}px)`;
+    });
+  }
+
+})();
+</script>
+
+{% endblock %}

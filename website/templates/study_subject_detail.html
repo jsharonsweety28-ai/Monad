@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block title %}{{ subject.name }} · monad{% endblock %}
+{% block page_title %}study{% endblock %}
+
+{% block extra_head %}
+<style>
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  .study-page { max-width:900px; margin:0 auto; padding-bottom:80px; }
+
+  /* Back link */
+  .back-link { display:inline-flex; align-items:center; gap:6px; color:var(--text-secondary); font-size:.82rem; font-weight:600; text-decoration:none; margin-bottom:16px; transition:color .15s; animation:fadeUp .3s ease both; }
+  .back-link:hover { color:var(--text-primary); }
+
+  /* Hero banner */
+  .subj-hero { border-radius:20px; padding:28px 28px 24px; margin-bottom:24px; position:relative; overflow:hidden; animation:fadeUp .4s ease .05s both; }
+  .subj-hero-bg { position:absolute; inset:0; opacity:.15; }
+  .subj-hero-content { position:relative; }
+  .subj-code  { font-size:.7rem; font-weight:700; letter-spacing:.6px; text-transform:uppercase; opacity:.75; margin-bottom:6px; }
+  .subj-name  { font-family:'Space Grotesk',sans-serif; font-size:1.8rem; font-weight:800; color:white; line-height:1.2; }
+  .subj-teacher { font-size:.84rem; color:rgba(255,255,255,.75); margin-top:6px; }
+  .subj-stats { display:flex; gap:16px; margin-top:14px; flex-wrap:wrap; }
+  .subj-stat  { background:rgba(255,255,255,.15); backdrop-filter:blur(4px); padding:5px 14px; border-radius:99px; font-size:.78rem; font-weight:600; color:white; }
+  .hero-actions { position:absolute; top:20px; right:20px; display:flex; gap:8px; }
+  .hero-btn { padding:7px 14px; border-radius:99px; font-size:.75rem; font-weight:600; cursor:pointer; border:1.5px solid rgba(255,255,255,.35); background:rgba(255,255,255,.12); color:white; transition:all .15s; }
+  .hero-btn:hover { background:rgba(255,255,255,.25); }
+  .hero-btn-del { border-color:rgba(255,100,100,.4); background:rgba(255,60,60,.12); }
+
+  /* Section headers */
+  .sec-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; animation:fadeUp .4s ease both; }
+  .sec-title   { font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:700; color:var(--text-primary); }
+  .sec-add-btn { padding:6px 14px; border-radius:99px; font-size:.75rem; font-weight:600; cursor:pointer; border:1.5px solid var(--border-color); background:var(--card-bg); color:var(--text-secondary); transition:all .15s; }
+  .sec-add-btn:hover { border-color:var(--accent-1); color:var(--accent-1); }
+  .section-block { margin-bottom:28px; }
+
+  /* Class slots row */
+  .slots-row { display:flex; flex-wrap:wrap; gap:8px; animation:fadeUp .35s ease both; }
+  .slot-pill  { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:12px; font-size:.82rem; font-weight:600; border:1.5px solid var(--border-color); background:var(--card-bg); }
+  .slot-day   { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; opacity:.65; }
+  .slot-time  { font-size:.76rem; opacity:.8; }
+  .slot-room  { font-size:.7rem; opacity:.6; }
+  .empty-sec  { color:var(--text-secondary); font-size:.85rem; padding:14px 0; }
+
+  /* Exam cards */
+  .exam-row { display:flex; flex-direction:column; gap:8px; animation:fadeUp .35s ease both; }
+  .exam-item { display:flex; align-items:center; gap:12px; background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:14px; padding:12px 14px; }
+  .ei-bar  { width:4px; border-radius:99px; align-self:stretch; min-height:34px; background:var(--accent-1); }
+  .ei-body { flex:1; min-width:0; }
+  .ei-title { font-weight:700; font-size:.88rem; color:var(--text-primary); }
+  .ei-meta  { font-size:.74rem; color:var(--text-secondary); margin-top:2px; }
+  .ei-badge { font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:99px; white-space:nowrap; }
+  .cd-soon  { background:rgba(220,38,38,.1); color:rgba(185,28,28,.9); }
+  .cd-week  { background:rgba(202,138,4,.1);  color:rgba(161,98,7,.9); }
+  .cd-later { background:rgba(22,163,74,.1);  color:rgba(21,128,61,.9); }
+  .ei-del   { padding:5px 10px; border-radius:99px; font-size:.72rem; cursor:pointer; border:1.5px solid rgba(239,68,68,.3); color:#ef4444; background:rgba(239,68,68,.06); transition:background .15s; }
+  .ei-del:hover { background:rgba(239,68,68,.14); }
+
+  /* Notes */
+  .notes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; animation:fadeUp .35s ease both; }
+  .note-card  { background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:6px; }
+  .nc-topic   { font-size:.64rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); }
+  .nc-title   { font-weight:700; font-size:.88rem; color:var(--text-primary); }
+  .nc-content { font-size:.78rem; color:var(--text-secondary); overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; transition:all .2s; }
+  .note-card.expanded .nc-content { -webkit-line-clamp:unset; display:block; }
+  .note-card { cursor:pointer; transition:box-shadow .15s, transform .15s; }
+  .note-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.08); }
+  .nc-expand-hint { font-size:.65rem; color:var(--accent-1); font-weight:600; margin-top:4px; }
+  .nc-file    { display:inline-flex; align-items:center; gap:5px; font-size:.74rem; font-weight:600; padding:3px 10px; border-radius:99px; background:var(--hover); color:var(--text-secondary); text-decoration:none; }
+  .nc-file:hover { color:var(--accent-1); }
+  .nc-date    { font-size:.68rem; color:var(--text-secondary); opacity:.6; }
+  .nc-del     { align-self:flex-start; margin-top:4px; padding:3px 10px; border-radius:99px; font-size:.68rem; cursor:pointer; border:1.5px solid rgba(239,68,68,.25); color:rgba(239,68,68,.7); background:transparent; transition:all .15s; }
+  .nc-del:hover { background:rgba(239,68,68,.1); }
+
+  /* Modals */
+  .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+  .modal-backdrop.open { display:flex; }
+  .modal-box { background:var(--card-bg); border-radius:22px; padding:26px; width:90%; max-width:430px; max-height:92vh; overflow-y:auto; border:1px solid var(--border-color); box-shadow:0 24px 64px rgba(0,0,0,.18); animation:fadeUp .25s ease both; }
+  .modal-title { font-family:'Space Grotesk',sans-serif; font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:18px; }
+  .modal-label { font-size:.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:5px; display:block; margin-top:12px; }
+  .modal-input, .modal-select, .modal-textarea { width:100%; padding:10px 14px; border-radius:12px; border:1.5px solid var(--border-color); background:var(--input-bg); color:var(--text-primary); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; transition:border-color .2s; box-sizing:border-box; }
+  .modal-input:focus, .modal-select:focus, .modal-textarea:focus { border-color:var(--accent-1); }
+  .modal-textarea { resize:vertical; min-height:80px; }
+  .modal-row { display:flex; gap:10px; }
+  .modal-row .modal-input { flex:1; }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .btn-save   { flex:1; padding:12px; background:var(--accent-1); color:white; border:none; border-radius:99px; font-weight:700; font-size:.9rem; cursor:pointer; }
+  .btn-cancel { padding:12px 20px; background:transparent; color:var(--text-secondary); border:1.5px solid var(--border-color); border-radius:99px; font-size:.9rem; cursor:pointer; }
+  .btn-danger { flex:1; padding:12px; background:rgba(239,68,68,.1); color:#ef4444; border:1.5px solid rgba(239,68,68,.25); border-radius:99px; font-size:.9rem; cursor:pointer; }
+
+  /* Color swatches */
+  .color-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .color-swatch { width:28px; height:28px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:border-color .15s, transform .15s; }
+  .color-swatch.picked { border-color:var(--text-primary); transform:scale(1.15); }
+
+  @media (max-width: 600px) {
+    .modal-row { flex-direction: column; }
+    .modal-row .modal-input { width: 100%; }
+    .modal-actions { flex-direction: column; }
+    .notes-grid { grid-template-columns: 1fr; }
+    .hero-actions { position: static; display: flex; margin-top: 12px; }
+    .subj-stats { gap: 8px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="study-page">
+
+  <a class="back-link" href="{{ url_for('views.study_subjects') }}">← Back to Subjects</a>
+
+  <!-- Hero -->
+  <div class="subj-hero" style="background:{{ subject.color }}">
+    <div class="subj-hero-content">
+      {% if subject.code %}<div class="subj-code">{{ subject.code }}</div>{% endif %}
+      <div class="subj-name">{{ subject.name }}</div>
+      {% if subject.teacher %}<div class="subj-teacher">👩‍🏫 {{ subject.teacher }}</div>{% endif %}
+      <div class="subj-stats">
+        <span class="subj-stat">{{ subject.slots|length }} class slot{{ 's' if subject.slots|length != 1 }}</span>
+        <span class="subj-stat">{{ upcoming_exams|length }} upcoming exam{{ 's' if upcoming_exams|length != 1 }}</span>
+        <span class="subj-stat">{{ subject.notes|length }} note{{ 's' if subject.notes|length != 1 }}</span>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="hero-btn" onclick="openEditSubject()">Edit</button>
+      <button class="hero-btn hero-btn-del" onclick="deleteSubject()">Delete</button>
+    </div>
+  </div>
+
+  <!-- Class Slots -->
+  <div class="section-block">
+    <div class="sec-header">
+      <div class="sec-title">Class Schedule</div>
+      <a class="sec-add-btn" href="{{ url_for('views.study_timetable') }}">Edit in Timetable →</a>
+    </div>
+    {% set day_names = ['Mon','Tue','Wed','Thu','Fri','Sat'] %}
+    {% if subject.slots %}
+    <div class="slots-row">
+      {% for sl in subject.slots|sort(attribute='day_of_week') %}
+      <div class="slot-pill" style="border-color:color-mix(in srgb,{{ subject.color }} 40%,var(--border-color)); background:color-mix(in srgb,{{ subject.color }} 8%,var(--card-bg))">
+        <span class="slot-day">{{ day_names[sl.day_of_week] }}</span>
+        <span class="slot-time">{{ sl.start_time }} – {{ sl.end_time }}</span>
+        {% if sl.room %}<span class="slot-room">📍 {{ sl.room }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-sec">No class slots yet — <a href="{{ url_for('views.study_timetable') }}" style="color:var(--accent-1)">add in timetable</a>.</div>
+    {% endif %}
+  </div>
+
+  <!-- Exams -->
+  <div class="section-block">
+    <div class="sec-header">
+      <div class="sec-title">Exams & Deadlines</div>
+      <button class="sec-add-btn" onclick="document.getElementById('addExamModal').classList.add('open')">+ Add</button>
+    </div>
+    {% if upcoming_exams %}
+    <div class="exam-row">
+      {% for exam in upcoming_exams %}
+        {% set days_left = (exam.date - today).days %}
+        <div class="exam-item" id="exam-{{ exam.id }}">
+          <div class="ei-bar" style="background:{{ subject.color }}"></div>
+          <div class="ei-body">
+            <div class="ei-title">{{ exam.title }}</div>
+            <div class="ei-meta">{{ exam.exam_type|title }} · {{ exam.date.strftime('%d %b %Y') }}{% if exam.time %} {{ exam.time }}{% endif %}{% if exam.weightage %} · {{ exam.weightage }}%{% endif %}</div>
+          </div>
+          {% if days_left == 0 %}
+            <span class="ei-badge cd-soon">Today!</span>
+          {% elif days_left == 1 %}
+            <span class="ei-badge cd-soon">Tomorrow</span>
+          {% elif days_left <= 7 %}
+            <span class="ei-badge cd-week">{{ days_left }}d</span>
+          {% else %}
+            <span class="ei-badge cd-later">{{ days_left }}d</span>
+          {% endif %}
+          <button class="ei-del" onclick="deleteExam({{ exam.id }})">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-sec">No upcoming exams.</div>
+    {% endif %}
+  </div>
+
+  <!-- Notes -->
+  <div class="section-block">
+    <div class="sec-header">
+      <div class="sec-title">Notes & Resources</div>
+      <button class="sec-add-btn" onclick="document.getElementById('addNoteModal').classList.add('open')">+ Add</button>
+    </div>
+    {% if subject.notes %}
+    <div class="notes-grid">
+      {% for note in subject.notes|sort(attribute='created_at', reverse=True) %}
+      <div class="note-card" id="note-{{ note.id }}" onclick="expandNote(this, event)">
+        {% if note.topic %}<div class="nc-topic">{{ note.topic }}</div>{% endif %}
+        <div class="nc-title">{{ note.title }}</div>
+        {% if note.content %}<div class="nc-content">{{ note.content }}</div>
+        {% if note.content|length > 120 %}<div class="nc-expand-hint" id="hint-{{ note.id }}">tap to expand ↓</div>{% endif %}
+        {% endif %}
+        {% if note.file_path %}
+          <a class="nc-file" href="/media/{{ note.file_path }}" target="_blank">
+            {% if note.file_type in ['pdf'] %}📄{% elif note.file_type in ['png','jpg','jpeg','gif','webp'] %}🖼{% else %}📎{% endif %}
+            {{ note.title }}
+          </a>
+        {% endif %}
+        <div class="nc-date">{{ note.created_at.strftime('%d %b %Y') }}</div>
+        <button class="nc-del" onclick="deleteNote({{ note.id }})">Delete</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-sec">No notes yet. Upload a PDF or write a quick note.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Edit Subject Modal -->
+<div class="modal-backdrop" id="editSubjectModal">
+  <div class="modal-box">
+    <div class="modal-title">Edit Subject</div>
+    <form method="POST" action="{{ url_for('views.edit_subject', id=subject.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="modal-label">Name</label>
+      <input class="modal-input" name="name" value="{{ subject.name }}" required autocomplete="off">
+      <label class="modal-label">Short Code</label>
+      <input class="modal-input" name="code" value="{{ subject.code or '' }}" maxlength="20" autocomplete="off">
+      <label class="modal-label">Teacher</label>
+      <input class="modal-input" name="teacher" value="{{ subject.teacher or '' }}" autocomplete="off">
+      <label class="modal-label">Color</label>
+      <div class="color-row" id="editColorRow">
+        {% for c in ['#e85d5d','#f97316','#E07B39','#eab308','#22c55e','#10b981','#3b82f6','#8b5cf6','#ec4899','#64748b'] %}
+        <div class="color-swatch {% if c == subject.color %}picked{% endif %}" style="background:{{ c }}"
+             onclick="editPickColor(this,'{{ c }}')"></div>
+        {% endfor %}
+      </div>
+      <input type="hidden" name="color" id="editColorInput" value="{{ subject.color }}">
+      <div class="modal-actions">
+        <button type="submit" class="btn-save">Save</button>
+        <button type="button" class="btn-cancel" onclick="document.getElementById('editSubjectModal').classList.remove('open')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Exam Modal -->
+<div class="modal-backdrop" id="addExamModal">
+  <div class="modal-box">
+    <div class="modal-title">Add Exam / Deadline</div>
+    <label class="modal-label">Title</label>
+    <input class="modal-input" id="examTitle" placeholder="e.g. Midterm Exam" autocomplete="off">
+    <label class="modal-label">Type</label>
+    <select class="modal-select" id="examType">
+      <option value="exam">📝 Exam</option>
+      <option value="assignment">📄 Assignment</option>
+      <option value="quiz">⚡ Quiz</option>
+      <option value="project">🎯 Project</option>
+    </select>
+    <label class="modal-label">Date & Time</label>
+    <div class="modal-row">
+      <input class="modal-input" type="date" id="examDate">
+      <input class="modal-input" type="time" id="examTime">
+    </div>
+    <label class="modal-label">Weightage %</label>
+    <input class="modal-input" type="number" id="examWeight" placeholder="e.g. 30" min="0" max="100">
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveExam()">Save</button>
+      <button class="btn-cancel" onclick="document.getElementById('addExamModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal-backdrop" id="addNoteModal">
+  <div class="modal-box">
+    <div class="modal-title">Add Note / Resource</div>
+    <form method="POST" action="{{ url_for('views.add_study_note') }}" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="subject_id" value="{{ subject.id }}">
+      <label class="modal-label">Title</label>
+      <input class="modal-input" name="title" placeholder="e.g. Chapter 3 summary" required autocomplete="off">
+      <label class="modal-label">Topic tag (optional)</label>
+      <input class="modal-input" name="topic" placeholder="e.g. Chapter 3, Lecture 5" autocomplete="off">
+      <label class="modal-label">Notes (optional)</label>
+      <textarea class="modal-textarea" name="content" placeholder="Write quick notes here..."></textarea>
+      <label class="modal-label">Attach file (PDF, image, DOCX)</label>
+      <input class="modal-input" type="file" name="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp">
+      <div class="modal-actions">
+        <button type="submit" class="btn-save">Save</button>
+        <button type="button" class="btn-cancel" onclick="document.getElementById('addNoteModal').classList.remove('open')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('examDate').value = '{{ today.strftime("%Y-%m-%d") }}';
+
+function openEditSubject() { document.getElementById('editSubjectModal').classList.add('open'); }
+
+function editPickColor(el, color) {
+  document.querySelectorAll('#editColorRow .color-swatch').forEach(s => s.classList.remove('picked'));
+  el.classList.add('picked');
+  document.getElementById('editColorInput').value = color;
+}
+
+async function deleteSubject() {
+  if (!confirm('Delete {{ subject.name }} and all its data?')) return;
+  await fetch('{{ url_for("views.delete_subject", id=subject.id) }}', { method:'POST', headers:{'Content-Type':'application/json'} });
+  location.href = '{{ url_for("views.study_subjects") }}';
+}
+
+async function saveExam() {
+  const payload = {
+    subject_id: {{ subject.id }},
+    title:      document.getElementById('examTitle').value.trim(),
+    exam_type:  document.getElementById('examType').value,
+    date:       document.getElementById('examDate').value,
+    time:       document.getElementById('examTime').value || null,
+    weightage:  parseInt(document.getElementById('examWeight').value) || 0,
+  };
+  if (!payload.title || !payload.date) return;
+  await fetch('/study/exams/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+  location.reload();
+}
+
+async function deleteExam(id) {
+  await fetch('/study/exams/delete/' + id, { method:'POST', headers:{'Content-Type':'application/json'} });
+  document.getElementById('exam-' + id)?.remove();
+}
+
+async function deleteNote(id) {
+  await fetch('/study/notes/delete/' + id, { method:'POST', headers:{'Content-Type':'application/json'} });
+  document.getElementById('note-' + id)?.remove();
+}
+
+function expandNote(card, e) {
+  if (e.target.closest('button') || e.target.closest('a')) return;
+  const isExpanded = card.classList.toggle('expanded');
+  const id = card.id.replace('note-', '');
+  const hint = document.getElementById('hint-' + id);
+  if (hint) hint.textContent = isExpanded ? 'tap to collapse ↑' : 'tap to expand ↓';
+}
+
+// Close modals on backdrop click
+['editSubjectModal','addExamModal','addNoteModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+</script>
+{% endblock %}

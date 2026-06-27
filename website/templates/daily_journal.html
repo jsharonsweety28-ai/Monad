@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% block title %}Daily Journal · monad{% endblock %}
+{% block page_title %}journal{% endblock %}
+{% block content %}
+
+<style>
+  .journal-page { max-width: 700px; margin: 0 auto; }
+
+  .journal-header {
+    background: var(--header-gradient);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 25px var(--glow-color);
+  }
+  .journal-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .journal-header .date-sub { opacity: 0.85; font-size: 0.9rem; }
+  .journal-nav { display: flex; justify-content: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .journal-nav a {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .journal-nav a:hover { background: rgba(255,255,255,0.35); }
+
+  .banner {
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 1px solid;
+  }
+  .banner.new { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: #f59e0b; }
+  .banner.done { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); color: #10b981; }
+  .banner .emoji { font-size: 40px; display: block; margin-bottom: 8px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .summary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .summary-card h5 { font-weight: 700; color: var(--text-primary); margin-bottom: 10px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+  .summary-card.done { border-left: 4px solid #10b981; }
+  .summary-card.missed { border-left: 4px solid #ef4444; }
+  .summary-card.habits { border-left: 4px solid #f59e0b; }
+
+  .task-mini { padding: 6px 0; font-size: 0.85rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; }
+  .task-mini:last-child { border-bottom: none; }
+  .task-mini .note { color: var(--accent-1); font-size: 0.78rem; margin-left: auto; }
+
+  .habit-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid var(--border-color); }
+  .habit-row:last-child { border-bottom: none; }
+  .habit-row .status { font-weight: 600; }
+  .habit-row .status.yes { color: #10b981; }
+  .habit-row .status.no { color: #ef4444; }
+
+  .journal-form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .journal-form-card h4 { font-weight: 700; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+  .mood-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+  .mood-opt { text-align: center; }
+  .mood-opt input { display: none; }
+  .mood-emoji {
+    font-size: 40px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+    background: var(--input-bg);
+    line-height: 1;
+  }
+  .mood-opt input:checked + .mood-emoji { 
+    border-color: var(--accent-1); 
+    background: var(--hover); 
+    transform: scale(1.1); 
+    box-shadow: 0 4px 15px var(--glow-color);
+  }
+  .mood-label { 
+    font-size: 0.72rem; 
+    color: var(--text-secondary); 
+    margin-top: 6px; 
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; font-size: 0.85rem; }
+  .input-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    min-height: 70px;
+    font-size: 0.9rem;
+  }
+  .input-group textarea:focus { outline: none; border-color: var(--accent-1); }
+
+  .btn-save {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent-1);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-save:hover { opacity: 0.9; }
+
+  @media (max-width: 600px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    .mood-emoji { font-size: 30px; padding: 10px; }
+  }
+</style>
+
+<div class="journal-page">
+  
+  <div class="journal-header">
+    <h2>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="vertical-align:middle; margin-right:6px;">
+        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+      </svg>
+      Daily Journal
+    </h2>
+    <div class="date-sub">{{ review_date.strftime('%A, %B %d, %Y') }}</div>
+    <div style="font-size:0.72rem;font-weight:600;opacity:0.75;letter-spacing:0.05em;margin-top:4px;">reflect and rise</div>
+    <div class="journal-nav">
+      <a href="{{ url_for('views.daily_journal', date_str=yesterday) }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="vertical-align:middle; margin-right:4px;"><polyline points="15,18 9,12 15,6"/></svg>
+        Yesterday
+      </a>
+      {% if show_tomorrow %}
+        <a href="{{ url_for('views.daily_journal', date_str=tomorrow) }}">
+          Tomorrow
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="vertical-align:middle; margin-left:4px;"><polyline points="9,18 15,12 9,6"/></svg>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not journal %}
+    <div class="banner new">
+      <span class="emoji">✦</span>
+      <strong>Time to reflect on your day!</strong>
+      <p style="margin:4px 0 0;">A few minutes of reflection can boost your productivity tomorrow.</p>
+    </div>
+  {% else %}
+    <div class="banner done">
+      <span class="emoji">
+        {% if journal.mood == 'great' %}🌟
+        {% elif journal.mood == 'good' %}😊
+        {% elif journal.mood == 'okay' %}😐
+        {% elif journal.mood == 'bad' %}😔
+        {% else %}😞
+        {% endif %}
+      </span>
+      <strong>You've already reflected on this day!</strong>
+      <p style="margin:4px 0 0;">Edit your reflection below anytime.</p>
+    </div>
+  {% endif %}
+
+  <div class="summary-grid">
+    <div class="summary-card done">
+      <h5>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+        Accomplished 
+        <span style="margin-left:auto; background:#10b981; color:white; padding:2px 10px; border-radius:12px; font-size:0.75rem;">{{ completed_tasks|length }}</span>
+      </h5>
+      {% if completed_tasks %}
+        {% for task in completed_tasks %}
+          <div class="task-mini">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+            {{ task.content }}
+            {% if task.quick_note %}<span class="note">{{ task.quick_note }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--text-secondary); font-size:0.85rem;">No tasks completed today</p>
+      {% endif %}
+    </div>
+    <div class="summary-card missed">
+      <h5>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Missed 
+        <span style="margin-left:auto; background:#ef4444; color:white; padding:2px 10px; border-radius:12px; font-size:0.75rem;">{{ missed_tasks|length }}</span>
+      </h5>
+      {% if missed_tasks %}
+        {% for task in missed_tasks %}
+          <div class="task-mini">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            {{ task.content }}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:#10b981; font-size:0.85rem;">All tasks completed!</p>
+      {% endif %}
+    </div>
+    <div class="summary-card habits">
+      <h5>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Today's Habits
+      </h5>
+      {% if habits_status %}
+        {% for h in habits_status %}
+          <div class="habit-row">
+            <span>{{ h.name }}</span>
+            <span class="status {% if h.done %}yes{% else %}no{% endif %}">{% if h.done %}Done{% else %}Missed{% endif %}</span>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--text-secondary); font-size:0.85rem;">No habits tracked yet</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="journal-form-card">
+    <h4>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="2.5" style="vertical-align:middle; margin-right:6px;">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+      </svg>
+      {% if journal %}Edit Your Reflection{% else %}Write Your Reflection{% endif %}
+    </h4>
+    
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label style="font-weight:600; color:var(--text-primary); margin-bottom:10px; display:block;">How was your day?</label>
+      
+      <div class="mood-selector">
+        {% set moods = [('great','🌟','Great'),('good','😊','Good'),('okay','😐','Okay'),('bad','😔','Bad'),('terrible','😞','Terrible')] %}
+        
+        {% for val, emoji, label in moods %}
+          <label class="mood-opt">
+            <input type="radio" name="mood" value="{{ val }}" {% if journal and journal.mood == val %}checked{% endif %}>
+            <span class="mood-emoji">{{ emoji }}</span>
+            <div class="mood-label">{{ label }}</div>
+          </label>
+        {% endfor %}
+      </div>
+
+      <div class="input-group">
+        <label>What went well today?</label>
+        <textarea name="accomplishments" placeholder="Write your wins...">{% if journal %}{{ journal.accomplishments or '' }}{% endif %}</textarea>
+      </div>
+      <div class="input-group">
+        <label>What could have gone better?</label>
+        <textarea name="improvements" placeholder="Any obstacles or areas to improve...">{% if journal %}{{ journal.improvements or '' }}{% endif %}</textarea>
+      </div>
+      <div class="input-group">
+        <label>What did you learn today?</label>
+        <textarea name="learnings" placeholder="Key takeaways...">{% if journal %}{{ journal.learnings or '' }}{% endif %}</textarea>
+      </div>
+      <div class="input-group">
+        <label>What are you grateful for?</label>
+        <textarea name="gratitude" placeholder="Things you're thankful for...">{% if journal %}{{ journal.gratitude or '' }}{% endif %}</textarea>
+      </div>
+
+      <button type="submit" class="btn-save">
+        {% if journal %}Update Reflection{% else %}Save Reflection{% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

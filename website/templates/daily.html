@@ -1,0 +1,1168 @@
+{% extends "base.html" %}
+{% block title %}Daily Tasks · monad{% endblock %}
+{% block page_title %}daily tasks{% endblock %}
+{% block content %}
+
+{%- macro fmt_time(t) -%}
+{%- if t -%}
+  {%- set h = t.split(':')[0]|int -%}
+  {%- set m = t.split(':')[1] -%}
+  {%- if (current_user.time_format or '12h') == '24h' -%}
+    {{- h }}:{{ m -}}
+  {%- else -%}
+    {%- set disp_h = 12 if h in [0,12] else (h if h < 12 else h - 12) -%}
+    {%- set ampm = 'AM' if h < 12 else 'PM' -%}
+    {%- if m == '00' -%}
+      {{- disp_h }} {{ ampm -}}
+    {%- else -%}
+      {{- disp_h }}:{{ m }} {{ ampm -}}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+{%- endmacro -%}
+
+<style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fillBar {
+    from { width: 0; }
+  }
+  @keyframes ringFill {
+    from { stroke-dashoffset: 163; }
+  }
+  @keyframes pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+
+  .daily-page { max-width: 760px; margin: 0 auto; }
+
+  /* ── Greeting header ── */
+  .day-hero {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; margin-bottom: 28px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .day-hero-left {}
+  .day-greeting {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.75rem; font-weight: 700;
+    color: var(--text-primary); line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .day-sub {
+    font-size: 0.88rem; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .day-badge {
+    background: var(--accent-3); color: var(--accent-1);
+    padding: 3px 10px; border-radius: 99px;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .day-nav { display: flex; gap: 6px; }
+  .day-nav-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
+    text-decoration: none; transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .day-nav-btn:hover { background: var(--accent-1); color: white; border-color: var(--accent-1); }
+
+  /* ── Progress ring ── */
+  .progress-ring { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+  .progress-ring svg { transform: rotate(-90deg); }
+  .ring-bg  { fill: none; stroke: var(--border-color); stroke-width: 7; }
+  .ring-fg  { fill: none; stroke: var(--accent-1); stroke-width: 7; stroke-linecap: round;
+              stroke-dasharray: 163; transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1);
+              animation: ringFill 1s cubic-bezier(0.4,0,0.2,1) both 0.3s; }
+  .ring-label { position: absolute; inset: 0; display: flex; flex-direction: column;
+                align-items: center; justify-content: center; }
+  .ring-pct { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
+              color: var(--text-primary); line-height: 1; }
+  .ring-done { font-size: 0.58rem; color: var(--text-secondary); margin-top: 1px; }
+
+  /* ── Priority badges ── */
+  .task-priority {
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.4px;
+    padding: 2px 8px; border-radius: 99px; line-height: 1.6;
+    display: inline-block;
+  }
+  .task-priority.p-high   { background: rgba(220,38,38,0.12);  color: rgba(185,28,28,0.85);  border: 1px solid rgba(220,38,38,0.2); }
+  .task-priority.p-medium { background: rgba(202,138,4,0.12);  color: rgba(161,98,7,0.9);    border: 1px solid rgba(202,138,4,0.22); }
+  .task-priority.p-low    { background: rgba(22,163,74,0.11);  color: rgba(21,128,61,0.85);  border: 1px solid rgba(22,163,74,0.2); }
+  .task-due {
+    font-size: 0.72rem; color: var(--text-secondary); font-weight: 500;
+    background: var(--hover); padding: 2px 8px; border-radius: 99px;
+  }
+  .add-details {
+    display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+  }
+  .add-select, .add-time {
+    padding: 7px 12px; border: 1.5px solid var(--border-color);
+    border-radius: 99px; background: var(--input-bg); color: var(--text-primary);
+    font-family: 'Inter', sans-serif; font-size: 0.82rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .add-select:focus, .add-time:focus { border-color: var(--accent-1); }
+  .btn-details {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1.5px solid var(--border-color); background: var(--input-bg);
+    color: var(--text-secondary); cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .btn-details:hover { border-color: var(--accent-1); color: var(--accent-1); }
+
+  /* ── Recurring day picker ── */
+  .recurring-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .recurring-label {
+    font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .day-pills { display: flex; gap: 5px; }
+  .day-pill {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1.5px solid var(--border-color); background: var(--input-bg);
+    color: var(--text-secondary); font-size: 0.7rem; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; user-select: none; flex-shrink: 0;
+  }
+  .day-pill.active {
+    background: var(--accent-1); border-color: var(--accent-1);
+    color: white; box-shadow: 0 2px 8px var(--glow-color);
+  }
+  .task-recurring-badge {
+    font-size: 0.68rem; background: color-mix(in srgb, var(--accent-1) 12%, var(--hover));
+    color: var(--accent-1); padding: 2px 7px; border-radius: 99px; font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ── Category pills on task cards ── */
+  .task-category {
+    display: inline-flex; align-items: center;
+    padding: 2px 9px; border-radius: 99px;
+    font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.02em; white-space: nowrap;
+    background: var(--cat-bg, rgba(224,123,57,0.12));
+    color: var(--cat-color, #c05a1a);
+  }
+
+  /* ── 12h time preview label ── */
+  .time-preview {
+    font-size: 0.72rem; color: var(--accent-1); font-weight: 600;
+    white-space: nowrap; min-width: 54px;
+  }
+
+  /* ── Category color dot picker ── */
+  .color-picker-row {
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    margin-top: 6px; padding: 2px 0;
+  }
+  .color-picker-label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+  .color-dot {
+    width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+    border: 2.5px solid transparent; transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .color-dot:hover { transform: scale(1.18); }
+  .color-dot.selected { border-color: var(--text-primary); transform: scale(1.15); }
+
+  /* ── Category filter tabs ── */
+  .cat-filter-wrap {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 14px; animation: fadeUp 0.5s ease 0.08s both;
+  }
+  .cat-tab {
+    padding: 5px 14px; border-radius: 99px; font-size: 0.78rem; font-weight: 600;
+    border: 1.5px solid var(--border-color); background: var(--card-bg);
+    color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+  }
+  .cat-tab:hover {
+    border-color: var(--cat-accent, var(--accent-1));
+    color: var(--cat-accent, var(--accent-1));
+  }
+  .cat-tab.active {
+    background: transparent !important;
+    color: var(--cat-accent, var(--accent-1)) !important;
+    border: 2px solid var(--cat-accent, var(--accent-1)) !important;
+    font-weight: 700;
+  }
+
+  /* ── Category input in forms ── */
+  .cat-input-wrap { position: relative; }
+  .cat-input-wrap datalist { display: none; }
+  .add-cat-input, .edit-cat-input {
+    width: 100%; padding: 9px 14px; border: 1.5px solid var(--border-color);
+    border-radius: 99px; background: var(--input-bg); color: var(--text-primary);
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; outline: none;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .add-cat-input:focus, .edit-cat-input:focus { border-color: var(--accent-1); }
+
+  /* ── Add task ── */
+  .add-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+  .add-card:focus-within {
+    border-color: var(--accent-1);
+    box-shadow: 0 0 0 4px var(--glow-color), 0 4px 16px rgba(0,0,0,0.05);
+  }
+  .add-form { display: flex; gap: 10px; align-items: center; }
+  .task-input {
+    flex: 1; padding: 11px 18px;
+    border: none; background: var(--input-bg);
+    border-radius: 99px; color: var(--text-primary);
+    font-size: 0.92rem; font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .task-input::placeholder { color: var(--text-secondary); }
+  .btn-add {
+    padding: 11px 22px; background: var(--accent-1); color: white;
+    border: none; border-radius: 99px; font-weight: 600;
+    cursor: pointer; font-size: 0.88rem; white-space: nowrap;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 12px var(--glow-color);
+  }
+  .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* ── Notes card ── */
+  .notes-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+    animation: fadeUp 0.5s ease 0.15s both;
+  }
+  .notes-card-header {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 0.92rem; color: var(--text-primary);
+    margin-bottom: 12px; cursor: pointer;
+    justify-content: space-between;
+  }
+  .notes-body { display: none; }
+  .notes-textarea {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border-color); border-radius: 14px;
+    background: var(--input-bg); color: var(--text-primary);
+    font-family: 'Inter', sans-serif; font-size: 0.88rem;
+    resize: vertical; outline: none; margin-bottom: 10px;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .notes-textarea:focus { border-color: var(--accent-1); }
+  .btn-save-note {
+    padding: 10px 22px; background: var(--accent-1); color: white;
+    border: none; border-radius: 99px; font-weight: 600;
+    font-size: 0.88rem; cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 12px var(--glow-color);
+  }
+  .btn-save-note:hover { opacity: 0.9; transform: translateY(-1px); }
+  .note-list { list-style: none; padding: 0; margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .note-item {
+    background: var(--hover); border-radius: 12px;
+    padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.86rem; color: var(--text-primary); line-height: 1.5;
+  }
+  .note-item-text { flex: 1; white-space: pre-wrap; word-break: break-word; }
+  .note-item-time { font-size: 0.68rem; color: var(--text-secondary); white-space: nowrap; margin-top: 2px; flex-shrink: 0; }
+  .btn-del-note {
+    background: none; border: none; cursor: pointer; color: var(--text-secondary);
+    font-size: 0.8rem; padding: 2px 4px; flex-shrink: 0; opacity: 0.5; transition: opacity 0.15s;
+    line-height: 1;
+  }
+  .btn-del-note:hover { opacity: 1; color: #ef4444; }
+
+  /* ── Task list ── */
+  .task-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+  .task-item {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-left: 3px solid var(--accent-1);
+    border-radius: 16px;
+    padding: 15px 16px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.2s; position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    animation: fadeUp 0.4s ease both;
+  }
+  .task-item:hover {
+    border-color: var(--accent-1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+  }
+  .task-item.done {
+    border-left-color: var(--border-color);
+    opacity: 0.65;
+  }
+
+  .task-check {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--border-color);
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; background: transparent;
+  }
+  .task-check:hover { border-color: var(--accent-1); background: var(--hover); }
+  .task-item.done .task-check {
+    background: var(--accent-1); border-color: var(--accent-1);
+    animation: pop 0.3s ease;
+  }
+  .task-item.done .task-check::after {
+    content: '✓'; color: white; font-size: 13px; font-weight: 700;
+  }
+
+  .task-content-wrap { flex: 1; cursor: pointer; min-width: 0; }
+  .task-name {
+    color: var(--text-primary); font-size: 0.92rem; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: all 0.25s;
+  }
+  .task-item.done .task-name {
+    text-decoration: line-through; color: var(--text-secondary);
+  }
+  .task-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+  .task-time {
+    font-size: 0.72rem; color: var(--accent-1); font-weight: 600;
+    background: var(--hover); padding: 2px 8px; border-radius: 99px;
+  }
+  .task-hint {
+    font-size: 0.7rem; color: var(--text-secondary); opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .task-item:hover .task-hint { opacity: 1; }
+
+  .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--border-color); background: transparent;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    text-decoration: none; font-size: 0.85rem; transition: all 0.2s;
+    color: var(--text-secondary);
+  }
+  .btn-note { color: var(--accent-1); border-color: rgba(224,123,57,0.3); background: var(--hover); }
+  .btn-note:hover { background: var(--accent-1); color: white; border-color: var(--accent-1); }
+  .btn-edit:hover { background: rgba(99,102,241,0.1); color: #6366f1; border-color: rgba(99,102,241,0.3); }
+  .btn-reschedule:hover { background: rgba(16,185,129,0.1); color: #10b981; border-color: rgba(16,185,129,0.3); }
+  .btn-del:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+
+  /* ── Reschedule quick buttons ── */
+  .reschedule-quick {
+    padding: 8px 14px; border-radius: 99px; font-size: 0.82rem; font-weight: 600;
+    border: 1.5px solid var(--border-color); background: var(--hover);
+    color: var(--text-primary); cursor: pointer; transition: all 0.15s;
+  }
+  .reschedule-quick:hover {
+    border-color: #10b981; color: #10b981;
+    background: rgba(16,185,129,0.08);
+  }
+
+  /* ── Edit modal ── */
+  .edit-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 200;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .edit-overlay.show { display: flex; }
+  .edit-modal {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 24px; padding: 28px 24px; width: 100%; max-width: 460px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+    animation: fadeUp 0.25s ease both;
+  }
+  .edit-modal h3 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem;
+    font-weight: 700; color: var(--text-primary); margin: 0 0 20px;
+  }
+  .edit-field { margin-bottom: 14px; }
+  .edit-label {
+    display: block; font-size: 0.75rem; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .edit-input, .edit-select, .edit-time {
+    width: 100%; padding: 11px 14px; box-sizing: border-box;
+    border: 1.5px solid var(--border-color); border-radius: 12px;
+    background: var(--input-bg); color: var(--text-primary);
+    font-family: 'Inter', sans-serif; font-size: 0.92rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .edit-input:focus, .edit-select:focus, .edit-time:focus { border-color: var(--accent-1); }
+  .edit-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .btn-save-edit {
+    flex: 1; padding: 12px; background: var(--accent-1); color: white;
+    border: none; border-radius: 99px; font-weight: 600; font-size: 0.9rem;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 12px var(--glow-color);
+  }
+  .btn-save-edit:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-cancel-edit {
+    padding: 12px 20px; background: var(--hover); color: var(--text-secondary);
+    border: 1.5px solid var(--border-color); border-radius: 99px;
+    font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-cancel-edit:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+  /* ── Focus popup ── */
+  .task-item:has(.focus-popup.show) { z-index: 200; }
+  .focus-popup {
+    display: none; position: absolute;
+    top: calc(100% + 8px); right: 0;
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    z-index: 9999; padding: 8px; min-width: 200px;
+  }
+  .focus-popup.show { display: block; }
+  .focus-opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 10px;
+    text-decoration: none; color: var(--text-primary); font-size: 0.88rem;
+    font-weight: 500; transition: background 0.15s;
+  }
+  .focus-opt:hover { background: var(--hover); color: var(--accent-1); }
+  .fo-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .fo-pomo { background: rgba(239,68,68,0.1); }
+  .fo-timer { background: rgba(59,130,246,0.1); }
+  .fo-stop  { background: rgba(16,185,129,0.1); }
+
+  /* ── Today's classes strip ── */
+  .class-strip {
+    display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .class-pill {
+    display:flex; align-items:center; gap:8px; padding:7px 13px;
+    border-radius:12px; font-size:.8rem; font-weight:600;
+    border:1.5px solid transparent; transition:transform .15s;
+    text-decoration:none;
+  }
+  .class-pill:hover { transform:translateY(-1px); }
+  .cp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .cp-time { font-size:.7rem; font-weight:500; opacity:.7; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    background: var(--card-bg); border: 1.5px dashed var(--border-color);
+    border-radius: 20px; color: var(--text-secondary);
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+  .empty-emoji { font-size: 56px; display: block; margin-bottom: 14px; }
+  .empty-state h4 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+
+  @media (max-width: 600px) {
+    .day-greeting { font-size: 1.35rem; }
+    .progress-ring { width: 64px; height: 64px; }
+    .add-form { flex-direction: column; border-radius: 16px; }
+    .btn-add { width: 100%; text-align: center; border-radius: 99px; }
+  }
+</style>
+
+<div class="daily-page">
+
+  <!-- Greeting + Progress Ring -->
+  <div class="day-hero">
+    <div class="day-hero-left">
+      <div class="day-greeting" id="greetingText">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} 👋</div>
+      <div style="font-size:0.7rem;font-weight:600;color:var(--accent-1);opacity:0.7;letter-spacing:0.04em;margin-bottom:4px;">plan and pursue</div>
+      <div class="day-sub">
+        <span>{{ today.strftime('%A, %B %d') }}</span>
+        <span class="day-badge">{{ today.strftime('%Y') }}</span>
+        <span class="day-nav">
+          <a href="{{ url_for('views.daily', date_str=yesterday) }}" class="day-nav-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+          </a>
+          <a href="{{ url_for('views.daily', date_str=tomorrow) }}" class="day-nav-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9,18 15,12 9,6"/></svg>
+          </a>
+        </span>
+      </div>
+    </div>
+
+    {% set total = tasks|length %}
+    {% set done = tasks|selectattr('completed','equalto',True)|list|length %}
+    {% set pct = ((done / total * 100)|round|int) if total > 0 else 0 %}
+    {% set offset = (163 - (pct / 100 * 163))|round|int %}
+
+    <div class="progress-ring" onclick="toggleRingPopup()" style="cursor:pointer; position:relative;">
+      <svg viewBox="0 0 60 60" width="80" height="80">
+        <circle class="ring-bg" cx="30" cy="30" r="26"/>
+        <circle class="ring-fg" cx="30" cy="30" r="26"
+                stroke-dashoffset="{{ offset }}" id="progressRing"/>
+      </svg>
+      <div class="ring-label">
+        <span class="ring-pct">{{ pct }}%</span>
+        <span class="ring-done">{{ done }}/{{ total }}</span>
+      </div>
+      <!-- Streak popup -->
+      <div id="ringPopup" style="
+        display:none; position:absolute; top:calc(100% + 10px); right:0;
+        background:var(--card-bg); border:1px solid var(--glass-border); border-radius:14px;
+        padding:12px 16px; min-width:160px; box-shadow:0 6px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+        z-index:100; text-align:center; white-space:nowrap;
+      ">
+        <div style="font-size:1.3rem; margin-bottom:4px;">🔥 {{ task_streak }}-day streak</div>
+        <div style="font-size:0.8rem; color:var(--text-secondary);">
+          {% if vs_yesterday > 0 %}+{{ vs_yesterday }} vs yesterday{% elif vs_yesterday < 0 %}{{ vs_yesterday }} vs yesterday{% else %}same as yesterday{% endif %}
+        </div>
+        {% if last_week_pct is not none %}
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px; opacity:0.75;">Last 7 days: {{ last_week_pct }}% avg</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's classes strip -->
+  {% if today_class_slots %}
+  <div class="class-strip">
+    {% for item in today_class_slots %}
+    <a class="class-pill" href="{{ url_for('views.study_timetable') }}"
+       style="background:color-mix(in srgb,{{ item.subject.color }} 12%,var(--card-bg)); border-color:color-mix(in srgb,{{ item.subject.color }} 30%,transparent); color:var(--text-primary);">
+      <div class="cp-dot" style="background:{{ item.subject.color }}"></div>
+      <span>{{ item.subject.name }}</span>
+      <span class="cp-time">{{ item.slot.start_time }} – {{ item.slot.end_time }}{% if item.slot.room %} · {{ item.slot.room }}{% endif %}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Today's Big 3 -->
+  {% set big3 = tasks|selectattr('priority','equalto','high')|rejectattr('completed','equalto',True)|list %}
+  {% if big3 %}
+  <div style="
+    background: color-mix(in srgb, var(--accent-1) 7%, var(--card-bg));
+    border: 1px solid color-mix(in srgb, var(--accent-1) 18%, transparent);
+    border-radius: 16px; padding: 14px 16px; margin-bottom: 16px;
+    animation: fadeUp 0.4s ease both;
+  ">
+    <div style="font-size:0.75rem; font-weight:600; color:var(--accent-1); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:10px;">⭐ Today's Big {{ [big3|length, 3]|min }}</div>
+    {% for task in big3[:3] %}
+    <div style="display:flex; align-items:center; gap:10px; {% if not loop.last %}margin-bottom:8px;{% endif %}">
+      <div class="task-check" onclick="window.location.href='{{ url_for('views.toggle_task', id=task.id) }}'"
+           style="width:18px; height:18px; min-width:18px; border-radius:50%; border:2px solid var(--accent-1); cursor:pointer;"></div>
+      <span style="font-size:0.88rem; color:var(--text-primary); font-weight:500;">{{ task.content }}</span>
+      {% if task.due_time %}
+      <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:auto; white-space:nowrap;">⏰ {{ fmt_time(task.due_time) }}</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Add Task -->
+  <div class="add-card">
+    <form method="POST" class="add-form" id="addTaskForm" style="flex-wrap:wrap;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="display:flex; gap:10px; align-items:center; width:100%;">
+        <input type="text" name="task" class="task-input"
+               placeholder="Add {{ phase_copy.task_label }}…" required autocomplete="off">
+        <button type="button" onclick="toggleAddDetails()" class="btn-details" title="More options" style="opacity:.45;font-size:.75rem">⋯</button>
+        <button type="submit" class="btn-add">+ Add</button>
+      </div>
+      <div class="add-details" id="addDetails" style="display:none; width:100%;">
+        <select name="priority" class="add-select">
+          <option value="">No priority</option>
+          <option value="high">🔴 High</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+        <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+          <input type="time" name="due_time" class="add-time" id="addDueTime" oninput="updateTimePreview('addDueTime','addDuePreview')">
+          {% if current_user.time_format == '12h' %}<span class="time-preview" id="addDuePreview"></span>{% endif %}
+          <span style="font-size:0.75rem; color:var(--text-secondary);">→</span>
+          <input type="time" name="end_time" class="add-time" id="addEndTime" oninput="updateTimePreview('addEndTime','addEndPreview')">
+          {% if current_user.time_format == '12h' %}<span class="time-preview" id="addEndPreview"></span>{% endif %}
+        </div>
+        <select name="reminder_offset" class="add-select" id="addReminderOffset" style="display:none;">
+          <option value="">No reminder</option>
+          <option value="-5">5 min before</option>
+          <option value="0">At task time</option>
+        </select>
+        <button type="button" class="btn-details" id="btnRecurring" onclick="toggleRecurring()" title="Set recurring days" style="font-size:0.85rem;">🔁</button>
+      </div>
+      <div id="addCatRow" style="display:none; width:100%; margin-top:8px;">
+        <div class="cat-input-wrap">
+          <input list="catSuggestions" name="category" id="addCategoryInput" class="add-cat-input"
+                 placeholder="📂 Category (e.g. Math, Work, Personal…)" autocomplete="off"
+                 oninput="onAddCatInput(this)">
+          <datalist id="catSuggestions">
+            {% for c in used_categories %}<option value="{{ c }}">{% endfor %}
+          </datalist>
+        </div>
+        <input type="hidden" name="category_color" id="addCategoryColor" value="#E07B39">
+        <div class="color-picker-row" id="addColorPicker">
+          <span class="color-picker-label">Colour:</span>
+          <span class="color-dot selected" data-color="#E07B39" style="background:#E07B39" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+          <span class="color-dot" data-color="#3b82f6" style="background:#3b82f6" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+          <span class="color-dot" data-color="#10b981" style="background:#10b981" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+          <span class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+          <span class="color-dot" data-color="#ef4444" style="background:#ef4444" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+          <span class="color-dot" data-color="#f59e0b" style="background:#f59e0b" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+          <span class="color-dot" data-color="#ec4899" style="background:#ec4899" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+          <span class="color-dot" data-color="#14b8a6" style="background:#14b8a6" onclick="pickColor(this,'addCategoryColor','addColorPicker')"></span>
+        </div>
+      </div>
+      <div id="addRecurring" style="display:none; width:100%; margin-top:4px; flex-wrap:wrap;">
+        <input type="hidden" name="recurring_days" id="addRecurringDays" value="">
+        <div class="recurring-row">
+          <span class="recurring-label">Repeat on:</span>
+          <div class="day-pills" id="addDayPills">
+            <span class="day-pill" data-day="0" onclick="toggleDay(this,'addRecurringDays')">Mo</span>
+            <span class="day-pill" data-day="1" onclick="toggleDay(this,'addRecurringDays')">Tu</span>
+            <span class="day-pill" data-day="2" onclick="toggleDay(this,'addRecurringDays')">We</span>
+            <span class="day-pill" data-day="3" onclick="toggleDay(this,'addRecurringDays')">Th</span>
+            <span class="day-pill" data-day="4" onclick="toggleDay(this,'addRecurringDays')">Fr</span>
+            <span class="day-pill" data-day="5" onclick="toggleDay(this,'addRecurringDays')">Sa</span>
+            <span class="day-pill" data-day="6" onclick="toggleDay(this,'addRecurringDays')">Su</span>
+          </div>
+          <span style="font-size:0.72rem; color:var(--text-secondary);">task repeats on selected days</span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Category filter tabs -->
+  {% set all_cats = tasks | map(attribute='category') | select | unique | list %}
+  {% if all_cats %}
+  <div class="cat-filter-wrap">
+    <span class="cat-tab active" onclick="filterCat(this, '')">All</span>
+    {% for cat in all_cats %}
+    {% set col = cat_colors.get(cat, '#E07B39') %}
+    <span class="cat-tab" onclick="filterCat(this, '{{ cat }}')"
+          style="--cat-accent: {{ col }}; border-color: {{ col }}33; color: {{ col }};">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px; vertical-align:-1px; opacity:0.85"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>{{ cat }}
+    </span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Tasks -->
+  {% if tasks %}
+    <ul class="task-list">
+      {% for task in tasks %}
+        <li class="task-item {% if task.completed %}done{% endif %}"
+            data-category="{{ task.category or '' }}"
+            style="animation-delay: {{ loop.index0 * 0.05 }}s">
+          <div class="task-check"
+               onclick="window.location.href='{{ url_for('views.toggle_task', id=task.id) }}'"></div>
+          <div class="task-content-wrap" onclick="toggleFocusMenu({{ task.id }})">
+            <div class="task-name">{{ task.content }}</div>
+            <div class="task-meta">
+              {% if task.priority %}
+                <span class="task-priority p-{{ task.priority }}">{{ 'High' if task.priority == 'high' else 'Medium' if task.priority == 'medium' else 'Low' }}</span>
+              {% endif %}
+              {% if task.due_time %}
+                <span class="task-due">⏰ {{ fmt_time(task.due_time) }}{% if task.end_time %} → {{ fmt_time(task.end_time) }}{% endif %}</span>
+              {% endif %}
+              {% if task.focus_time and task.focus_time > 0 %}
+                <span class="task-time">⏱ {{ (task.focus_time // 60) }}m · {{ task.session_count }} sessions</span>
+              {% endif %}
+              {% if task.recurring_days %}
+                <span class="task-recurring-badge">🔁 recurring</span>
+              {% elif task.recurring_task_id %}
+                <span class="task-recurring-badge">🔁</span>
+              {% endif %}
+              {% if task.category %}
+                {% set col = cat_colors.get(task.category, '#E07B39') %}
+                <span class="task-category"
+                      style="background:{{ col }}18; color:{{ col }};">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="{{ col }}" style="margin-right:3px; vertical-align:-1px;"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>{{ task.category }}
+                </span>
+              {% endif %}
+              {% if not task.completed %}
+                <span class="task-hint">tap to focus →</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="task-actions">
+            {% if task.completed and not task.quick_note %}
+              <a href="{{ url_for('views.quick_note', id=task.id) }}" class="btn-icon btn-note" title="Add note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </a>
+            {% endif %}
+            <button class="btn-icon btn-edit" title="Edit"
+              data-id="{{ task.id }}"
+              data-content="{{ task.content }}"
+              data-priority="{{ task.priority or '' }}"
+              data-due="{{ task.due_time or '' }}"
+              data-recurring="{{ task.recurring_days or '' }}"
+              data-is-instance="{{ '1' if task.recurring_task_id else '' }}"
+              data-reminder="{{ task.reminder_offset if task.reminder_offset is not none else '' }}"
+              data-category="{{ task.category or '' }}"
+              data-end-time="{{ task.end_time or '' }}"
+              onclick="openEditModal(this); event.stopPropagation();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn-icon btn-reschedule" title="Reschedule"
+              data-id="{{ task.id }}"
+              data-content="{{ task.content }}"
+              data-current="{{ task.date.strftime('%Y-%m-%d') }}"
+              onclick="openRescheduleModal(this); event.stopPropagation();">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
+            <a href="{{ url_for('views.delete_task', id=task.id) }}" class="btn-icon btn-del" title="Delete">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </a>
+          </div>
+          <div class="focus-popup" id="focusPopup{{ task.id }}">
+            <a href="{{ url_for('views.pomodoro', task_id=task.id, mode='pomodoro') }}" class="focus-opt">
+              <span class="fo-icon fo-pomo">🍅</span> Pomodoro · 25 min
+            </a>
+            <a href="{{ url_for('views.pomodoro', task_id=task.id, mode='timer') }}" class="focus-opt">
+              <span class="fo-icon fo-timer">⏱</span> Timer
+            </a>
+            <a href="{{ url_for('views.pomodoro', task_id=task.id, mode='stopwatch') }}" class="focus-opt">
+              <span class="fo-icon fo-stop">▶</span> Stopwatch
+            </a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <span class="empty-emoji">✨</span>
+      <h4>{{ phase_copy.greeting }}</h4>
+      <p>{{ phase_copy.empty }}</p>
+    </div>
+  {% endif %}
+
+  <!-- Notes (bottom of page) -->
+  <div class="notes-card" style="margin-top:20px">
+    <div class="notes-card-header" onclick="toggleNotes()">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Notes
+        {% if notes %}<span style="font-size:0.7rem; background:var(--hover); color:var(--text-secondary); padding:2px 8px; border-radius:99px; font-weight:500;">{{ notes|length }}</span>{% endif %}
+      </div>
+      <span id="notesChevron" style="color:var(--text-secondary); font-size:0.8rem; transition:transform 0.25s;">▼</span>
+    </div>
+    <div class="notes-body" id="notesBody">
+      <form method="POST" action="{{ url_for('views.add_note') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="date" value="{{ today.strftime('%Y-%m-%d') }}">
+        <textarea class="notes-textarea" name="content" rows="3"
+          placeholder="Jot anything down — ideas, reminders, thoughts…" required></textarea>
+        <button type="submit" class="btn-save-note">Save note</button>
+      </form>
+      {% if notes %}
+        <ul class="note-list">
+          {% for note in notes %}
+            <li class="note-item">
+              <span class="note-item-text">{{ note.content }}</span>
+              <span class="note-item-time">{{ note.created_at.strftime('%H:%M') }}</span>
+              <a href="{{ url_for('views.delete_note', id=note.id) }}" class="btn-del-note" title="Delete">✕</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Reschedule Task Modal -->
+<div class="edit-overlay" id="rescheduleOverlay" onclick="if(event.target===this)closeRescheduleModal()">
+  <div class="edit-modal">
+    <h3>📅 Reschedule Task</h3>
+    <p id="rescheduleTaskName" style="font-size:0.88rem; color:var(--text-secondary); margin:-10px 0 18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></p>
+
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+      <button type="button" class="reschedule-quick" onclick="applyQuickDate('tomorrow')">Tomorrow</button>
+      <button type="button" class="reschedule-quick" onclick="applyQuickDate('in2')">In 2 days</button>
+      <button type="button" class="reschedule-quick" onclick="applyQuickDate('nextweek')">Next week</button>
+      <button type="button" class="reschedule-quick" onclick="applyQuickDate('nextmonday')">Next Monday</button>
+    </div>
+
+    <div class="edit-field">
+      <label class="edit-label">Or pick a date</label>
+      <input type="date" id="rescheduleDate" class="edit-input">
+    </div>
+
+    <form method="POST" id="rescheduleForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="new_date" id="rescheduleDateHidden">
+      <div class="edit-actions" style="margin-top:18px;">
+        <button type="button" class="btn-save-edit" onclick="submitReschedule()">Move task</button>
+        <button type="button" class="btn-cancel-edit" onclick="closeRescheduleModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEditModal()">
+  <div class="edit-modal">
+    <h3>✏️ Edit Task</h3>
+    <form method="POST" id="editForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="edit-field">
+        <label class="edit-label">Task</label>
+        <input type="text" name="content" id="editContent" class="edit-input" required autocomplete="off">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Priority</label>
+        <select name="priority" id="editPriority" class="edit-select">
+          <option value="">No priority</option>
+          <option value="high">🔴 High</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Time (optional)</label>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <input type="time" name="due_time" id="editDueTime" class="edit-time" style="flex:1;" oninput="updateTimePreview('editDueTime','editDuePreview')">
+          {% if current_user.time_format == '12h' %}<span class="time-preview" id="editDuePreview"></span>{% endif %}
+          <span style="font-size:0.82rem; color:var(--text-secondary); white-space:nowrap;">→</span>
+          <input type="time" name="end_time" id="editEndTime" class="edit-time" style="flex:1;" oninput="updateTimePreview('editEndTime','editEndPreview')">
+          {% if current_user.time_format == '12h' %}<span class="time-preview" id="editEndPreview"></span>{% endif %}
+        </div>
+      </div>
+      <div class="edit-field" id="editReminderField" style="display:none;">
+        <label class="edit-label">Remind me</label>
+        <select name="reminder_offset" id="editReminderOffset" class="edit-select">
+          <option value="">No reminder</option>
+          <option value="-5">5 min before task time</option>
+          <option value="0">At task time</option>
+        </select>
+      </div>
+      <div class="edit-field" id="editRecurringSection">
+        <label class="edit-label">Repeat on days</label>
+        <input type="hidden" name="recurring_days" id="editRecurringDays" value="">
+        <div class="day-pills" id="editDayPills" style="margin-bottom:6px;">
+          <span class="day-pill" data-day="0" onclick="toggleDay(this,'editRecurringDays')">Mo</span>
+          <span class="day-pill" data-day="1" onclick="toggleDay(this,'editRecurringDays')">Tu</span>
+          <span class="day-pill" data-day="2" onclick="toggleDay(this,'editRecurringDays')">We</span>
+          <span class="day-pill" data-day="3" onclick="toggleDay(this,'editRecurringDays')">Th</span>
+          <span class="day-pill" data-day="4" onclick="toggleDay(this,'editRecurringDays')">Fr</span>
+          <span class="day-pill" data-day="5" onclick="toggleDay(this,'editRecurringDays')">Sa</span>
+          <span class="day-pill" data-day="6" onclick="toggleDay(this,'editRecurringDays')">Su</span>
+        </div>
+        <p id="editRecurringNote" style="font-size:0.72rem; color:var(--text-secondary); margin:0;"></p>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Category</label>
+        <div class="cat-input-wrap">
+          <input list="catSuggestionsEdit" name="category" id="editCategory"
+                 class="edit-cat-input" placeholder="e.g. Math, Work, Personal…" autocomplete="off"
+                 oninput="onEditCatInput(this)">
+          <datalist id="catSuggestionsEdit">
+            {% for c in used_categories %}<option value="{{ c }}">{% endfor %}
+          </datalist>
+        </div>
+        <input type="hidden" name="category_color" id="editCategoryColor" value="#E07B39">
+        <div class="color-picker-row" id="editColorPicker" style="margin-top:8px;">
+          <span class="color-picker-label">Colour:</span>
+          <span class="color-dot" data-color="#E07B39" style="background:#E07B39" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+          <span class="color-dot" data-color="#3b82f6" style="background:#3b82f6" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+          <span class="color-dot" data-color="#10b981" style="background:#10b981" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+          <span class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+          <span class="color-dot" data-color="#ef4444" style="background:#ef4444" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+          <span class="color-dot" data-color="#f59e0b" style="background:#f59e0b" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+          <span class="color-dot" data-color="#ec4899" style="background:#ec4899" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+          <span class="color-dot" data-color="#14b8a6" style="background:#14b8a6" onclick="pickColor(this,'editCategoryColor','editColorPicker')"></span>
+        </div>
+      </div>
+      <div class="edit-actions">
+        <button type="submit" class="btn-save-edit">Save changes</button>
+        <button type="button" class="btn-cancel-edit" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Time-based greeting + morning tip
+  (function() {
+    const h = new Date().getHours();
+    const name = "{{ current_user.name.split()[0] if current_user.name else 'there' }}";
+    const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    const emoji = h < 12 ? '☀️' : h < 17 ? '🌤️' : '🌙';
+    document.getElementById('greetingText').textContent = greet + ', ' + name + ' ' + emoji;
+
+    // Hide insight card if dismissed today
+    const insightKey = 'insightDismissed_' + new Date().toDateString();
+    if (sessionStorage.getItem(insightKey)) {
+      const card = document.getElementById('insightCard');
+      if (card) card.style.display = 'none';
+    }
+  })();
+
+  // Progress ring popup toggle
+  function toggleRingPopup() {
+    const popup = document.getElementById('ringPopup');
+    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+  }
+  document.addEventListener('click', function(e) {
+    const ring = e.target.closest('.progress-ring');
+    if (!ring) {
+      const popup = document.getElementById('ringPopup');
+      if (popup) popup.style.display = 'none';
+    }
+  });
+
+  // Auto-expand details when task input is focused
+  document.querySelector('.task-input').addEventListener('focus', function() {
+    const d = document.getElementById('addDetails');
+    if (d.style.display === 'none') toggleAddDetails();
+  });
+
+  // Quick-add details toggle (also shows category row)
+  function toggleAddDetails() {
+    const d   = document.getElementById('addDetails');
+    const cat = document.getElementById('addCatRow');
+    const open = d.style.display === 'none';
+    d.style.display   = open ? 'flex' : 'none';
+    cat.style.display = open ? 'block' : 'none';
+  }
+
+  // 12h time preview
+  var USE_12H = {{ 'true' if current_user.time_format == '12h' else 'false' }};
+  function to12h(val) {
+    if (!val) return '';
+    var parts = val.split(':');
+    var h = parseInt(parts[0]), m = parts[1];
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return m === '00' ? (h + ' ' + ampm) : (h + ':' + m + ' ' + ampm);
+  }
+  function updateTimePreview(inputId, previewId) {
+    if (!USE_12H) return;
+    var el = document.getElementById(previewId);
+    if (el) el.textContent = to12h(document.getElementById(inputId).value);
+  }
+
+  // Category filter
+  function filterCat(tab, cat) {
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.task-item').forEach(li => {
+      li.style.display = (!cat || li.dataset.category === cat) ? '' : 'none';
+    });
+  }
+
+  // Category color map from server
+  const CAT_COLORS = {{ cat_colors | tojson }};
+
+  function pickColor(dot, hiddenId, pickerId) {
+    document.querySelectorAll('#' + pickerId + ' .color-dot').forEach(d => d.classList.remove('selected'));
+    dot.classList.add('selected');
+    document.getElementById(hiddenId).value = dot.dataset.color;
+  }
+
+  function selectColorDot(pickerId, hiddenId, color) {
+    const dots = document.querySelectorAll('#' + pickerId + ' .color-dot');
+    dots.forEach(d => d.classList.remove('selected'));
+    let matched = false;
+    dots.forEach(d => { if (d.dataset.color === color) { d.classList.add('selected'); matched = true; } });
+    if (!matched && dots.length) dots[0].classList.add('selected');
+    document.getElementById(hiddenId).value = color;
+  }
+
+  function onAddCatInput(input) {
+    const known = CAT_COLORS[input.value.trim()];
+    if (known) selectColorDot('addColorPicker', 'addCategoryColor', known);
+  }
+
+  function onEditCatInput(input) {
+    const known = CAT_COLORS[input.value.trim()];
+    if (known) selectColorDot('editColorPicker', 'editCategoryColor', known);
+  }
+
+  // Show reminder select when due time is filled
+  document.getElementById('addDueTime').addEventListener('change', function() {
+    const rem = document.getElementById('addReminderOffset');
+    rem.style.display = this.value ? 'block' : 'none';
+    if (!this.value) rem.value = '';
+  });
+
+  // Focus popup
+  function toggleFocusMenu(id) {
+    document.querySelectorAll('.focus-popup').forEach(p => {
+      if (p.id !== 'focusPopup' + id) p.classList.remove('show');
+    });
+    document.getElementById('focusPopup' + id).classList.toggle('show');
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.task-content-wrap') && !e.target.closest('.focus-popup'))
+      document.querySelectorAll('.focus-popup').forEach(p => p.classList.remove('show'));
+  });
+
+  // Notes toggle
+  let notesOpen = false;
+  function toggleNotes() {
+    notesOpen = !notesOpen;
+    document.getElementById('notesBody').style.display = notesOpen ? 'block' : 'none';
+    document.getElementById('notesChevron').style.transform = notesOpen ? 'rotate(180deg)' : '';
+  }
+  // Auto-open if notes already exist for today
+  {% if notes %}toggleNotes();{% endif %}
+
+  // ── Day pill toggle (shared by add form and edit modal) ──
+  function toggleDay(pill, hiddenId) {
+    pill.classList.toggle('active');
+    const container = pill.closest('.day-pills');
+    const active = [...container.querySelectorAll('.day-pill.active')]
+                     .map(p => p.dataset.day).join(',');
+    document.getElementById(hiddenId).value = active;
+  }
+
+  function setDayPills(pillsEl, hiddenId, daysStr) {
+    pillsEl.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
+    if (daysStr) {
+      daysStr.split(',').forEach(d => {
+        const pill = pillsEl.querySelector(`[data-day="${d.trim()}"]`);
+        if (pill) pill.classList.add('active');
+      });
+    }
+    document.getElementById(hiddenId).value = daysStr || '';
+  }
+
+  // ── Add-form recurring toggle ──
+  function toggleRecurring() {
+    const el = document.getElementById('addRecurring');
+    const btn = document.getElementById('btnRecurring');
+    const visible = el.style.display !== 'none';
+    el.style.display = visible ? 'none' : 'block';
+    btn.style.borderColor = visible ? '' : 'var(--accent-1)';
+    btn.style.color = visible ? '' : 'var(--accent-1)';
+    if (visible) {
+      // clear selection when hiding
+      setDayPills(document.getElementById('addDayPills'), 'addRecurringDays', '');
+    }
+  }
+
+  // ── Edit modal ──
+  const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  function openEditModal(btn) {
+    const id         = btn.dataset.id;
+    const content    = btn.dataset.content;
+    const priority   = btn.dataset.priority || '';
+    const dueTime    = btn.dataset.due || '';
+    const recurring  = btn.dataset.recurring || '';
+    const isInstance = btn.dataset.isInstance === '1';
+
+    document.getElementById('editForm').action = '/edit/' + id;
+    document.getElementById('editContent').value = content;
+    document.getElementById('editPriority').value = priority;
+    document.getElementById('editDueTime').value = dueTime;
+    document.getElementById('editEndTime').value = btn.dataset.endTime || '';
+    updateTimePreview('editDueTime', 'editDuePreview');
+    updateTimePreview('editEndTime', 'editEndPreview');
+
+    // Reminder field — show only when start time is set
+    const reminderField  = document.getElementById('editReminderField');
+    const reminderSelect = document.getElementById('editReminderOffset');
+    const reminder = btn.dataset.reminder;
+    if (dueTime) {
+      reminderField.style.display = 'block';
+      reminderSelect.value = (reminder !== undefined && reminder !== '') ? reminder : '';
+    } else {
+      reminderField.style.display = 'none';
+      reminderSelect.value = '';
+    }
+
+    // Also show reminder when user sets a start time inside the modal
+    document.getElementById('editDueTime').onchange = function() {
+      reminderField.style.display = this.value ? 'block' : 'none';
+      if (!this.value) reminderSelect.value = '';
+    };
+
+    // Recurring section
+    const section = document.getElementById('editRecurringSection');
+    const note    = document.getElementById('editRecurringNote');
+    if (isInstance) {
+      section.style.display = 'none';   // instances can't change recurrence
+    } else {
+      section.style.display = 'block';
+      setDayPills(document.getElementById('editDayPills'), 'editRecurringDays', recurring);
+      if (recurring) {
+        const names = recurring.split(',').map(d => DAY_NAMES[parseInt(d)]).join(', ');
+        note.textContent = `Currently repeating on: ${names}. Select days to change, or deselect all to stop.`;
+      } else {
+        note.textContent = 'Select days to make this task repeat automatically.';
+      }
+    }
+
+    const editCat = btn.dataset.category || '';
+    document.getElementById('editCategory').value = editCat;
+    const editCatColor = editCat ? (CAT_COLORS[editCat] || '#E07B39') : '#E07B39';
+    selectColorDot('editColorPicker', 'editCategoryColor', editCatColor);
+    document.getElementById('editOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('editContent').focus(), 50);
+  }
+
+  function closeEditModal() {
+    document.getElementById('editOverlay').classList.remove('show');
+  }
+
+  // ── Reschedule modal ──
+  let _rescheduleId = null;
+
+  function openRescheduleModal(btn) {
+    _rescheduleId = btn.dataset.id;
+    const taskName = btn.dataset.content || btn.closest('.task-item').querySelector('.task-name').textContent;
+    const current  = btn.dataset.current;
+
+    document.getElementById('rescheduleTaskName').textContent = '"' + taskName + '"';
+    document.getElementById('rescheduleDate').value = '';
+    document.getElementById('rescheduleDate').min = new Date().toISOString().split('T')[0];
+    document.getElementById('rescheduleDateHidden').value = '';
+    document.getElementById('rescheduleOverlay').classList.add('show');
+  }
+
+  function closeRescheduleModal() {
+    document.getElementById('rescheduleOverlay').classList.remove('show');
+    _rescheduleId = null;
+  }
+
+  function applyQuickDate(key) {
+    const d = new Date();
+    if (key === 'tomorrow')   d.setDate(d.getDate() + 1);
+    if (key === 'in2')        d.setDate(d.getDate() + 2);
+    if (key === 'nextweek')   d.setDate(d.getDate() + 7);
+    if (key === 'nextmonday') {
+      const day = d.getDay();            // 0=Sun…6=Sat
+      const daysUntil = day === 1 ? 7 : (8 - day) % 7 || 7;
+      d.setDate(d.getDate() + daysUntil);
+    }
+    const iso = d.toISOString().split('T')[0];
+    document.getElementById('rescheduleDate').value = iso;
+    document.getElementById('rescheduleDateHidden').value = iso;
+  }
+
+  document.getElementById('rescheduleDate').addEventListener('change', function() {
+    document.getElementById('rescheduleDateHidden').value = this.value;
+  });
+
+  function submitReschedule() {
+    const date = document.getElementById('rescheduleDateHidden').value;
+    if (!date) { alert('Please pick a date first.'); return; }
+    const form = document.getElementById('rescheduleForm');
+    form.action = '/reschedule/' + _rescheduleId;
+    form.submit();
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeEditModal(); closeRescheduleModal(); }
+  });
+</script>
+
+{% endblock %}

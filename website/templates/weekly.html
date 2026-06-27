@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}Weekly Planner · monad{% endblock %}
+{% block page_title %}weekly tasks{% endblock %}
+{% block content %}
+
+<style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .weekly-page { max-width: 1100px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .week-hero {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 28px; flex-wrap: wrap;
+    animation: fadeUp 0.5s ease both;
+  }
+  .week-hero-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+  }
+  .week-hero-sub { font-size: 0.88rem; color: var(--text-secondary); margin-top: 3px; }
+  .week-nav-pills { display: flex; gap: 8px; }
+  .wpill {
+    padding: 8px 18px; border-radius: 99px; font-weight: 600; font-size: 0.84rem;
+    text-decoration: none; transition: all 0.2s; border: 1.5px solid var(--border-color);
+    background: var(--card-bg); color: var(--text-secondary);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .wpill:hover, .wpill.today { background: var(--accent-1); color: white; border-color: var(--accent-1); }
+
+  /* ── Day grid ── */
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+  }
+
+  .day-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 18px; overflow: hidden;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.05);
+    animation: fadeUp 0.4s ease both;
+  }
+  .day-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+  }
+  .day-card.today-card {
+    border-color: var(--accent-1);
+    border-width: 2px;
+    box-shadow: 0 4px 20px var(--glow-color);
+  }
+
+  /* Per-day color bands */
+  .dc-head {
+    padding: 10px 12px 8px;
+    font-weight: 700; font-size: 0.82rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .dc-mon { background: rgba(59,130,246,0.12);  color: #3b82f6; }
+  .dc-tue { background: rgba(139,92,246,0.12);  color: #8b5cf6; }
+  .dc-wed { background: rgba(20,184,166,0.12);  color: #14b8a6; }
+  .dc-thu { background: rgba(245,158,11,0.12);  color: #f59e0b; }
+  .dc-fri { background: rgba(244,63,94,0.12);   color: #f43f5e; }
+  .dc-sat { background: rgba(16,185,129,0.12);  color: #10b981; }
+  .dc-sun { background: rgba(224,123,57,0.12);  color: var(--accent-1); }
+
+  .dc-date { font-size: 0.75rem; opacity: 0.7; font-weight: 500; }
+  .today-badge {
+    background: var(--accent-1); color: white;
+    font-size: 0.6rem; font-weight: 700;
+    padding: 1px 7px; border-radius: 99px; letter-spacing: 0.5px;
+  }
+
+  .dc-progress {
+    font-size: 0.65rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 99px;
+    background: rgba(255,255,255,0.5);
+  }
+
+  .dc-body { padding: 10px 10px; min-height: 90px; }
+
+  .mini-task {
+    display: flex; align-items: flex-start; gap: 6px;
+    padding: 5px 0; font-size: 0.76rem; color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    line-height: 1.3;
+  }
+  .mini-task:last-child { border-bottom: none; }
+  .mini-task.done { opacity: 0.45; text-decoration: line-through; color: var(--text-secondary); }
+  .mini-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 3px;
+  }
+  .mini-dot.pending { background: var(--accent-2); }
+  .mini-dot.done    { background: #10b981; }
+
+  .empty-day {
+    color: var(--text-secondary); font-size: 0.78rem;
+    text-align: center; padding: 18px 0; opacity: 0.5;
+  }
+
+  /* ── Weekly Reflection ── */
+  .weekly-reflection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.5s 0.1s ease both; opacity: 0;
+  }
+  .wr-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .wr-card-title {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent-1);
+    margin-bottom: 14px;
+  }
+  .wr-stats-row {
+    display: flex; gap: 20px; flex-wrap: wrap;
+  }
+  .wr-stat {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .wr-stat-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.55rem; font-weight: 700; color: var(--text-primary); line-height: 1;
+  }
+  .wr-stat-label {
+    font-size: 0.72rem; color: var(--text-secondary); font-weight: 500;
+  }
+  .wr-divider {
+    width: 1px; background: var(--border-color); align-self: stretch; margin: 0 4px;
+  }
+  .wr-detail-row {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .wr-detail-item {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .wr-detail-label {
+    font-size: 0.72rem; color: var(--text-secondary); font-weight: 500;
+  }
+  .wr-detail-val {
+    font-size: 0.9rem; font-weight: 600; color: var(--text-primary);
+  }
+  .wr-sep { border: none; border-top: 1px solid var(--border-color); margin: 0; }
+
+  @media (max-width: 700px) {
+    .weekly-reflection { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 900px) {
+    .day-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .day-grid { grid-template-columns: repeat(2, 1fr); }
+    .week-hero-title { font-size: 1.3rem; }
+  }
+</style>
+
+<div class="weekly-page">
+
+  <div class="week-hero">
+    <div>
+      <div class="week-hero-title">
+        {{ start_of_week.strftime('%b %d') }} — {{ end_of_week.strftime('%b %d, %Y') }}
+      </div>
+      <div class="week-hero-sub">Weekly overview · tap any day to go to daily view</div>
+    </div>
+    <div class="week-nav-pills">
+      <a href="{{ url_for('views.weekly', week_offset=prev_week) }}" class="wpill">← Prev</a>
+      <a href="{{ url_for('views.daily') }}" class="wpill today">Today</a>
+      <a href="{{ url_for('views.weekly', week_offset=next_week) }}" class="wpill">Next →</a>
+    </div>
+  </div>
+
+  <!-- Weekly Reflection -->
+  <div class="weekly-reflection">
+    <!-- Left: headline stats -->
+    <div class="wr-card">
+      <div class="wr-card-title">This Week</div>
+      <div class="wr-stats-row">
+        <div class="wr-stat">
+          <span class="wr-stat-val">{{ total_focus_fmt }}</span>
+          <span class="wr-stat-label">Focus Time</span>
+        </div>
+        <div class="wr-divider"></div>
+        <div class="wr-stat">
+          <span class="wr-stat-val">{{ total_done }}</span>
+          <span class="wr-stat-label">Tasks Done</span>
+        </div>
+        <div class="wr-divider"></div>
+        <div class="wr-stat">
+          <span class="wr-stat-val">{{ completion_rate }}%</span>
+          <span class="wr-stat-label">Completion</span>
+        </div>
+        <div class="wr-divider"></div>
+        <div class="wr-stat">
+          <span class="wr-stat-val">{{ total_session_count }}</span>
+          <span class="wr-stat-label">Sessions</span>
+        </div>
+      </div>
+    </div>
+    <!-- Right: breakdown details -->
+    <div class="wr-card">
+      <div class="wr-card-title">Breakdown</div>
+      <div class="wr-detail-row">
+        {% if most_productive_day %}
+        <div class="wr-detail-item">
+          <span class="wr-detail-label">Most productive day</span>
+          <span class="wr-detail-val">{{ most_productive_day.strftime('%A') }}</span>
+        </div>
+        <hr class="wr-sep">
+        {% endif %}
+        {% if top_category %}
+        <div class="wr-detail-item">
+          <span class="wr-detail-label">Highest focus category</span>
+          <span class="wr-detail-val">📂 {{ top_category }} · {{ top_category_fmt }}</span>
+        </div>
+        <hr class="wr-sep">
+        {% endif %}
+        {% if longest_session_secs > 0 %}
+        <div class="wr-detail-item">
+          <span class="wr-detail-label">Longest session</span>
+          <span class="wr-detail-val">{{ longest_session_fmt }}</span>
+        </div>
+        {% else %}
+        <div class="wr-detail-item">
+          <span class="wr-detail-label" style="opacity:0.5;">No focus sessions logged yet this week.</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% set dayClasses = ['dc-mon','dc-tue','dc-wed','dc-thu','dc-fri','dc-sat','dc-sun'] %}
+  {% set dayNames   = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+
+  <div class="day-grid">
+    {% for day, tasks in week_tasks.items() %}
+      {% set isToday = (datetime.utcnow().date() == day) %}
+      {% set done    = tasks|selectattr('completed','equalto',True)|list|length %}
+      {% set total   = tasks|length %}
+      <a href="{{ url_for('views.daily', date_str=day.strftime('%Y-%m-%d')) }}"
+         class="day-card {% if isToday %}today-card{% endif %}"
+         style="animation-delay: {{ loop.index0 * 0.05 }}s; text-decoration:none;">
+        <div class="dc-head {{ dayClasses[loop.index0] }}">
+          <div>
+            <div>{{ day.strftime('%a') }}{% if isToday %} <span class="today-badge">TODAY</span>{% endif %}</div>
+            <div class="dc-date">{{ day.strftime('%b %d') }}</div>
+          </div>
+          {% if total > 0 %}
+            <span class="dc-progress">{{ done }}/{{ total }}</span>
+          {% endif %}
+        </div>
+        <div class="dc-body">
+          {% if tasks %}
+            {% for task in tasks[:5] %}
+              <div class="mini-task {% if task.completed %}done{% endif %}">
+                <span class="mini-dot {% if task.completed %}done{% else %}pending{% endif %}"></span>
+                <span>{{ task.content[:22] }}{% if task.content|length > 22 %}…{% endif %}</span>
+              </div>
+            {% endfor %}
+            {% if tasks|length > 5 %}
+              <div style="font-size:0.68rem; color:var(--text-secondary); padding-top:4px; text-align:center;">
+                +{{ tasks|length - 5 }} more
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="empty-day">— free —</div>
+          {% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+
+</div>
+
+{% endblock %}

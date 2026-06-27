@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Exams & Deadlines · monad{% endblock %}
+{% block page_title %}exams{% endblock %}
+
+{% block extra_head %}
+<style>
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  .study-page { max-width:860px; margin:0 auto; padding-bottom:80px; }
+
+  .study-tabs { display:flex; gap:4px; background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:14px; padding:4px; width:fit-content; margin-bottom:20px; animation:fadeUp .4s ease both; }
+  .stab { padding:7px 18px; border-radius:10px; border:none; font-size:.82rem; font-weight:600; cursor:pointer; background:transparent; color:var(--text-secondary); text-decoration:none; transition:all .18s; display:inline-flex; align-items:center; gap:5px; }
+  .stab.active { background:var(--accent-1); color:white; box-shadow:0 2px 8px var(--glow-color); }
+  .stab:not(.active):hover { background:var(--hover); color:var(--text-primary); }
+
+  .exams-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; animation:fadeUp .4s ease .05s both; }
+  .exams-title  { font-family:'Space Grotesk',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text-primary); }
+
+  .exam-group-label { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text-secondary); margin:20px 0 8px; }
+  .exam-card {
+    background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:16px;
+    padding:14px 16px; margin-bottom:8px; display:flex; align-items:center; gap:14px;
+    animation:fadeUp .35s ease both;
+  }
+  .ec-bar { width:5px; border-radius:99px; flex-shrink:0; align-self:stretch; min-height:40px; }
+  .ec-body { flex:1; min-width:0; }
+  .ec-title   { font-weight:700; font-size:.9rem; color:var(--text-primary); }
+  .ec-subject { font-size:.76rem; color:var(--text-secondary); margin-top:2px; }
+  .ec-meta    { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .ec-chip    { font-size:.68rem; font-weight:600; padding:2px 8px; border-radius:99px; background:var(--hover); color:var(--text-secondary); }
+  .ec-countdown {
+    font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:99px; white-space:nowrap;
+  }
+  .cd-soon   { background:rgba(220,38,38,.1);  color:rgba(185,28,28,.9); }
+  .cd-week   { background:rgba(202,138,4,.1);  color:rgba(161,98,7,.9); }
+  .cd-later  { background:rgba(22,163,74,.1);  color:rgba(21,128,61,.9); }
+  .ec-actions { display:flex; gap:6px; flex-shrink:0; }
+  .btn-sm { padding:5px 12px; border-radius:99px; font-size:.72rem; font-weight:600; cursor:pointer; border:1.5px solid var(--border-color); background:var(--card-bg); color:var(--text-secondary); transition:all .15s; }
+  .btn-sm:hover { border-color:var(--accent-1); color:var(--accent-1); }
+  .btn-sm-del { border-color:rgba(239,68,68,.3); color:#ef4444; background:rgba(239,68,68,.06); }
+  .btn-sm-del:hover { background:rgba(239,68,68,.14); }
+
+  .empty-exams { text-align:center; padding:60px 24px; color:var(--text-secondary); font-size:.9rem; }
+
+  /* Modal */
+  .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+  .modal-backdrop.open { display:flex; }
+  .modal-box { background:var(--card-bg); border-radius:22px; padding:26px; width:90%; max-width:430px; max-height:90vh; overflow-y:auto; border:1px solid var(--border-color); box-shadow:0 24px 64px rgba(0,0,0,.18); animation:fadeUp .25s ease both; }
+  .modal-title { font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:700; color:var(--text-primary); margin-bottom:18px; }
+  .modal-label { font-size:.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:5px; display:block; margin-top:12px; }
+  .modal-input, .modal-select { width:100%; padding:10px 14px; border-radius:12px; border:1.5px solid var(--border-color); background:var(--input-bg); color:var(--text-primary); font-size:.9rem; outline:none; transition:border-color .2s; box-sizing:border-box; cursor:pointer; font-family:'Inter',sans-serif; }
+  .modal-input:focus, .modal-select:focus { border-color:var(--accent-1); }
+  .modal-row { display:flex; gap:10px; }
+  .modal-row .modal-input { flex:1; }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .btn-save   { flex:1; padding:12px; background:var(--accent-1); color:white; border:none; border-radius:99px; font-weight:700; font-size:.9rem; cursor:pointer; }
+  .btn-cancel { padding:12px 20px; background:transparent; color:var(--text-secondary); border:1.5px solid var(--border-color); border-radius:99px; font-size:.9rem; cursor:pointer; }
+
+  @media (max-width: 600px) {
+    .modal-row { flex-direction: column; }
+    .modal-row .modal-input { width: 100%; }
+    .exam-actions { flex-wrap: wrap; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="study-page">
+
+  <!-- Tabs -->
+  <div class="study-tabs">
+    <a class="stab" href="{{ url_for('views.study_profile') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> Profile</a>
+    <a class="stab" href="{{ url_for('views.study_subjects') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Subjects</a>
+    <a class="stab" href="{{ url_for('views.study_timetable') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Timetable</a>
+    <a class="stab active" href="{{ url_for('views.study_exams') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg> Exams</a>
+    <a class="stab" href="{{ url_for('views.study_marks') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Marks</a>
+  </div>
+
+  <div class="exams-header">
+    <div class="exams-title">Exams & Deadlines</div>
+    <button class="btn-save" style="width:auto;padding:10px 20px;"
+            onclick="document.getElementById('addExamModal').classList.add('open')">+ Add</button>
+  </div>
+
+  {% if not exams %}
+    <div class="empty-exams">
+      <div style="font-size:3rem;margin-bottom:12px">📋</div>
+      <p>No upcoming exams or deadlines. Enjoy the peace!</p>
+    </div>
+  {% else %}
+    {% set this_week = exams|selectattr('date','le', this_week_end)|list %}
+    {% set next_week = exams|rejectattr('date','le', this_week_end)|selectattr('date','le', next_week_end)|list %}
+    {% set later     = exams|rejectattr('date','le', next_week_end)|list %}
+
+    {% for group_label, group_exams in [('This week', this_week), ('Next week', next_week), ('Later', later)] %}
+      {% if group_exams %}
+        <div class="exam-group-label">{{ group_label }}</div>
+        {% for exam in group_exams %}
+          {% set days_left = (exam.date - today).days %}
+          {% set subj = exam.subject %}
+          <div class="exam-card">
+            <div class="ec-bar" style="background:{{ subj.color }}"></div>
+            <div class="ec-body">
+              <div class="ec-title">{{ exam.title }}</div>
+              <div class="ec-subject" style="color:{{ subj.color }}">{{ subj.name }}</div>
+              <div class="ec-meta">
+                <span class="ec-chip">{{ exam.exam_type|title }}</span>
+                <span class="ec-chip">📅 {{ exam.date.strftime('%d %b %Y') }}{% if exam.time %} · {{ exam.time }}{% endif %}</span>
+                {% if exam.weightage %}<span class="ec-chip">⚖️ {{ exam.weightage }}%</span>{% endif %}
+              </div>
+            </div>
+            <div class="ec-actions">
+              {% if days_left == 0 %}
+                <span class="ec-countdown cd-soon">Today!</span>
+              {% elif days_left == 1 %}
+                <span class="ec-countdown cd-soon">Tomorrow</span>
+              {% elif days_left <= 7 %}
+                <span class="ec-countdown cd-week">{{ days_left }} days</span>
+              {% else %}
+                <span class="ec-countdown cd-later">{{ days_left }} days</span>
+              {% endif %}
+              {% if not exam.linked_task_id %}
+              <button class="btn-sm" onclick="createTask({{ exam.id }}, this)" title="Add to daily tasks">+ Task</button>
+              {% else %}
+              <span class="btn-sm" style="opacity:.5;cursor:default">✓ Task</span>
+              {% endif %}
+              <button class="btn-sm btn-sm-del" onclick="deleteExam({{ exam.id }}, this)">✕</button>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+</div>
+
+<!-- Add Exam Modal -->
+<div class="modal-backdrop" id="addExamModal">
+  <div class="modal-box">
+    <div class="modal-title">Add Exam / Deadline</div>
+    <label class="modal-label">Subject</label>
+    <select class="modal-select" id="examSubject">
+      {% for s in subjects %}
+        <option value="{{ s.id }}">{{ s.name }}</option>
+      {% endfor %}
+    </select>
+    <label class="modal-label">Title</label>
+    <input class="modal-input" id="examTitle" placeholder="e.g. Midterm Exam" autocomplete="off">
+    <label class="modal-label">Type</label>
+    <select class="modal-select" id="examType">
+      <option value="exam">📝 Exam</option>
+      <option value="assignment">📄 Assignment</option>
+      <option value="quiz">⚡ Quiz</option>
+      <option value="project">🎯 Project</option>
+    </select>
+    <label class="modal-label">Date & Time</label>
+    <div class="modal-row">
+      <input class="modal-input" type="date" id="examDate">
+      <input class="modal-input" type="time" id="examTime">
+    </div>
+    <label class="modal-label">Weightage % (optional)</label>
+    <input class="modal-input" type="number" id="examWeight" placeholder="e.g. 30" min="0" max="100">
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveExam()">Save</button>
+      <button class="btn-cancel" onclick="document.getElementById('addExamModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Set default date to today
+document.getElementById('examDate').value = '{{ today.strftime("%Y-%m-%d") }}';
+
+async function saveExam() {
+  const payload = {
+    subject_id: parseInt(document.getElementById('examSubject').value),
+    title:      document.getElementById('examTitle').value.trim(),
+    exam_type:  document.getElementById('examType').value,
+    date:       document.getElementById('examDate').value,
+    time:       document.getElementById('examTime').value || null,
+    weightage:  parseInt(document.getElementById('examWeight').value) || 0,
+  };
+  if (!payload.title || !payload.date) return;
+  await fetch('/study/exams/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+  location.reload();
+}
+
+async function deleteExam(id, btn) {
+  await fetch('/study/exams/delete/' + id, { method:'POST', headers:{'Content-Type':'application/json'} });
+  btn.closest('.exam-card').remove();
+}
+
+async function createTask(id, btn) {
+  const res  = await fetch('/study/exams/' + id + '/create-task', { method:'POST', headers:{'Content-Type':'application/json'} });
+  const data = await res.json();
+  if (data.status === 'ok') {
+    btn.textContent = '✓ Task';
+    btn.style.opacity = '.5';
+    btn.style.cursor  = 'default';
+    btn.onclick = null;
+  }
+}
+
+document.getElementById('addExamModal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+</script>
+{% endblock %}

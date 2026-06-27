@@ -1,0 +1,760 @@
+{% extends "base.html" %}
+{% block title %}Habit Tracker · monad{% endblock %}
+{% block page_title %}habits{% endblock %}
+{% block content %}
+
+<style>
+  @keyframes fadeUp  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes checkPop { 0%{transform:scale(0.5)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+
+  .habits-page { max-width: 100%; margin: 0 auto; }
+
+  /* ── Hero ── */
+  .habits-hero {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+    animation: fadeUp 0.5s ease both;
+  }
+  .habits-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+  }
+  .habits-sub { font-size: 0.88rem; color: var(--text-secondary); margin-top: 3px; }
+  .habits-nav-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hpill {
+    padding: 8px 16px; border-radius: 99px; font-weight: 600; font-size: 0.82rem;
+    text-decoration: none; transition: all 0.2s; border: 1.5px solid var(--border-color);
+    background: var(--card-bg); color: var(--text-secondary);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .hpill:hover { background: var(--accent-1); color: white; border-color: var(--accent-1); }
+  .hpill.streak-pill { background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.3); }
+  .hpill.streak-pill:hover { background: #f59e0b; color: white; border-color: #f59e0b; }
+
+  /* ── Add habit ── */
+  .add-habit-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 14px 16px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.5s ease 0.08s both;
+  }
+  .add-habit-card:focus-within {
+    border-color: var(--accent-1);
+    box-shadow: 0 0 0 4px var(--glow-color), 0 4px 16px rgba(0,0,0,0.05);
+  }
+  .add-habit-form { display: flex; gap: 10px; }
+  .habit-input {
+    flex: 1; padding: 11px 18px; border: none;
+    background: var(--input-bg); border-radius: 99px;
+    color: var(--text-primary); font-size: 0.92rem;
+    font-family: 'Inter', sans-serif; outline: none;
+  }
+  .habit-input::placeholder { color: var(--text-secondary); }
+  .btn-add-habit {
+    padding: 11px 22px; background: var(--accent-1); color: white;
+    border: none; border-radius: 99px; font-weight: 600;
+    cursor: pointer; font-size: 0.88rem; white-space: nowrap;
+    box-shadow: 0 4px 12px var(--glow-color); transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-add-habit:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* ── Table wrap ── */
+  .habit-table-wrap {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+    animation: fadeUp 0.5s ease 0.12s both;
+  }
+
+  .habit-table {
+    width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 750px;
+  }
+
+  .habit-table th {
+    padding: 10px 3px; background: var(--input-bg);
+    color: var(--text-secondary); font-weight: 700;
+    text-align: center; white-space: nowrap; font-size: 0.6rem;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .habit-table th:first-child {
+    text-align: left; padding-left: 14px; min-width: 130px;
+    position: sticky; left: 0; background: var(--input-bg); z-index: 3;
+  }
+  .habit-table th.today-col { color: var(--accent-1); font-weight: 800; }
+
+  .habit-table td {
+    border: 1px solid var(--border-color); padding: 4px 2px;
+    text-align: center; font-size: 0.68rem; height: 36px;
+    transition: background 0.15s;
+  }
+  .habit-table td:first-child {
+    position: sticky; left: 0; background: var(--card-bg); z-index: 1;
+    border-right: 2px solid var(--border-color);
+  }
+  .habit-table td.today-col { background: rgba(224,123,57,0.06); }
+  .habit-table tr:hover td { background: var(--hover); }
+  .habit-table tr:hover td:first-child { background: var(--hover); }
+  .habit-table tr:hover td.today-col { background: rgba(224,123,57,0.1); }
+
+  /* Habit name cell */
+  .habit-name-cell {
+    display: flex; align-items: center; gap: 7px;
+    padding: 2px 10px; font-weight: 600; color: var(--text-primary);
+    font-size: 0.76rem; white-space: nowrap;
+  }
+  .habit-icon {
+    width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-study       { background: rgba(59,130,246,0.12); }
+  .icon-study svg   { stroke: #3b82f6; }
+  .icon-fitness     { background: rgba(239,68,68,0.12); }
+  .icon-fitness svg { stroke: #ef4444; }
+  .icon-mind        { background: rgba(139,92,246,0.12); }
+  .icon-mind svg    { stroke: #8b5cf6; }
+  .icon-health      { background: rgba(16,185,129,0.12); }
+  .icon-health svg  { stroke: #10b981; }
+  .icon-productivity     { background: rgba(245,158,11,0.12); }
+  .icon-productivity svg { stroke: #f59e0b; }
+  .icon-default          { background: var(--hover); }
+  .icon-default svg      { stroke: var(--accent-1); }
+
+  /* Check circles */
+  .habit-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border-color); margin: 0 auto;
+    cursor: pointer; transition: all 0.18s; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .habit-check:hover { border-color: var(--accent-1); background: var(--hover); }
+  .habit-check.checked {
+    background: var(--accent-1); border-color: var(--accent-1);
+    animation: checkPop 0.25s ease;
+  }
+  .habit-check.checked::after {
+    content: '✓'; color: white; font-size: 11px; font-weight: 800;
+  }
+
+  /* Progress badge */
+  .progress-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 99px; font-weight: 700; font-size: 0.62rem;
+  }
+  .progress-badge.great { background:rgba(16,185,129,0.12); color:#059669; }
+  .progress-badge.good  { background:rgba(59,130,246,0.12);  color:#2563eb; }
+  .progress-badge.ok    { background:rgba(245,158,11,0.12);  color:#d97706; }
+  .progress-badge.low   { background:rgba(239,68,68,0.12);   color:#dc2626; }
+
+  /* Streak badge */
+  .streak-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 8px; border-radius: 99px; font-weight: 700; font-size: 0.62rem;
+    background: rgba(245,158,11,0.12); color: #d97706; white-space: nowrap;
+  }
+
+  /* Delete */
+  .btn-del-habit {
+    width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid rgba(239,68,68,0.2);
+    background: transparent; color: #ef4444; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; text-decoration: none; transition: all 0.15s; margin: 0 auto;
+  }
+  .btn-del-habit:hover { background: rgba(239,68,68,0.1); border-color: #ef4444; }
+
+  /* Legend */
+  .legend-row {
+    display: flex; gap: 14px; justify-content: center;
+    margin-top: 14px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-secondary);
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+  .legend-item  { display: flex; align-items: center; gap: 6px; }
+  .legend-dot   { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-1); }
+  .legend-dot.empty { background: transparent; border: 2px solid var(--text-secondary); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    background: var(--card-bg); border: 1.5px dashed var(--border-color);
+    border-radius: 20px; color: var(--text-secondary);
+    animation: fadeUp 0.5s ease 0.15s both;
+  }
+  .empty-state h4 { color: var(--text-primary); font-size: 1.05rem; margin-bottom: 6px; }
+
+  /* Suggested habits */
+  .suggested-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 20px; margin-top: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+  .suggested-title {
+    font-weight: 700; color: var(--text-primary); margin-bottom: 12px; font-size: 0.92rem;
+  }
+  .suggested-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .suggested-chip {
+    padding: 8px 18px; border: 2px solid var(--accent-1);
+    background: transparent; color: var(--accent-1);
+    border-radius: 99px; cursor: pointer; font-size: 0.84rem; font-weight: 600;
+    font-family: 'Inter', sans-serif; transition: all 0.2s;
+  }
+  .suggested-chip:hover { background: var(--accent-1); color: white; }
+
+  /* Frequency badge */
+  .freq-badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 7px; border-radius: 99px; font-size: 0.6rem; font-weight: 700;
+    background: rgba(139,92,246,0.12); color: #7c3aed; white-space: nowrap;
+    margin-left: 4px; flex-shrink: 0;
+  }
+
+  /* Frequency selector in add form */
+  .habit-freq-select {
+    padding: 10px 14px; border: none; border-radius: 99px;
+    background: var(--input-bg); color: var(--text-primary);
+    font-size: 0.88rem; font-family: 'Inter', sans-serif; outline: none;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* Day pills for custom frequency */
+  .add-day-pills {
+    display: none; gap: 5px; flex-wrap: wrap;
+    margin-top: 8px; padding: 0 4px;
+  }
+  .day-pill-h {
+    padding: 5px 10px; border-radius: 99px; border: 1.5px solid var(--border-color);
+    background: var(--input-bg); color: var(--text-secondary);
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; user-select: none;
+  }
+  .day-pill-h.active { background: var(--accent-1); color: white; border-color: var(--accent-1); }
+
+  /* Off-day cells (not required by frequency) */
+  .habit-check.off-day {
+    border-style: dashed; opacity: 0.3; cursor: default;
+  }
+  .habit-check.off-day:hover { background: transparent; border-color: var(--border-color); }
+
+  /* Weekly counter */
+  .week-counter {
+    display: block; font-size: 0.58rem; color: var(--text-secondary);
+    margin-top: 2px; white-space: nowrap;
+  }
+
+  @media (max-width: 600px) {
+    .add-habit-form { flex-direction: column; }
+    .btn-add-habit  { width: 100%; text-align: center; }
+    .habit-table    { min-width: 600px; font-size: 0.62rem; }
+  }
+
+  /* ── Habit reflection modal ── */
+  @keyframes modalIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.92)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+
+  #habitReflectOverlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 99990;
+    backdrop-filter: blur(3px);
+  }
+  #habitReflectModal {
+    display: none; position: fixed;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: var(--card-bg); border-radius: 24px;
+    width: 92%; max-width: 440px; z-index: 99999;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+    animation: modalIn 0.35s cubic-bezier(0.34,1.4,0.64,1) both;
+    overflow: hidden;
+  }
+  .reflect-header {
+    background: linear-gradient(135deg, var(--accent-1, #E07B39) 0%, #f5a623 100%);
+    padding: 20px 24px 16px; color: white;
+  }
+  .reflect-header h3 { font-size: 1.1rem; font-weight: 700; margin: 0 0 2px; }
+  .reflect-header p  { font-size: 0.82rem; opacity: 0.88; margin: 0; }
+  .reflect-habit-name {
+    display: inline-block; background: rgba(255,255,255,0.22);
+    border-radius: 99px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600;
+    margin-top: 8px;
+  }
+  .reflect-body { padding: 20px 24px; }
+  .reflect-section { margin-bottom: 16px; }
+  .reflect-label {
+    font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .reflect-textarea {
+    width: 100%; min-height: 90px; padding: 12px 14px;
+    border: 1.5px solid var(--border-color); border-radius: 14px;
+    background: var(--input-bg); color: var(--text-primary);
+    font-family: 'Inter', sans-serif; font-size: 0.88rem;
+    resize: vertical; outline: none; transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+  .reflect-textarea:focus { border-color: var(--accent-1); }
+  .reflect-photo-label {
+    display: flex; align-items: center; gap: 10px;
+    border: 2px dashed var(--border-color); border-radius: 14px;
+    padding: 14px 16px; cursor: pointer; transition: all 0.2s;
+    background: var(--input-bg); color: var(--text-secondary); font-size: 0.86rem;
+  }
+  .reflect-photo-label:hover { border-color: var(--accent-1); color: var(--accent-1); background: rgba(224,123,57,0.05); }
+  .reflect-photo-label .ph-icon { font-size: 1.5rem; }
+  #reflectPhotoInput { display: none; }
+  #reflectPhotoPreview {
+    margin-top: 10px; display: none;
+    border-radius: 12px; overflow: hidden; max-height: 140px;
+  }
+  #reflectPhotoPreview img { width: 100%; object-fit: cover; max-height: 140px; display: block; }
+  .reflect-footer { display: flex; gap: 10px; padding: 0 24px 20px; }
+  .btn-reflect-skip {
+    flex: 0; padding: 11px 20px; border: 1.5px solid var(--border-color);
+    background: transparent; color: var(--text-secondary); border-radius: 99px;
+    cursor: pointer; font-size: 0.86rem; font-weight: 600; white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .btn-reflect-skip:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+  .btn-reflect-save {
+    flex: 1; padding: 11px 20px; background: var(--accent-1);
+    color: white; border: none; border-radius: 99px;
+    cursor: pointer; font-size: 0.88rem; font-weight: 700;
+    box-shadow: 0 4px 14px rgba(224,123,57,0.4); transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-reflect-save:hover { opacity: 0.92; transform: translateY(-1px); }
+
+  /* ── Habit toast ── */
+  @keyframes toastIn  { from{opacity:0;transform:translate(-50%,24px) scale(0.92)} to{opacity:1;transform:translate(-50%,0) scale(1)} }
+  @keyframes toastOut { from{opacity:1;transform:translate(-50%,0) scale(1)} to{opacity:0;transform:translate(-50%,16px) scale(0.95)} }
+  @keyframes bigCheck { 0%{transform:scale(0) rotate(-15deg)} 60%{transform:scale(1.25) rotate(4deg)} 100%{transform:scale(1) rotate(0deg)} }
+
+  #habitToast {
+    position: fixed; bottom: 36px; left: 50%; transform: translate(-50%, 0);
+    background: white; border-radius: 20px;
+    padding: 16px 24px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
+    z-index: 99999; min-width: 240px; max-width: 360px;
+    animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+    border: 1.5px solid rgba(0,0,0,0.06);
+  }
+  #habitToast.hiding { animation: toastOut 0.28s ease forwards; }
+  #habitToast.success .toast-icon { background: #dcfce7; color: #16a34a; }
+  #habitToast.undo    .toast-icon { background: #fef3c7; color: #d97706; }
+  .toast-icon {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; animation: bigCheck 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .toast-body { flex: 1; }
+  .toast-title { font-weight: 700; font-size: 0.95rem; color: #111; line-height: 1.2; }
+  .toast-sub   { font-size: 0.78rem; color: #888; margin-top: 2px; }
+  .toast-close {
+    background: none; border: none; cursor: pointer; color: #aaa;
+    font-size: 1.1rem; line-height: 1; padding: 2px; flex-shrink: 0;
+  }
+  .toast-close:hover { color: #555; }
+</style>
+
+<div class="habits-page">
+
+  <!-- Hero -->
+  <div class="habits-hero">
+    <div>
+      <div class="habits-title">📈 Habit Tracker</div>
+      <div class="habits-sub">{{ month }}/{{ year }} · build streaks that last</div>
+    </div>
+    <div class="habits-nav-pills">
+      {% if month == 1 %}
+        <a href="{{ url_for('views.habits_monthly', year=year-1, month=12) }}" class="hpill">← Dec {{ year-1 }}</a>
+      {% else %}
+        <a href="{{ url_for('views.habits_monthly', year=year, month=month-1) }}" class="hpill">← Prev</a>
+      {% endif %}
+      <a href="{{ url_for('views.habit_streaks', year=year, month=month) }}" class="hpill streak-pill">🔥 Streaks</a>
+      {% if month == 12 %}
+        <a href="{{ url_for('views.habits_monthly', year=year+1, month=1) }}" class="hpill">Jan {{ year+1 }} →</a>
+      {% else %}
+        <a href="{{ url_for('views.habits_monthly', year=year, month=month+1) }}" class="hpill">Next →</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Habit tip banner -->
+  <div id="habitTip" style="display:none; margin-bottom:16px; animation: fadeUp 0.4s ease both;">
+    <div style="
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent-1) 10%, var(--card-bg)), color-mix(in srgb, var(--accent-2) 8%, var(--card-bg)));
+      border: 1px solid color-mix(in srgb, var(--accent-1) 20%, transparent);
+      border-radius: 16px; padding: 13px 16px;
+      display: flex; align-items: center; gap: 12px;
+    ">
+      <span style="font-size: 1.3rem; flex-shrink:0;" id="habitTipEmoji">🔥</span>
+      <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin:0; flex:1;" id="habitTipText"></p>
+      <button onclick="document.getElementById('habitTip').style.display='none'; sessionStorage.setItem('habitTipDismissed_'+new Date().toDateString(),'1')"
+        style="background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size:1rem; padding:2px 6px; flex-shrink:0; opacity:0.6;">×</button>
+    </div>
+  </div>
+
+  <!-- Add habit -->
+  <div class="add-habit-card">
+    <form method="POST" class="add-habit-form" id="addHabitForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="habit" class="habit-input" placeholder="Add a new habit to track…" required>
+      <select name="frequency" class="habit-freq-select" onchange="onHabitFreqChange(this)">
+        <option value="daily">Daily</option>
+        <option value="2x">2× / week</option>
+        <option value="3x">3× / week</option>
+        <option value="4x">4× / week</option>
+        <option value="5x">5× / week</option>
+        <option value="custom">Custom days…</option>
+      </select>
+      <button type="submit" class="btn-add-habit">+ Add Habit</button>
+    </form>
+    <div class="add-day-pills" id="customDayPickerAdd">
+      <span class="day-pill-h" data-day="0" onclick="toggleHabitDay(this)">Mo</span>
+      <span class="day-pill-h" data-day="1" onclick="toggleHabitDay(this)">Tu</span>
+      <span class="day-pill-h" data-day="2" onclick="toggleHabitDay(this)">We</span>
+      <span class="day-pill-h" data-day="3" onclick="toggleHabitDay(this)">Th</span>
+      <span class="day-pill-h" data-day="4" onclick="toggleHabitDay(this)">Fr</span>
+      <span class="day-pill-h" data-day="5" onclick="toggleHabitDay(this)">Sa</span>
+      <span class="day-pill-h" data-day="6" onclick="toggleHabitDay(this)">Su</span>
+    </div>
+    <input type="hidden" name="custom_days" id="customDaysAdd" form="addHabitForm">
+  </div>
+
+  {% if habits %}
+    {% set daysInMonth = 31 %}
+    {% if month in [4,6,9,11] %}{% set daysInMonth = 30 %}{% endif %}
+    {% if month == 2 %}
+      {% if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0) %}
+        {% set daysInMonth = 29 %}
+      {% else %}
+        {% set daysInMonth = 28 %}
+      {% endif %}
+    {% endif %}
+    {% set todayDay = datetime.utcnow().day %}
+    {% set todayMonth = datetime.utcnow().month %}
+    {% set todayYear  = datetime.utcnow().year %}
+
+    <div class="habit-table-wrap">
+      <table class="habit-table">
+        <thead>
+          <tr>
+            <th>Habit</th>
+            {% for d in range(1, daysInMonth + 1) %}
+              <th class="{% if d == todayDay and month == todayMonth and year == todayYear %}today-col{% endif %}">
+                {{ d }}
+              </th>
+            {% endfor %}
+            <th>Progress</th>
+            <th>Streak</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for habit in habits %}
+            <tr>
+              <td>
+                <div class="habit-name-cell">
+                  {% set nl = habit.name.lower() %}
+                  {% if 'study' in nl or 'exam' in nl or 'homework' in nl or 'read' in nl or 'learn' in nl or 'course' in nl or 'lecture' in nl or 'assignment' in nl %}
+                    <div class="habit-icon icon-study"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+                  {% elif 'gym' in nl or 'workout' in nl or 'exercise' in nl or 'run' in nl or 'walk' in nl or 'fitness' in nl or 'cardio' in nl or 'sport' in nl %}
+                    <div class="habit-icon icon-fitness"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
+                  {% elif 'meditate' in nl or 'meditation' in nl or 'yoga' in nl or 'pray' in nl or 'bible' in nl or 'journal' in nl or 'gratitude' in nl %}
+                    <div class="habit-icon icon-mind"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                  {% elif 'water' in nl or 'drink' in nl or 'sleep' in nl or 'eat' in nl or 'diet' in nl or 'meal' in nl or 'hydrate' in nl %}
+                    <div class="habit-icon icon-health"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+                  {% elif 'plan' in nl or 'organize' in nl or 'work' in nl or 'project' in nl or 'code' in nl or 'write' in nl or 'build' in nl %}
+                    <div class="habit-icon icon-productivity"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+                  {% else %}
+                    <div class="habit-icon icon-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div>
+                  {% endif %}
+                  {{ habit.name }}
+                  {% set hfreq = habit.frequency or 'daily' %}
+                  {% if hfreq != 'daily' %}
+                    <span class="freq-badge">
+                      {%- if hfreq == '2x' %}2× /wk
+                      {%- elif hfreq == '3x' %}3× /wk
+                      {%- elif hfreq == '4x' %}4× /wk
+                      {%- elif hfreq == '5x' %}5× /wk
+                      {%- elif hfreq.startswith('days:') -%}
+                        {%- set day_abbr = ['Mo','Tu','We','Th','Fr','Sa','Su'] -%}
+                        {%- for dnum in hfreq[5:].split(',') if dnum.strip() -%}
+                          {{ day_abbr[dnum.strip()|int] }}{%- if not loop.last %} {% endif -%}
+                        {%- endfor -%}
+                      {%- endif -%}
+                    </span>
+                  {% endif %}
+                </div>
+              </td>
+              {% set hprog = habit_progress[habit.id] %}
+              {% for d in range(1, daysInMonth + 1) %}
+                {% set date = datetime(year, month, d).date() %}
+                {% set log  = habit.logs|selectattr('date','equalto',date)|first %}
+                {% set isTodayCol = (d == todayDay and month == todayMonth and year == todayYear) %}
+                {% set is_off = (hprog.required_weekdays is not none and date.weekday() not in hprog.required_weekdays) %}
+                <td class="{% if isTodayCol %}today-col{% endif %}"
+                    {% if not is_off %}data-href="{{ url_for('views.toggle_habit', id=habit.id, date_str=date.strftime('%Y-%m-%d')) }}" style="cursor:pointer;"{% endif %}>
+                  <div class="habit-check {% if log and log.completed %}checked{% elif is_off %}off-day{% endif %}"></div>
+                </td>
+              {% endfor %}
+              <td>
+                {% set prog = habit_progress[habit.id] %}
+                {% set rate = (prog.done / prog.expected * 100) if prog.expected > 0 else 0 %}
+                {% if rate >= 80 %}<span class="progress-badge great">{{ prog.done }}/{{ prog.expected }}</span>
+                {% elif rate >= 60 %}<span class="progress-badge good">{{ prog.done }}/{{ prog.expected }}</span>
+                {% elif rate >= 40 %}<span class="progress-badge ok">{{ prog.done }}/{{ prog.expected }}</span>
+                {% else %}<span class="progress-badge low">{{ prog.done }}/{{ prog.expected }}</span>{% endif %}
+                {% if prog.week_target is not none %}
+                  <span class="week-counter">{{ prog.week_done }}/{{ prog.week_target }} this wk</span>
+                {% endif %}
+              </td>
+              <td>
+                {% set streak = namespace(count=0) %}
+                {% for d in range(daysInMonth, 0, -1) %}
+                  {% set date = datetime(year, month, d).date() %}
+                  {% set log  = habit.logs|selectattr('date','equalto',date)|first %}
+                  {% if log and log.completed and streak.count == (daysInMonth - d) %}
+                    {% set streak.count = streak.count + 1 %}
+                  {% endif %}
+                {% endfor %}
+                {% if streak.count > 0 %}
+                  <span class="streak-badge">🔥 {{ streak.count }}</span>
+                {% else %}
+                  <span style="color:var(--text-secondary); font-size:0.65rem;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('views.delete_habit', id=habit.id) }}" class="btn-del-habit"
+                   onclick="return confirm('Delete this habit?')" title="Delete">✕</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-dot"></div> Completed</div>
+      <div class="legend-item"><div class="legend-dot empty"></div> Missed</div>
+    </div>
+
+  {% else %}
+    <div class="empty-state">
+      <div style="font-size:3rem; margin-bottom:12px;">📋</div>
+      <h4>No habits yet</h4>
+      <p>Add your first habit above to start building streaks!</p>
+    </div>
+
+    {% if suggested_habits %}
+    <div class="suggested-card">
+      <div class="suggested-title">✨ Suggested for you</div>
+      <div class="suggested-chips">
+        {% for habit in suggested_habits %}
+          <form method="POST" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" name="habit" value="{{ habit }}" class="suggested-chip">
+              + {{ habit }}
+            </button>
+          </form>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% endif %}
+
+</div>
+
+<!-- Habit Reflection Modal -->
+<div id="habitReflectOverlay" onclick="closeReflectModal()"></div>
+<div id="habitReflectModal">
+  <div class="reflect-header">
+    <h3>🌟 How did it go?</h3>
+    <p>Reflect on your progress today</p>
+    <span class="reflect-habit-name" id="reflectHabitName"></span>
+  </div>
+  <div class="reflect-body">
+    <div class="reflect-section">
+      <div class="reflect-label">✏️ Your reflection</div>
+      <textarea class="reflect-textarea" id="reflectText"
+        placeholder="What went well? How did this habit make you feel? Any challenges?"></textarea>
+    </div>
+    <div class="reflect-section">
+      <div class="reflect-label">📸 Capture your progress <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-secondary);font-size:0.75rem;">(optional)</span></div>
+      <label class="reflect-photo-label" for="reflectPhotoInput">
+        <span class="ph-icon">📷</span>
+        <span id="reflectPhotoLabelText">Tap to take a photo or upload one</span>
+      </label>
+      <input type="file" id="reflectPhotoInput" accept="image/*" capture="environment" onchange="onReflectPhoto(this)">
+      <div id="reflectPhotoPreview"><img id="reflectPhotoImg" src="" alt="preview"></div>
+    </div>
+  </div>
+  <div class="reflect-footer">
+    <button class="btn-reflect-skip" onclick="closeReflectModal()">Skip</button>
+    <button class="btn-reflect-save" onclick="submitReflection()">Save reflection ✨</button>
+  </div>
+</div>
+
+<div id="habitToast" style="display:none;"></div>
+
+<script>
+/* ── Frequency picker ── */
+function onHabitFreqChange(sel) {
+  var picker = document.getElementById('customDayPickerAdd');
+  picker.style.display = (sel.value === 'custom') ? 'flex' : 'none';
+  if (sel.value !== 'custom') document.getElementById('customDaysAdd').value = '';
+}
+function toggleHabitDay(pill) {
+  pill.classList.toggle('active');
+  var days = [];
+  document.querySelectorAll('#customDayPickerAdd .day-pill-h.active').forEach(function(p) {
+    days.push(p.dataset.day);
+  });
+  document.getElementById('customDaysAdd').value = days.join(',');
+}
+
+/* ── Reflection modal ── */
+var currentLogId = null;
+
+function openReflectModal(logId, habitName) {
+  currentLogId = logId;
+  document.getElementById('reflectHabitName').textContent = habitName;
+  document.getElementById('reflectText').value = '';
+  document.getElementById('reflectPhotoInput').value = '';
+  document.getElementById('reflectPhotoPreview').style.display = 'none';
+  document.getElementById('reflectPhotoLabelText').textContent = 'Tap to take a photo or upload one';
+  document.getElementById('habitReflectOverlay').style.display = 'block';
+  document.getElementById('habitReflectModal').style.display = 'block';
+  setTimeout(function() { document.getElementById('reflectText').focus(); }, 350);
+}
+
+function closeReflectModal() {
+  document.getElementById('habitReflectOverlay').style.display = 'none';
+  document.getElementById('habitReflectModal').style.display = 'none';
+  currentLogId = null;
+}
+
+function onReflectPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  document.getElementById('reflectPhotoLabelText').textContent = file.name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('reflectPhotoImg').src = e.target.result;
+    document.getElementById('reflectPhotoPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitReflection() {
+  if (!currentLogId) { closeReflectModal(); return; }
+  var btn = document.querySelector('.btn-reflect-save');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  var fd = new FormData();
+  fd.append('log_id', currentLogId);
+  fd.append('reflection', document.getElementById('reflectText').value);
+  var photoFile = document.getElementById('reflectPhotoInput').files[0];
+  if (photoFile) fd.append('photo', photoFile);
+
+  fetch('/habit/reflect', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      closeReflectModal();
+      showHabitToast(true, true); // true = completed, true = saved
+    })
+    .catch(function() {
+      closeReflectModal();
+    });
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeReflectModal();
+});
+
+/* ── Toast ── */
+var toastTimer = null;
+function showHabitToast(completed, saved) {
+  var toast = document.getElementById('habitToast');
+  toast.className = completed ? 'success' : 'undo';
+  toast.style.display = 'flex';
+  var title = completed ? (saved ? 'Reflection saved! 🌟' : 'Habit done! 🔥') : 'Unmarked';
+  var sub   = completed ? (saved ? 'Great job tracking your progress.' : 'Keep the streak going!') : 'No worries, try again tomorrow.';
+  toast.innerHTML =
+    '<div class="toast-icon">' + (completed ? (saved ? '🌟' : '✅') : '↩️') + '</div>' +
+    '<div class="toast-body">' +
+      '<div class="toast-title">' + title + '</div>' +
+      '<div class="toast-sub">' + sub + '</div>' +
+    '</div>' +
+    '<button class="toast-close" onclick="dismissToast()">×</button>';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(dismissToast, 2800);
+}
+function dismissToast() {
+  var toast = document.getElementById('habitToast');
+  toast.classList.add('hiding');
+  setTimeout(function() { toast.style.display = 'none'; toast.classList.remove('hiding'); }, 280);
+}
+
+/* ── AJAX habit toggle ── */
+document.querySelectorAll('td[data-href]').forEach(function(td) {
+  var habitName = td.closest('tr').querySelector('.habit-name-cell')
+                  ? td.closest('tr').querySelector('.habit-name-cell').textContent.trim()
+                  : 'Habit';
+
+  td.addEventListener('click', function(e) {
+    var url = td.dataset.href;
+    var check = td.querySelector('.habit-check');
+
+    var nowChecked = !check.classList.contains('checked');
+    if (nowChecked) {
+      check.classList.add('checked');
+    } else {
+      check.classList.remove('checked');
+    }
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.completed) {
+          check.classList.add('checked');
+          // Show reflection modal after a brief toast moment
+          showHabitToast(true, false);
+          setTimeout(function() {
+            dismissToast();
+            openReflectModal(data.log_id, habitName);
+          }, 1200);
+        } else {
+          check.classList.remove('checked');
+          showHabitToast(false, false);
+        }
+      })
+      .catch(function() {
+        window.location.href = url;
+      });
+  });
+});
+
+// Habit tip
+(function() {
+  const key = 'habitTipDismissed_' + new Date().toDateString();
+  if (!sessionStorage.getItem(key)) {
+    const tips = [
+      { e: '🔥', t: 'Streaks are built one day at a time. Even doing 5 minutes counts — just show up.' },
+      { e: '🧠', t: 'Habit stacking works: attach your new habit right after an existing one you already do.' },
+      { e: '📅', t: 'Missing once is an accident. Missing twice is the start of a new habit — bounce back today.' },
+      { e: '💧', t: 'The key to habits? Make them so easy you can\'t say no. Start tiny, build from there.' },
+      { e: '🌱', t: 'You don\'t rise to your goals — you fall to your systems. Your habits ARE your system.' },
+      { e: '⏰', t: 'Same time, same place every day. Context cues are the secret sauce of lasting habits.' },
+      { e: '🎯', t: 'Track it, don\'t just do it. Seeing your streak grow is motivation fuel in itself.' },
+      { e: '💪', t: '"We are what we repeatedly do. Excellence is not an act, but a habit." — Aristotle' },
+      { e: '🌟', t: 'Celebrate small wins out loud — your brain links the reward to the behavior and wants more.' },
+      { e: '🔄', t: 'A habit has 3 parts: cue, routine, reward. Knowing this lets you redesign any habit.' },
+    ];
+    const pick = tips[Math.floor(Math.random() * tips.length)];
+    document.getElementById('habitTipEmoji').textContent = pick.e;
+    document.getElementById('habitTipText').textContent = pick.t;
+    document.getElementById('habitTip').style.display = 'block';
+  }
+})();
+</script>
+
+{% endblock %}

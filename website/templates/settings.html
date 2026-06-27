@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% block title %}Settings · monad{% endblock %}
+{% block page_title %}settings{% endblock %}
+{% block content %}
+
+<style>
+  .settings-page { max-width: 600px; margin: 0 auto; }
+
+  /* ── Theme preview tiles ── */
+  .theme-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .theme-tile {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; border-radius: 14px; padding: 6px 6px 10px;
+    border: 2px solid var(--border-color); background: var(--input-bg);
+    transition: all 0.18s;
+  }
+  .theme-tile:hover { border-color: var(--accent-1); transform: translateY(-2px); }
+  .theme-tile.selected { border-color: var(--accent-1); box-shadow: 0 0 0 3px var(--glow-color); }
+  .theme-tile-preview {
+    width: 100%; border-radius: 9px; overflow: hidden;
+    height: 64px; display: flex; flex-direction: column;
+    border: 1px solid var(--border-color);
+  }
+  .tp-nav { height: 16px; flex-shrink: 0; }
+  .tp-body { flex: 1; padding: 5px; display: flex; align-items: center; justify-content: center; }
+  .tp-card {
+    width: 100%; border-radius: 5px; padding: 5px 7px;
+    border: 1px solid; display: flex; flex-direction: column; gap: 3px;
+    align-items: flex-start;
+  }
+  .tp-dot { width: 8px; height: 8px; border-radius: 50%; margin-bottom: 2px; }
+  .tp-line { height: 3px; border-radius: 2px; width: 80%; opacity: 0.7; }
+  .tp-line.short { width: 50%; opacity: 0.4; }
+  .theme-tile-label { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); }
+
+  .settings-header {
+    background: var(--header-gradient);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 25px var(--glow-color);
+  }
+  .settings-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .settings-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+  }
+  .settings-card h4 {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+  }
+
+  .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; }
+  .option-card {
+    border: 2px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--input-bg);
+  }
+  .option-card:hover { border-color: var(--accent-1); }
+  .option-card input { display: none; }
+  .option-card input:checked + .opt-content { }
+  .option-card:has(input:checked) { border-color: var(--accent-1); background: var(--hover); box-shadow: 0 0 0 3px var(--glow-color); }
+  .opt-icon { font-size: 32px; display: block; margin-bottom: 6px; }
+  .opt-label { font-weight: 600; color: var(--text-primary); font-size: 0.85rem; }
+
+  .btn-save {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent-1);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-save:hover { opacity: 0.9; }
+
+  /* Feature toggles */
+  .feat-toggle { position:relative; display:inline-block; width:46px; height:26px; flex-shrink:0; }
+  .feat-toggle input { opacity:0; width:0; height:0; }
+  .feat-slider {
+    position:absolute; inset:0; border-radius:99px; cursor:pointer;
+    background:var(--border-color); transition:.25s;
+  }
+  .feat-slider::before {
+    content:''; position:absolute; width:20px; height:20px; border-radius:50%;
+    background:white; left:3px; bottom:3px; transition:.25s;
+    box-shadow:0 1px 4px rgba(0,0,0,.2);
+  }
+  .feat-toggle input:checked + .feat-slider { background:var(--accent-1); }
+  .feat-toggle input:checked + .feat-slider::before { transform:translateX(20px); }
+
+  @media (max-width: 600px) {
+    .settings-page { padding: 0 2px; }
+    .theme-preview-grid { grid-template-columns: repeat(2, 1fr); }
+    .settings-card { padding: 18px 16px; }
+    .settings-header { padding: 18px 16px; border-radius: 14px; }
+  }
+  @media (max-width: 400px) {
+    .option-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<div class="settings-page">
+  
+  <div class="settings-header">
+    <h2>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="vertical-align:middle; margin-right:8px;">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+      Settings
+    </h2>
+  </div>
+
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="settings-card">
+      <h4>👤 Profile</h4>
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Display Name</label>
+        <input type="text" name="name" value="{{ current_user.name or '' }}" placeholder="Your name"
+               style="width:100%; padding:12px 14px; border:2px solid var(--border-color); border-radius:10px; background:var(--input-bg); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:0.95rem; box-sizing:border-box;">
+      </div>
+      <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:10px;">Life Phase</label>
+      <div class="option-grid">
+        {% set phases = [('school','🎒','School'),('college','📚','College'),('working','💼','Working'),('other','🌟','Other')] %}
+        {% for val, icon, label in phases %}
+          <label class="option-card">
+            <input type="radio" name="life_phase" value="{{ val }}" {% if current_user.life_phase == val %}checked{% endif %}>
+            <div class="opt-content">
+              <span class="opt-icon">{{ icon }}</span>
+              <span class="opt-label">{{ label }}</span>
+            </div>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h4>⚙️ Features</h4>
+      <p style="font-size:.82rem;color:var(--text-secondary);margin:0 0 16px">Turn off sections you don't need — they'll be hidden from the sidebar.</p>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border-color)">
+        <div>
+          <div style="font-size:.9rem;font-weight:600;color:var(--text-primary)">📚 Study Section</div>
+          <div style="font-size:.77rem;color:var(--text-secondary);margin-top:2px">Subjects, timetable, exams &amp; marks</div>
+        </div>
+        <label class="feat-toggle">
+          <input type="checkbox" name="study_enabled" value="1" {% if current_user.study_enabled != False %}checked{% endif %}>
+          <span class="feat-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h4>🎨 Theme</h4>
+      <input type="hidden" name="theme" id="themeVal" value="{{ current_user.theme or 'default' }}">
+      <div class="theme-preview-grid" id="themeGrid">
+
+        <div class="theme-tile {% if (current_user.theme or 'default') == 'default' %}selected{% endif %}" data-val="default"
+          data-nav="#FDF6F0" data-body="#FFFDF9" data-accent="#E07B39" data-card="#FFFFFF"
+          data-tp="#2D2A26" data-ts="#8B7E74" data-border="#F0E8DF">
+          <div class="theme-tile-preview">
+            <div class="tp-nav" style="background:#FDF6F0;"></div>
+            <div class="tp-body" style="background:#FFFDF9;">
+              <div class="tp-card" style="background:#fff; border-color:#F0E8DF;">
+                <div class="tp-dot" style="background:#E07B39;"></div>
+                <div class="tp-line" style="background:#2D2A26;"></div>
+                <div class="tp-line short" style="background:#8B7E74;"></div>
+              </div>
+            </div>
+          </div>
+          <span class="theme-tile-label">🌙 Cream</span>
+        </div>
+
+        <div class="theme-tile {% if current_user.theme == 'ocean' %}selected{% endif %}" data-val="ocean"
+          data-nav="#001f3f" data-body="#e8f4f8" data-accent="#0077b6" data-card="#ffffff"
+          data-tp="#1a1a2e" data-ts="#4a5568" data-border="#caf0f8">
+          <div class="theme-tile-preview">
+            <div class="tp-nav" style="background:#001f3f;"></div>
+            <div class="tp-body" style="background:#e8f4f8;">
+              <div class="tp-card" style="background:#fff; border-color:#caf0f8;">
+                <div class="tp-dot" style="background:#0077b6;"></div>
+                <div class="tp-line" style="background:#1a1a2e;"></div>
+                <div class="tp-line short" style="background:#4a5568;"></div>
+              </div>
+            </div>
+          </div>
+          <span class="theme-tile-label">🌊 Ocean</span>
+        </div>
+
+        <div class="theme-tile {% if current_user.theme == 'forest' %}selected{% endif %}" data-val="forest"
+          data-nav="#e8f5e9" data-body="#f1f8e9" data-accent="#2e7d32" data-card="#ffffff"
+          data-tp="#1b3a1b" data-ts="#4a6b4a" data-border="#c8e6c9">
+          <div class="theme-tile-preview">
+            <div class="tp-nav" style="background:#e8f5e9;"></div>
+            <div class="tp-body" style="background:#f1f8e9;">
+              <div class="tp-card" style="background:#fff; border-color:#c8e6c9;">
+                <div class="tp-dot" style="background:#2e7d32;"></div>
+                <div class="tp-line" style="background:#1b3a1b;"></div>
+                <div class="tp-line short" style="background:#4a6b4a;"></div>
+              </div>
+            </div>
+          </div>
+          <span class="theme-tile-label">🌿 Forest</span>
+        </div>
+
+        <div class="theme-tile {% if current_user.theme == 'sunset' %}selected{% endif %}" data-val="sunset"
+          data-nav="#7a2d50" data-body="#fff5f8" data-accent="#e8607a" data-card="#ffffff"
+          data-tp="#2a0f1a" data-ts="#7a4a5a" data-border="#f5ccd8">
+          <div class="theme-tile-preview">
+            <div class="tp-nav" style="background:#7a2d50;"></div>
+            <div class="tp-body" style="background:#fff5f8;">
+              <div class="tp-card" style="background:#fff; border-color:#f5ccd8;">
+                <div class="tp-dot" style="background:#e8607a;"></div>
+                <div class="tp-line" style="background:#2a0f1a;"></div>
+                <div class="tp-line short" style="background:#7a4a5a;"></div>
+              </div>
+            </div>
+          </div>
+          <span class="theme-tile-label">🌅 Sunset</span>
+        </div>
+
+        <div class="theme-tile {% if current_user.theme == 'dark' %}selected{% endif %}" data-val="dark"
+          data-nav="#0a0a0a" data-body="#121212" data-accent="#bb86fc" data-card="#1e1e1e"
+          data-tp="#e0e0e0" data-ts="#a0a0a0" data-border="#2a2a2a">
+          <div class="theme-tile-preview">
+            <div class="tp-nav" style="background:#0a0a0a;"></div>
+            <div class="tp-body" style="background:#121212;">
+              <div class="tp-card" style="background:#1e1e1e; border-color:#2a2a2a;">
+                <div class="tp-dot" style="background:#bb86fc;"></div>
+                <div class="tp-line" style="background:#e0e0e0;"></div>
+                <div class="tp-line short" style="background:#a0a0a0;"></div>
+              </div>
+            </div>
+          </div>
+          <span class="theme-tile-label">🌑 Dark</span>
+        </div>
+
+        <div class="theme-tile {% if current_user.theme == 'haikyuu' %}selected{% endif %}" data-val="haikyuu"
+          data-nav="#1e1208" data-body="#fdf6f0" data-accent="#f48120" data-card="#ffffff"
+          data-tp="#1a1a1a" data-ts="#6b5e53" data-border="#f0e0d0">
+          <div class="theme-tile-preview">
+            <div class="tp-nav" style="background:#1e1208;"></div>
+            <div class="tp-body" style="background:#fdf6f0;">
+              <div class="tp-card" style="background:#fff; border-color:#f0e0d0;">
+                <div class="tp-dot" style="background:#f48120;"></div>
+                <div class="tp-line" style="background:#1a1a1a;"></div>
+                <div class="tp-line short" style="background:#6b5e53;"></div>
+              </div>
+            </div>
+          </div>
+          <span class="theme-tile-label">🏐 Haikyuu</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h4>🎯 Goals</h4>
+
+      <!-- Year goal -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:.78rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">{{ current_year }} Goal</label>
+        <input type="text" name="year_goal" value="{{ current_user.year_goal or '' }}" placeholder="What's your #1 goal this year?" maxlength="200"
+               style="width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:.9rem;outline:none;box-sizing:border-box;font-family:'Inter',sans-serif;">
+      </div>
+      <div style="font-size:.72rem;color:var(--text-secondary)">{{ total_focus_sessions }} focus sessions completed</div>
+    </div>
+
+    <div class="settings-card">
+      <h4>🕐 Time Format</h4>
+      <div class="option-grid">
+        <label class="option-card">
+          <input type="radio" name="time_format" value="12h" {% if (current_user.time_format or '12h') == '12h' %}checked{% endif %}>
+          <div class="opt-content">
+            <span class="opt-icon">🕐</span>
+            <span class="opt-label">12-hour<br><small style="font-weight:400;font-size:0.72rem;color:var(--text-secondary);">2:30 PM</small></span>
+          </div>
+        </label>
+        <label class="option-card">
+          <input type="radio" name="time_format" value="24h" {% if current_user.time_format == '24h' %}checked{% endif %}>
+          <div class="opt-content">
+            <span class="opt-icon">🕑</span>
+            <span class="opt-label">24-hour<br><small style="font-weight:400;font-size:0.72rem;color:var(--text-secondary);">14:30</small></span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-save">Save Preferences</button>
+  </form>
+</div>
+
+<script>
+document.querySelectorAll('#themeGrid .theme-tile').forEach(function(tile) {
+  tile.addEventListener('click', function() {
+    document.querySelectorAll('#themeGrid .theme-tile').forEach(function(t) { t.classList.remove('selected'); });
+    tile.classList.add('selected');
+    document.getElementById('themeVal').value = tile.dataset.val;
+
+    var r = document.documentElement.style;
+    r.setProperty('--nav-bg',       tile.dataset.nav);
+    r.setProperty('--footer-bg',    tile.dataset.nav);
+    r.setProperty('--body-bg',      tile.dataset.body);
+    r.setProperty('--card-bg',      tile.dataset.card);
+    r.setProperty('--accent-1',     tile.dataset.accent);
+    r.setProperty('--text-primary', tile.dataset.tp);
+    r.setProperty('--text-secondary', tile.dataset.ts);
+    r.setProperty('--border-color', tile.dataset.border);
+    r.setProperty('--input-bg',     tile.dataset.body);
+    r.setProperty('--hover',        tile.dataset.body);
+    r.setProperty('--header-gradient', 'linear-gradient(135deg, ' + tile.dataset.accent + ', ' + tile.dataset.accent + 'aa)');
+
+    // Update sidebar + topbar inline too
+    var navEls = document.querySelectorAll('.sidebar, .topbar');
+    navEls.forEach(function(el) {
+      el.style.setProperty('--nav-bg', tile.dataset.nav);
+      el.style.backgroundColor = tile.dataset.nav;
+    });
+    document.querySelector('.sidebar').style.backgroundColor = tile.dataset.nav;
+    document.querySelector('.topbar').style.backgroundColor  = tile.dataset.nav;
+  });
+});
+</script>
+
+{% endblock %}

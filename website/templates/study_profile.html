@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+{% block title %}My Profile · monad{% endblock %}
+{% block page_title %}profile{% endblock %}
+{% block content %}
+<style>
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  .study-page { max-width:900px; margin:0 auto; padding-bottom:80px; }
+
+  .study-tabs { display:flex; gap:4px; background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:14px; padding:4px; width:fit-content; margin-bottom:24px; animation:fadeUp .4s ease both; }
+  .stab { padding:7px 18px; border-radius:10px; font-size:.82rem; font-weight:600; cursor:pointer; background:transparent; color:var(--text-secondary); text-decoration:none; transition:all .18s; display:inline-flex; align-items:center; gap:5px; }
+  .stab.active { background:var(--accent-1); color:white; box-shadow:0 2px 8px var(--glow-color); }
+  .stab:not(.active):hover { background:var(--hover); color:var(--text-primary); }
+
+  /* ── Stats row ── */
+  .sp-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; animation:fadeUp .4s ease .05s both; }
+  .sp-stat {
+    background:var(--card-bg); border:1.5px solid var(--border-color);
+    border-radius:16px; padding:16px 14px; text-align:center;
+    box-shadow:0 2px 12px rgba(0,0,0,.04);
+    transition:transform .2s;
+  }
+  .sp-stat:hover { transform:translateY(-3px); }
+  .sp-stat-icon { font-size:1.5rem; margin-bottom:6px; }
+  .sp-stat-num  { font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:800; color:var(--text-primary); line-height:1; }
+  .sp-stat-lbl  { font-size:.72rem; color:var(--text-secondary); margin-top:3px; }
+
+  /* ── ID Card flip ── */
+  .sp-card-wrap {
+    perspective:1100px; width:380px; height:230px;
+    margin:0 auto 32px; cursor:pointer; position:relative;
+    animation:fadeUp .4s ease .1s both;
+  }
+  .sp-card-inner {
+    position:absolute; inset:0;
+    transform-style:preserve-3d; transition:transform .65s cubic-bezier(.4,0,.2,1);
+  }
+  .sp-card-wrap.flipped .sp-card-inner { transform:rotateY(180deg); }
+
+  .sp-card-face {
+    position:absolute; inset:0; border-radius:20px;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.13), 0 2px 8px rgba(0,0,0,.08);
+  }
+  .sp-card-back { transform:rotateY(180deg); }
+
+  /* Front face */
+  .sp-front-header {
+    height:68px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 18px; position:relative; overflow:hidden;
+    background:linear-gradient(135deg, var(--accent-1), var(--accent-2, #a78bfa));
+  }
+  .sp-front-header::before {
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0,rgba(255,255,255,.04) 1px,transparent 1px,transparent 8px);
+  }
+  .sp-front-header-left { display:flex; align-items:center; gap:10px; position:relative; }
+  .sp-inst-initial {
+    width:38px; height:38px; border-radius:10px;
+    background:rgba(255,255,255,.22); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:800; color:white;
+    border:1.5px solid rgba(255,255,255,.35);
+  }
+  .sp-inst-name { font-size:.78rem; font-weight:700; color:white; max-width:200px; line-height:1.3; }
+  .sp-card-label {
+    font-size:.6rem; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.7);
+    text-transform:uppercase; position:relative;
+  }
+  .sp-front-body { background:var(--card-bg); padding:14px 18px; display:flex; gap:16px; flex:1; height:calc(100% - 68px); }
+  .sp-photo-col { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .sp-photo-wrap {
+    width:72px; height:82px; border-radius:10px; overflow:hidden;
+    border:2.5px solid var(--border-color);
+    background:var(--hover); display:flex; align-items:center; justify-content:center;
+    position:relative; flex-shrink:0;
+  }
+  .sp-photo-wrap img { width:100%; height:100%; object-fit:cover; }
+  .sp-photo-placeholder { font-size:2rem; opacity:.3; }
+  .sp-upload-btn {
+    font-size:.6rem; font-weight:700; color:var(--accent-1);
+    background:none; border:none; cursor:pointer; padding:0;
+    opacity:.8; transition:opacity .15s;
+  }
+  .sp-upload-btn:hover { opacity:1; }
+  .sp-info-col { flex:1; display:flex; flex-direction:column; justify-content:center; gap:5px; }
+  .sp-info-name { font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:800; color:var(--text-primary); }
+  .sp-info-row { display:flex; gap:6px; align-items:baseline; }
+  .sp-info-key { font-size:.6rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.5px; min-width:42px; }
+  .sp-info-val { font-size:.72rem; font-weight:600; color:var(--text-primary); }
+  .sp-info-empty { font-size:.72rem; color:var(--text-secondary); font-style:italic; }
+  .sp-flip-hint { font-size:.58rem; color:var(--text-secondary); text-align:center; margin-top:4px; opacity:.6; }
+
+  /* Back face */
+  .sp-back-face {
+    background:var(--card-bg); padding:18px;
+    display:flex; flex-direction:column; gap:10px;
+    border:1.5px solid var(--border-color);
+  }
+  .sp-back-header { display:flex; justify-content:space-between; align-items:center; }
+  .sp-back-title { font-family:'Space Grotesk',sans-serif; font-size:.82rem; font-weight:800; color:var(--text-primary); }
+  .sp-back-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .sp-back-field { background:var(--hover); border-radius:8px; padding:7px 10px; }
+  .sp-back-field-key { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); }
+  .sp-back-field-val { font-size:.75rem; font-weight:600; color:var(--text-primary); margin-top:1px; }
+  .sp-barcode { display:flex; align-items:flex-end; gap:1.5px; height:28px; margin-top:auto; opacity:.18; }
+  .sp-bar { background:var(--text-primary); border-radius:1px; }
+
+  /* ── Edit form ── */
+  .sp-edit-section { animation:fadeUp .4s ease .15s both; }
+  .sp-edit-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .sp-edit-title { font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:800; color:var(--text-primary); }
+  .sp-form { background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:20px; padding:24px; box-shadow:0 2px 12px rgba(0,0,0,.04); }
+  .sp-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .sp-field { display:flex; flex-direction:column; gap:5px; }
+  .sp-field.full { grid-column:1/-1; }
+  .sp-label { font-size:.72rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.5px; }
+  .sp-input {
+    background:var(--hover); border:1.5px solid var(--border-color);
+    border-radius:10px; padding:9px 13px; font-size:.87rem; color:var(--text-primary);
+    transition:border-color .15s, box-shadow .15s; outline:none;
+  }
+  .sp-input:focus { border-color:var(--accent-1); box-shadow:0 0 0 3px var(--glow-color); }
+  .sp-type-btn {
+    padding:8px 18px; border-radius:10px; font-size:.82rem; font-weight:600;
+    border:1.5px solid var(--border-color); background:var(--card-bg); color:var(--text-secondary);
+    cursor:pointer; transition:all .18s;
+  }
+  .sp-type-btn.active { background:var(--accent-1); color:white; border-color:var(--accent-1); box-shadow:0 2px 8px var(--glow-color); }
+  .sp-type-btn:not(.active):hover { border-color:var(--accent-1); color:var(--accent-1); }
+  .sp-save-btn {
+    margin-top:18px; padding:11px 28px;
+    background:var(--accent-1); color:white; border:none;
+    border-radius:12px; font-size:.87rem; font-weight:700; cursor:pointer;
+    box-shadow:0 2px 10px var(--glow-color); transition:all .2s;
+  }
+  .sp-save-btn:hover { transform:translateY(-2px); box-shadow:0 4px 16px var(--glow-color); }
+
+  @media(max-width:600px) {
+    .sp-stats { grid-template-columns:1fr 1fr; }
+    .sp-card-wrap { width:100%; height:auto; min-height:220px; }
+    .sp-form-grid { grid-template-columns:1fr; }
+    .study-tabs { width:100%; overflow-x:auto; }
+    .stab { flex-shrink:0; }
+  }
+</style>
+
+<div class="study-page">
+
+  <!-- Tabs -->
+  <div class="study-tabs">
+    <a class="stab active" href="{{ url_for('views.study_profile') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> Profile</a>
+    <a class="stab" href="{{ url_for('views.study_subjects') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Subjects</a>
+    <a class="stab" href="{{ url_for('views.study_timetable') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Timetable</a>
+    <a class="stab" href="{{ url_for('views.study_exams') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg> Exams</a>
+    <a class="stab" href="{{ url_for('views.study_marks') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Marks</a>
+  </div>
+
+  <!-- ID Card -->
+  <div class="sp-card-wrap" id="idCard" onclick="flipCard()">
+    <div class="sp-card-inner">
+
+      <!-- Front -->
+      <div class="sp-card-face">
+        <div class="sp-front-header">
+          <div class="sp-front-header-left">
+            <div class="sp-inst-initial" id="instInitial">
+              {{ (profile.institution or '?')[0].upper() if profile else '?' }}
+            </div>
+            <div class="sp-inst-name" id="instNameCard">
+              {{ profile.institution or 'Your Institution' }}
+            </div>
+          </div>
+          <div class="sp-card-label">Student ID</div>
+        </div>
+        <div class="sp-front-body">
+          <div class="sp-photo-col">
+            <div class="sp-photo-wrap" id="photoWrap">
+              {% if profile and profile.photo_filename %}
+                <img src="/media/{{ profile.photo_filename }}" id="photoImg" alt="ID Photo">
+              {% else %}
+                <span class="sp-photo-placeholder" id="photoPlaceholder">🧑‍🎓</span>
+                <img src="" id="photoImg" style="display:none" alt="ID Photo">
+              {% endif %}
+            </div>
+            <button class="sp-upload-btn" onclick="event.stopPropagation(); document.getElementById('photoInput').click()">
+              📷 Change photo
+            </button>
+            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+          </div>
+          <div class="sp-info-col">
+            <div class="sp-info-name">{{ current_user.name }}</div>
+            <div class="sp-info-row">
+              <span class="sp-info-key">Course</span>
+              <span class="sp-info-val" id="cardCourse">{{ profile.course if profile and profile.course else '—' }}</span>
+            </div>
+            {% if profile and profile.institution_type == 'school' %}
+            <div class="sp-info-row" id="cardClassRow">
+              <span class="sp-info-key">Class</span>
+              <span class="sp-info-val" id="cardClass">{{ profile.class_name or '—' }} {% if profile.section %}– {{ profile.section }}{% endif %}</span>
+            </div>
+            {% else %}
+            <div class="sp-info-row" id="cardYearRow">
+              <span class="sp-info-key">Year</span>
+              <span class="sp-info-val" id="cardYear">{{ profile.year if profile and profile.year else '—' }}</span>
+            </div>
+            {% endif %}
+            <div class="sp-info-row">
+              <span class="sp-info-key">Roll No</span>
+              <span class="sp-info-val" id="cardRoll">{{ profile.roll_number if profile and profile.roll_number else '—' }}</span>
+            </div>
+            <div class="sp-flip-hint">Tap to flip ↻</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back -->
+      <div class="sp-card-face sp-card-back">
+        <div class="sp-back-face">
+          <div class="sp-back-header">
+            <div class="sp-back-title">{{ current_user.name }}</div>
+            <div style="font-size:.65rem;color:var(--text-secondary);">Tap to flip back ↺</div>
+          </div>
+          <div class="sp-back-grid">
+            <div class="sp-back-field">
+              <div class="sp-back-field-key">Department</div>
+              <div class="sp-back-field-val" id="cardDept">{{ profile.department if profile and profile.department else '—' }}</div>
+            </div>
+            <div class="sp-back-field">
+              <div class="sp-back-field-key">Semester</div>
+              <div class="sp-back-field-val" id="cardSem">{{ profile.semester if profile and profile.semester else '—' }}</div>
+            </div>
+            <div class="sp-back-field">
+              <div class="sp-back-field-key">Subjects</div>
+              <div class="sp-back-field-val">{{ subjects|length }} enrolled</div>
+            </div>
+            <div class="sp-back-field">
+              <div class="sp-back-field-key">Upcoming</div>
+              <div class="sp-back-field-val">{{ exams_soon }} exams</div>
+            </div>
+          </div>
+          <!-- Decorative barcode -->
+          <div class="sp-barcode" id="barcodeEl"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Edit form -->
+  <div class="sp-edit-section">
+    <div class="sp-edit-header">
+      <div class="sp-edit-title">Edit Student Info</div>
+    </div>
+    <form class="sp-form" method="POST" action="{{ url_for('views.study_profile_save') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <!-- Institution type picker -->
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <button type="button" class="sp-type-btn {% if not profile or profile.institution_type != 'college' %}active{% endif %}"
+                id="spTypeSchool" onclick="switchInstType('school')">🏫 School</button>
+        <button type="button" class="sp-type-btn {% if profile and profile.institution_type == 'college' %}active{% endif %}"
+                id="spTypeCollege" onclick="switchInstType('college')">🎓 College / University</button>
+      </div>
+      <input type="hidden" name="institution_type" id="fInstType"
+             value="{{ profile.institution_type or 'school' if profile else 'school' }}">
+
+      <div class="sp-form-grid">
+        <!-- Common: institution name -->
+        <div class="sp-field full">
+          <label class="sp-label" id="fInstLabel">
+            {% if profile and profile.institution_type == 'college' %}College / University{% else %}School{% endif %} Name
+          </label>
+          <input class="sp-input" name="institution" id="fInstitution"
+                 value="{{ profile.institution or '' if profile else '' }}"
+                 placeholder="e.g. St. Mary's Higher Secondary School" autocomplete="off"
+                 oninput="liveUpdate()">
+        </div>
+
+        <!-- Common: course -->
+        <div class="sp-field">
+          <label class="sp-label" id="fCourseLabel">
+            {% if profile and profile.institution_type == 'college' %}Course / Program{% else %}Course / Stream{% endif %}
+          </label>
+          <input class="sp-input" name="course" id="fCourse"
+                 value="{{ profile.course or '' if profile else '' }}"
+                 placeholder="e.g. Science / B.Tech"
+                 oninput="liveUpdate()">
+        </div>
+
+        <!-- School-only: class + section -->
+        <div class="sp-field sp-school-field" style="{% if profile and profile.institution_type == 'college' %}display:none{% endif %}">
+          <label class="sp-label">Class</label>
+          <input class="sp-input" name="class_name" id="fClass"
+                 value="{{ profile.class_name or '' if profile else '' }}"
+                 placeholder="e.g. 10th, 11th, 12th">
+        </div>
+        <div class="sp-field sp-school-field" style="{% if profile and profile.institution_type == 'college' %}display:none{% endif %}">
+          <label class="sp-label">Section</label>
+          <input class="sp-input" name="section" id="fSection"
+                 value="{{ profile.section or '' if profile else '' }}"
+                 placeholder="e.g. A, B, C">
+        </div>
+
+        <!-- College-only: department + year + semester -->
+        <div class="sp-field sp-college-field" style="{% if not profile or profile.institution_type != 'college' %}display:none{% endif %}">
+          <label class="sp-label">Department</label>
+          <input class="sp-input" name="department" id="fDepartment"
+                 value="{{ profile.department or '' if profile else '' }}"
+                 placeholder="e.g. Computer Science"
+                 oninput="liveUpdate()">
+        </div>
+        <div class="sp-field sp-college-field" style="{% if not profile or profile.institution_type != 'college' %}display:none{% endif %}">
+          <label class="sp-label">Year</label>
+          <input class="sp-input" name="year" id="fYear"
+                 value="{{ profile.year or '' if profile else '' }}"
+                 placeholder="e.g. 2nd Year"
+                 oninput="liveUpdate()">
+        </div>
+        <div class="sp-field sp-college-field" style="{% if not profile or profile.institution_type != 'college' %}display:none{% endif %}">
+          <label class="sp-label">Semester</label>
+          <input class="sp-input" name="semester" id="fSemester"
+                 value="{{ profile.semester or '' if profile else '' }}"
+                 placeholder="e.g. 4th Semester"
+                 oninput="liveUpdate()">
+        </div>
+
+        <!-- Common: roll number -->
+        <div class="sp-field full">
+          <label class="sp-label">Roll Number / Student ID</label>
+          <input class="sp-input" name="roll_number" id="fRoll"
+                 value="{{ profile.roll_number or '' if profile else '' }}"
+                 placeholder="e.g. CS2024001"
+                 oninput="liveUpdate()">
+        </div>
+      </div>
+      <button type="submit" class="sp-save-btn">Save profile</button>
+    </form>
+  </div>
+
+  <!-- Stats row -->
+  <div class="sp-stats" style="margin-top:28px">
+    <div class="sp-stat">
+      <div class="sp-stat-icon">📚</div>
+      <div class="sp-stat-num">{{ subjects|length }}</div>
+      <div class="sp-stat-lbl">Subjects</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-icon">🗓</div>
+      <div class="sp-stat-num">{{ total_slots }}</div>
+      <div class="sp-stat-lbl">Classes/week</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-icon">📋</div>
+      <div class="sp-stat-num">{{ exams_soon }}</div>
+      <div class="sp-stat-lbl">Upcoming exams</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-icon">⏱</div>
+      <div class="sp-stat-num">{{ study_hours }}</div>
+      <div class="sp-stat-lbl">Study hrs this month</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function flipCard() {
+  document.getElementById('idCard').classList.toggle('flipped');
+}
+
+function switchInstType(type) {
+  document.getElementById('fInstType').value = type;
+  const isCollege = type === 'college';
+  document.getElementById('spTypeSchool').classList.toggle('active', !isCollege);
+  document.getElementById('spTypeCollege').classList.toggle('active', isCollege);
+  document.querySelectorAll('.sp-school-field').forEach(el => el.style.display = isCollege ? 'none' : '');
+  document.querySelectorAll('.sp-college-field').forEach(el => el.style.display = isCollege ? '' : 'none');
+  document.getElementById('fInstLabel').textContent  = (isCollege ? 'College / University' : 'School') + ' Name';
+  document.getElementById('fCourseLabel').textContent = isCollege ? 'Course / Program' : 'Course / Stream';
+}
+
+// Live-update the card as the user types
+function liveUpdate() {
+  const inst = document.getElementById('fInstitution').value.trim();
+  document.getElementById('instInitial').textContent  = inst ? inst[0].toUpperCase() : '?';
+  document.getElementById('instNameCard').textContent = inst || 'Your Institution';
+  document.getElementById('cardCourse').textContent   = document.getElementById('fCourse').value.trim()     || '—';
+  document.getElementById('cardYear').textContent     = document.getElementById('fYear').value.trim()       || '—';
+  document.getElementById('cardRoll').textContent     = document.getElementById('fRoll').value.trim()       || '—';
+  document.getElementById('cardDept').textContent     = document.getElementById('fDepartment').value.trim() || '—';
+  document.getElementById('cardSem').textContent      = document.getElementById('fSemester').value.trim()   || '—';
+}
+
+// Decorative barcode
+(function() {
+  const bc = document.getElementById('barcodeEl');
+  const widths = [1,2,1,3,1,2,2,1,3,1,2,1,2,3,1,1,2,1,3,2,1,2,1,2,1,3,1,2,1,2];
+  widths.forEach((w, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'sp-bar';
+    bar.style.width  = w + 'px';
+    bar.style.height = (i % 4 === 0 ? 28 : i % 3 === 0 ? 22 : 18) + 'px';
+    bc.appendChild(bar);
+  });
+})();
+
+// Photo upload
+async function uploadPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('photo', file);
+  const res = await fetch('/study/profile/upload-photo', { method:'POST', body:fd });
+  const data = await res.json();
+  if (data.status === 'ok') {
+    const img = document.getElementById('photoImg');
+    const ph  = document.getElementById('photoPlaceholder');
+    img.src = data.url + '?t=' + Date.now();
+    img.style.display = '';
+    if (ph) ph.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}

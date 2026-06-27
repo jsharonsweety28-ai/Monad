@@ -1,0 +1,674 @@
+{% extends "base.html" %}
+{% block title %}Analytics · monad{% endblock %}
+{% block page_title %}analytics{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+
+<style>
+  @keyframes fadeUp  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fillBar { from{width:0} }
+
+  .analytics-page { max-width: 1000px; margin: 0 auto; }
+
+  /* ── Hero ── */
+  .analytics-hero {
+    margin-bottom: 24px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .analytics-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+  }
+  .analytics-sub { font-size: 0.88rem; color: var(--text-secondary); margin-top: 3px; }
+
+  /* ── Insight cards ── */
+  .insight-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+    animation: fadeUp 0.5s ease 0.05s both;
+  }
+  .insight {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: 14px;
+    border-left: 4px solid; border: 1.5px solid;
+    font-size: 0.86rem; font-weight: 500;
+    transition: transform 0.2s;
+  }
+  .insight:hover { transform: translateY(-2px); }
+  .insight-icon-wrap {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  }
+  .insight.warning { background:rgba(245,158,11,0.07); border-color:rgba(245,158,11,0.25); color:#d97706; }
+  .insight.warning .insight-icon-wrap { background:rgba(245,158,11,0.15); }
+  .insight.success { background:rgba(16,185,129,0.07); border-color:rgba(16,185,129,0.25); color:#059669; }
+  .insight.success .insight-icon-wrap { background:rgba(16,185,129,0.15); }
+  .insight.danger  { background:rgba(239,68,68,0.07);  border-color:rgba(239,68,68,0.25);  color:#dc2626; }
+  .insight.danger  .insight-icon-wrap { background:rgba(239,68,68,0.15); }
+  .insight.info    { background:rgba(59,130,246,0.07); border-color:rgba(59,130,246,0.25); color:#2563eb; }
+  .insight.info    .insight-icon-wrap { background:rgba(59,130,246,0.15); }
+
+  /* ── Stat boxes ── */
+  .stat-row {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 12px; margin-bottom: 20px;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+  .stat-box {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 18px; padding: 18px 14px; text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+  }
+  .stat-box:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .stat-box-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px; font-size: 1.1rem;
+  }
+  .sb-green  { background: rgba(16,185,129,0.12); }
+  .sb-blue   { background: rgba(59,130,246,0.12); }
+  .sb-orange { background: rgba(224,123,57,0.12); }
+  .sb-purple { background: rgba(139,92,246,0.12); }
+  .stat-val { font-family:'Space Grotesk',sans-serif; font-size:1.55rem; font-weight:700; color:var(--text-primary); line-height:1; }
+  .stat-lbl { font-size:0.68rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-top:5px; }
+  .prog-wrap { height:5px; background:var(--border-color); border-radius:99px; overflow:hidden; margin-top:8px; }
+  .prog-fill { height:100%; border-radius:99px; animation: fillBar 1s ease both 0.3s; }
+
+  /* ── Cards ── */
+  .acard {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 22px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+    margin-bottom: 16px; transition: border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .acard:hover { border-color: var(--accent-1); }
+  .acard-title {
+    font-weight: 700; color: var(--text-primary); margin-bottom: 18px;
+    font-size: 0.95rem; display: flex; align-items: center; gap: 8px;
+  }
+  .acard-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+    background: var(--hover);
+  }
+
+  .chart-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+    animation: fadeUp 0.5s ease 0.15s both;
+  }
+
+  /* ── Table ── */
+  .a-table { width:100%; border-collapse:collapse; font-size:0.84rem; }
+  .a-table th {
+    padding:10px 14px; text-align:left; color:var(--text-secondary);
+    font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.8px;
+    border-bottom:2px solid var(--border-color);
+  }
+  .a-table td { padding:11px 14px; border-bottom:1px solid var(--border-color); color:var(--text-primary); }
+  .a-table tr:last-child td { border-bottom:none; }
+  .a-table tr:hover td { background:var(--hover); }
+
+  /* Habit progress mini bar */
+  .habit-prog { display:flex; align-items:center; gap:8px; }
+  .habit-bar  { flex:1; height:6px; background:var(--border-color); border-radius:99px; overflow:hidden; }
+  .habit-fill { height:100%; border-radius:99px; background:var(--accent-1); animation:fillBar 1s ease both 0.4s; }
+  .habit-pct  { font-size:0.72rem; font-weight:600; color:var(--accent-1); width:32px; text-align:right; }
+
+  /* Session timeline */
+  .session-row {
+    display:flex; align-items:center; gap:14px;
+    padding:10px 0; border-bottom:1px solid var(--border-color);
+    font-size:0.84rem;
+  }
+  .session-row:last-child { border-bottom:none; }
+  .session-dot {
+    width:10px; height:10px; border-radius:50%; flex-shrink:0;
+    background:var(--accent-1);
+  }
+  .session-task { flex:1; color:var(--text-primary); font-weight:500; }
+  .session-meta { display:flex; gap:8px; }
+  .session-chip {
+    padding:2px 9px; border-radius:99px; font-size:0.68rem; font-weight:600;
+    background:var(--hover); color:var(--text-secondary);
+  }
+  .session-chip.mode-pomo   { background:rgba(239,68,68,0.1);  color:#dc2626; }
+  .session-chip.mode-timer  { background:rgba(59,130,246,0.1); color:#2563eb; }
+  .session-chip.mode-stop   { background:rgba(16,185,129,0.1); color:#059669; }
+
+  @media (max-width:700px) {
+    .stat-row   { grid-template-columns: repeat(2,1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width:480px) {
+    .stat-row { grid-template-columns: 1fr; }
+  }
+
+  /* ── Monad Intelligence card ── */
+  @keyframes spinPulse { 0%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.1)} 100%{transform:rotate(360deg) scale(1)} }
+
+  .mi-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 22px; margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+    animation: fadeUp 0.5s ease both;
+  }
+  .mi-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .mi-title {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 800;
+    color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+  }
+  .mi-title-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  }
+  .mi-regen {
+    font-size: .72rem; color: var(--text-secondary); cursor: pointer;
+    border: 1px solid var(--border-color); background: var(--hover);
+    padding: 5px 12px; border-radius: 8px; font-weight: 600;
+    transition: all .15s;
+  }
+  .mi-regen:hover { color: var(--accent-1); border-color: var(--accent-1); }
+
+  /* empty state */
+  .mi-empty {
+    text-align: center; padding: 28px 0;
+  }
+  .mi-empty-icon { font-size: 2rem; margin-bottom: 10px; }
+  .mi-empty-lbl  { font-size: .88rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+  .mi-btn {
+    display: inline-block; padding: 10px 24px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: white; border: none; border-radius: 12px;
+    font-weight: 700; font-size: .88rem; cursor: pointer;
+    box-shadow: 0 4px 14px var(--glow-color); transition: all .2s;
+  }
+  .mi-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--glow-color); }
+  .mi-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+  /* loading */
+  .mi-loading {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 0; gap: 12px;
+  }
+  .mi-spinner {
+    width: 30px; height: 30px; border: 3px solid var(--border-color);
+    border-top-color: var(--accent-1); border-radius: 50%;
+    animation: spinPulse 1s linear infinite;
+  }
+  .mi-loading-lbl { font-size: .82rem; color: var(--text-secondary); }
+
+  /* loaded */
+  .mi-scores {
+    display: grid; grid-template-columns: auto 1fr; gap: 20px;
+    align-items: center; margin-bottom: 18px;
+  }
+  .mi-ring-wrap { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
+  .mi-ring-wrap svg { transform: rotate(-90deg); }
+  .mi-ring-bg   { fill: none; stroke: var(--border-color); stroke-width: 8; }
+  .mi-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round;
+                  stroke: url(#miGradient); transition: stroke-dashoffset 1.2s ease; }
+  .mi-ring-num  {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 900;
+    color: var(--text-primary); line-height: 1;
+  }
+  .mi-ring-lbl  { font-size: .52rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+  .mi-chips     { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mi-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 12px; border-radius: 10px;
+    background: var(--hover); border: 1px solid var(--border-color);
+    font-size: .75rem; font-weight: 700;
+  }
+  .mi-chip-label { color: var(--text-secondary); font-weight: 500; margin-right: 2px; }
+  .mi-chip.on-track  { border-color: #10b981; color: #059669; }
+  .mi-chip.needs-att { border-color: #f59e0b; color: #d97706; }
+  .mi-chip.at-risk   { border-color: #ef4444; color: #dc2626; }
+  .mi-chip.risk-high { border-color: #ef4444; color: #dc2626; }
+  .mi-chip.risk-mod  { border-color: #f59e0b; color: #d97706; }
+  .mi-insights  { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+  .mi-insight {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 13px; border-radius: 11px; font-size: .82rem; font-weight: 500;
+  }
+  .mi-insight.positive { background: rgba(16,185,129,.07); color: #059669; }
+  .mi-insight.warning  { background: rgba(245,158,11,.07);  color: #d97706; }
+  .mi-insight.risk     { background: rgba(239,68,68,.07);   color: #dc2626; }
+  .mi-insight-icon     { flex-shrink: 0; font-weight: 800; }
+  .mi-rec {
+    font-size: .8rem; color: var(--text-secondary);
+    padding: 10px 14px; background: var(--hover); border-radius: 10px;
+    border-left: 3px solid var(--accent-1); line-height: 1.5;
+  }
+  .mi-rec strong { color: var(--text-primary); }
+  .mi-momentum-lbl {
+    font-size: .62rem; font-weight: 700; letter-spacing: .08em;
+    color: var(--accent-1); text-transform: uppercase; margin-bottom: 4px;
+  }
+</style>
+
+<div class="analytics-page">
+
+  <!-- Hero -->
+  <div class="analytics-hero">
+    <div class="analytics-title">📊 Analytics & Insights</div>
+    <div class="analytics-sub">Track where your time and energy goes</div>
+  </div>
+
+  <!-- ✦ Monad Intelligence -->
+  <div class="mi-card" id="miCard">
+    <div class="mi-header">
+      <div class="mi-title">
+        <div class="mi-title-dot"></div>
+        Monad Intelligence
+      </div>
+      <button class="mi-regen" id="miRegenBtn" onclick="runMI(true)" style="display:none">↻ Regenerate</button>
+    </div>
+
+    <!-- Empty state -->
+    <div class="mi-empty" id="miEmpty" {% if cached_report %}style="display:none"{% endif %}>
+      <div class="mi-empty-icon">✦</div>
+      <div class="mi-empty-lbl">AI-powered analysis of your habits, tasks, and focus patterns.<br>Takes about 10 seconds.</div>
+      <button class="mi-btn" id="miGenBtn" onclick="runMI(false)">Generate My Report</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="mi-loading" id="miLoading" style="display:none">
+      <div class="mi-spinner"></div>
+      <div class="mi-loading-lbl">Analyzing your data…</div>
+    </div>
+
+    <!-- Report -->
+    <div id="miReport" {% if not cached_report %}style="display:none"{% endif %}>
+      <svg width="0" height="0">
+        <defs>
+          <linearGradient id="miGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:var(--accent-1)"/>
+            <stop offset="100%" style="stop-color:var(--accent-2)"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="mi-scores">
+        <div class="mi-ring-wrap">
+          <svg viewBox="0 0 84 84" width="84" height="84">
+            <circle class="mi-ring-bg" cx="42" cy="42" r="34"/>
+            <circle class="mi-ring-fill" cx="42" cy="42" r="34"
+                    stroke-dasharray="213.6"
+                    stroke-dashoffset="213.6"
+                    id="miRingFill"/>
+          </svg>
+          <div class="mi-ring-num">
+            <span id="miScore">–</span>
+            <span class="mi-ring-lbl">score</span>
+          </div>
+        </div>
+        <div>
+          <div class="mi-momentum-lbl" id="miMomentumLbl"></div>
+          <div class="mi-chips" id="miChips"></div>
+        </div>
+      </div>
+      <div class="mi-insights" id="miInsights"></div>
+      <div class="mi-rec" id="miRec"></div>
+    </div>
+
+    <div id="miError" style="display:none;text-align:center;padding:20px;font-size:.85rem;color:var(--text-secondary)">
+      Could not generate report. <span style="cursor:pointer;color:var(--accent-1);font-weight:600" onclick="runMI(false)">Try again →</span>
+    </div>
+  </div>
+
+  <!-- Year Goal card -->
+  {% if current_user.year_goal %}
+  {% set days_remaining = (today.replace(month=12, day=31) - today).days %}
+  {% set days_elapsed   = (today - today.replace(month=1, day=1)).days + 1 %}
+  {% set total_days     = (today.replace(month=12, day=31) - today.replace(month=1, day=1)).days + 1 %}
+  {% set pct_through    = ((days_elapsed / total_days * 100) | round | int) %}
+  <div style="background:linear-gradient(135deg, var(--accent-3) 0%, var(--card-bg) 100%); border:1.5px solid var(--border-color); border-radius:20px; padding:20px 22px; margin-bottom:20px; animation:fadeUp .5s ease both;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:200px;">
+        <div style="font-size:.65rem; font-weight:700; letter-spacing:.1em; color:var(--accent-1); margin-bottom:6px;">🎯 {{ today.year }} GOAL</div>
+        <div style="font-size:1.05rem; font-weight:700; color:var(--text-primary); line-height:1.4; margin-bottom:12px;">{{ current_user.year_goal }}</div>
+        <div style="height:6px; background:var(--border-color); border-radius:99px; overflow:hidden; max-width:340px;">
+          <div style="height:100%; width:{{ pct_through }}%; background:var(--accent-1); border-radius:99px; transition:width 1s ease;"></div>
+        </div>
+        <div style="font-size:.72rem; color:var(--text-secondary); margin-top:6px;">{{ pct_through }}% of the year gone · <strong style="color:var(--text-primary);">{{ days_remaining }} days left</strong></div>
+      </div>
+      <a href="{{ url_for('views.settings') }}" style="font-size:.72rem; font-weight:600; color:var(--text-secondary); text-decoration:none; white-space:nowrap; opacity:.7; flex-shrink:0;">Edit goal</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Insights -->
+  {% if insights %}
+  <div class="insight-grid">
+    {% for insight in insights %}
+      <div class="insight {{ insight.type }}">
+        <div class="insight-icon-wrap">{{ insight.icon }}</div>
+        <span>{{ insight.message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Stat boxes -->
+  <div class="stat-row" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-box">
+      <div class="stat-box-icon sb-green">✅</div>
+      <div class="stat-val">{{ "%.0f"|format(weekly_completion_rate) }}%</div>
+      <div class="stat-lbl">This Week</div>
+      <div class="prog-wrap"><div class="prog-fill" style="width:{{ weekly_completion_rate }}%; background:#10b981;"></div></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-icon sb-blue">📅</div>
+      <div class="stat-val">{{ "%.0f"|format(monthly_completion_rate) }}%</div>
+      <div class="stat-lbl">This Month</div>
+      <div class="prog-wrap"><div class="prog-fill" style="width:{{ monthly_completion_rate }}%; background:#3b82f6;"></div></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-icon sb-purple">🏆</div>
+      <div class="stat-val">{{ total_focus_hours|float }}h</div>
+      <div class="stat-lbl">Total Focus</div>
+    </div>
+  </div>
+
+  <!-- Focus stats row -->
+  <div class="stat-row" style="grid-template-columns:repeat(3,1fr); margin-top:-8px">
+    <div class="stat-box">
+      <div class="stat-box-icon sb-orange">⏱</div>
+      {% set th = today_focus_seconds // 3600 %}{% set tm = (today_focus_seconds % 3600) // 60 %}
+      <div class="stat-val">{% if th %}{{ th }}h {% endif %}{{ tm }}m</div>
+      <div class="stat-lbl">Focus Today</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-icon sb-green">🔥</div>
+      {% set wh = week_focus_seconds // 3600 %}{% set wm = (week_focus_seconds % 3600) // 60 %}
+      <div class="stat-val">{% if wh %}{{ wh }}h {% endif %}{{ wm }}m</div>
+      <div class="stat-lbl">Focus This Week</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-icon sb-blue">📆</div>
+      {% set mh = month_focus_seconds // 3600 %}{% set mm_f = (month_focus_seconds % 3600) // 60 %}
+      <div class="stat-val">{% if mh %}{{ mh }}h {% endif %}{{ mm_f }}m</div>
+      <div class="stat-lbl">Focus This Month</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-grid">
+    <div class="acard" style="animation-delay:0.15s">
+      <div class="acard-title"><div class="acard-icon">📅</div> Weekly Tasks</div>
+      <canvas id="weeklyChart"></canvas>
+    </div>
+    <div class="acard" style="animation-delay:0.2s">
+      <div class="acard-title"><div class="acard-icon">📆</div> Monthly Tasks</div>
+      <canvas id="monthlyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Focus per day + Category breakdown -->
+  <div class="chart-grid">
+    <div class="acard" style="animation-delay:0.22s">
+      <div class="acard-title"><div class="acard-icon">⏱</div> Focus Minutes This Week</div>
+      <canvas id="focusDayChart"></canvas>
+    </div>
+    {% if cat_breakdown|length > 1 %}
+    <div class="acard" style="animation-delay:0.24s">
+      <div class="acard-title"><div class="acard-icon">📂</div> Tasks by Category</div>
+      <canvas id="catChart"></canvas>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Upcoming exams -->
+  {% if exams_upcoming %}
+  <div class="acard" style="animation-delay:0.26s">
+    <div class="acard-title"><div class="acard-icon">📋</div> Upcoming Exams</div>
+    <table class="a-table">
+      <thead><tr><th>Exam</th><th>Subject</th><th>Date</th><th>Countdown</th></tr></thead>
+      <tbody>
+        {% for exam in exams_upcoming %}
+        {% set days_left = (exam.date - today).days %}
+        <tr>
+          <td><strong>{{ exam.title }}</strong></td>
+          <td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:{{ exam.subject.color }};display:inline-block"></span>{{ exam.subject.name }}</span></td>
+          <td>{{ exam.date.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if days_left == 0 %}<span style="color:#dc2626;font-weight:700">Today!</span>
+            {% elif days_left == 1 %}<span style="color:#dc2626;font-weight:700">Tomorrow</span>
+            {% elif days_left <= 7 %}<span style="color:#d97706;font-weight:700">{{ days_left }} days</span>
+            {% else %}<span style="color:#059669;font-weight:600">{{ days_left }} days</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- Habit performance -->
+  {% if habit_stats %}
+  <div class="acard" style="animation-delay:0.25s">
+    <div class="acard-title"><div class="acard-icon">🎯</div> Habit Performance</div>
+    <div class="table-responsive">
+      <table class="a-table">
+        <thead><tr><th>Habit</th><th>Done</th><th>Streak</th><th>Progress</th></tr></thead>
+        <tbody>
+          {% for h in habit_stats %}
+          <tr>
+            <td>{{ h.name }}</td>
+            <td>{{ h.completed }}/{{ h.total }}</td>
+            <td>🔥 {{ h.streak }} days</td>
+            <td>
+              <div class="habit-prog">
+                <div class="habit-bar"><div class="habit-fill" style="width:{{ h.rate }}%"></div></div>
+                <span class="habit-pct">{{ "%.0f"|format(h.rate) }}%</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Focus time by task -->
+  {% if task_time_stats %}
+  <div class="acard" style="animation-delay:0.3s">
+    <div class="acard-title"><div class="acard-icon">⏱</div> Focus Time by Task</div>
+    <div class="table-responsive">
+      <table class="a-table">
+        <thead><tr><th>Task</th><th>Time</th><th>Sessions</th></tr></thead>
+        <tbody>
+          {% for t in task_time_stats %}
+          <tr>
+            <td>{{ t.name }}</td>
+            <td><strong style="color:var(--accent-1)">{{ t.display_time }}</strong></td>
+            <td>{{ t.sessions }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recent sessions timeline -->
+  {% if recent_sessions %}
+  <div class="acard" style="animation-delay:0.35s">
+    <div class="acard-title"><div class="acard-icon">🕐</div> Recent Sessions</div>
+    {% for s in recent_sessions %}
+    <div class="session-row">
+      <div class="session-dot" style="background:{% if s.mode == 'pomodoro' %}#ef4444{% elif s.mode == 'timer' %}#3b82f6{% else %}#10b981{% endif %}"></div>
+      <div class="session-task">{{ s.task.content[:30] if s.task else 'Deleted task' }}{% if s.task and s.task.content|length > 30 %}…{% endif %}</div>
+      <div class="session-meta">
+        <span class="session-chip">{{ s.duration // 60 }}m</span>
+        <span class="session-chip mode-{% if s.mode == 'pomodoro' %}pomo{% elif s.mode == 'timer' %}timer{% else %}stop{% endif %}">{{ s.mode }}</span>
+        <span class="session-chip">{{ s.date.strftime('%b %d') }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-1').trim() || '#E07B39';
+const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#F5A623';
+const border  = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#F0E8DF';
+const textSec = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#8B7E74';
+
+const chartDefaults = {
+  responsive: true,
+  plugins: { legend: { labels: { color: textSec, font: { family: 'Inter', size: 12 } } } },
+  scales: {
+    x: { grid: { color: border }, ticks: { color: textSec } },
+    y: { beginAtZero: true, grid: { color: border }, ticks: { color: textSec, stepSize: 1 } }
+  }
+};
+
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'bar',
+  data: {
+    labels: [{% for d in weekly_daily_stats %}'{{ d }}'{% if not loop.last %},{% endif %}{% endfor %}],
+    datasets: [
+      { label: 'Total',  data: [{% for d,s in weekly_daily_stats.items() %}{{ s.total }}{% if not loop.last %},{% endif %}{% endfor %}],    backgroundColor: border, borderRadius: 6 },
+      { label: 'Done',   data: [{% for d,s in weekly_daily_stats.items() %}{{ s.completed }}{% if not loop.last %},{% endif %}{% endfor %}], backgroundColor: accent, borderRadius: 6 }
+    ]
+  },
+  options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, legend: { ...chartDefaults.plugins.legend, position: 'bottom' } } }
+});
+
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: [{% for w in monthly_weekly_stats %}'{{ w }}'{% if not loop.last %},{% endif %}{% endfor %}],
+    datasets: [
+      { label: 'Total', data: [{% for w,s in monthly_weekly_stats.items() %}{{ s.total }}{% if not loop.last %},{% endif %}{% endfor %}],    backgroundColor: border, borderRadius: 6 },
+      { label: 'Done',  data: [{% for w,s in monthly_weekly_stats.items() %}{{ s.completed }}{% if not loop.last %},{% endif %}{% endfor %}], backgroundColor: accent2, borderRadius: 6 }
+    ]
+  },
+  options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, legend: { ...chartDefaults.plugins.legend, position: 'bottom' } } }
+});
+
+// Focus per day chart
+new Chart(document.getElementById('focusDayChart'), {
+  type: 'bar',
+  data: {
+    labels: [{% for d in focus_per_day %}'{{ d }}'{% if not loop.last %},{% endif %}{% endfor %}],
+    datasets: [{
+      label: 'Minutes',
+      data: [{% for d,m in focus_per_day.items() %}{{ m }}{% if not loop.last %},{% endif %}{% endfor %}],
+      backgroundColor: accent, borderRadius: 8,
+    }]
+  },
+  options: { ...chartDefaults, plugins: { legend: { display: false } } }
+});
+
+{% if cat_breakdown|length > 1 %}
+// Category donut
+new Chart(document.getElementById('catChart'), {
+  type: 'doughnut',
+  data: {
+    labels: [{% for c in cat_breakdown %}'{{ c }}'{% if not loop.last %},{% endif %}{% endfor %}],
+    datasets: [{
+      data: [{% for c,n in cat_breakdown.items() %}{{ n }}{% if not loop.last %},{% endif %}{% endfor %}],
+      backgroundColor: ['#E07B39','#3b82f6','#10b981','#8b5cf6','#f59e0b','#ec4899','#64748b','#22c55e'],
+      borderWidth: 2, borderColor: 'transparent', hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true, cutout: '65%',
+    plugins: { legend: { position: 'bottom', labels: { color: textSec, font: { family: 'Inter', size: 11 }, padding: 12 } } }
+  }
+});
+{% endif %}
+</script>
+
+<script>
+// ── Monad Intelligence ─────────────────────────────────────────────────────
+{% if cached_report %}
+(function() {
+  const r = {{ cached_report | tojson }};
+  renderMI(r);
+  document.getElementById('miRegenBtn').style.display = '';
+})();
+{% endif %}
+
+function runMI(force) {
+  document.getElementById('miEmpty').style.display   = 'none';
+  document.getElementById('miReport').style.display  = 'none';
+  document.getElementById('miError').style.display   = 'none';
+  document.getElementById('miLoading').style.display = '';
+  document.getElementById('miRegenBtn').style.display = 'none';
+
+  fetch('/analytics/generate-report' + (force ? '?force=1' : ''), { method: 'POST' })
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(data) {
+      document.getElementById('miLoading').style.display = 'none';
+      if (data.error) throw new Error(data.error);
+      renderMI(data);
+      document.getElementById('miRegenBtn').style.display = '';
+    })
+    .catch(function() {
+      document.getElementById('miLoading').style.display = 'none';
+      document.getElementById('miError').style.display   = '';
+    });
+}
+
+function renderMI(r) {
+  const score = r.momentum_score || 0;
+  document.getElementById('miScore').textContent = score;
+  document.getElementById('miMomentumLbl').textContent = r.momentum_label || '';
+  const circumference = 2 * Math.PI * 34;
+  const offset = circumference - (score / 100) * circumference;
+  setTimeout(function() {
+    document.getElementById('miRingFill').style.strokeDashoffset = offset;
+  }, 80);
+
+  const chips = document.getElementById('miChips');
+  chips.innerHTML = '';
+  const forecastClass = {
+    'On Track': 'on-track', 'Needs Attention': 'needs-att',
+    'At Risk': 'at-risk', 'Insufficient Data': ''
+  };
+  const riskClass = { 'High': 'risk-high', 'Moderate': 'risk-mod', 'Low': '' };
+  const chipDefs = [
+    { label: 'Forecast',  val: r.goal_forecast,  cls: forecastClass[r.goal_forecast] || '' },
+    { label: 'Burnout',   val: r.burnout_risk,    cls: riskClass[r.burnout_risk] || '' },
+    { label: 'Peak',      val: r.peak_hours,      cls: '' },
+    { label: 'Time Lost', val: (r.time_leak_hours || 0) + 'h this week',
+      cls: (r.time_leak_hours || 0) > 5 ? 'needs-att' : '' },
+  ];
+  chipDefs.forEach(function(c) {
+    const el = document.createElement('div');
+    el.className = 'mi-chip ' + c.cls;
+    el.innerHTML = '<span class="mi-chip-label">' + c.label + '&nbsp;</span>' + c.val;
+    chips.appendChild(el);
+  });
+
+  const ins = document.getElementById('miInsights');
+  ins.innerHTML = '';
+  (r.insights || []).forEach(function(i) {
+    const el = document.createElement('div');
+    el.className = 'mi-insight ' + (i.type || 'warning');
+    el.innerHTML = '<span class="mi-insight-icon">' + (i.icon || '✦') + '</span><span>' + i.message + '</span>';
+    ins.appendChild(el);
+  });
+
+  document.getElementById('miRec').innerHTML =
+    '<strong>Tomorrow →</strong> ' + (r.recommendation || '');
+
+  document.getElementById('miReport').style.display = '';
+}
+</script>
+
+{% endblock %}

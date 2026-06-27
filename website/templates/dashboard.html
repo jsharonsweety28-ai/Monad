@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% block title %}Home · monad{% endblock %}
+{% block page_title %}dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pop    { 0%{transform:scale(1)} 50%{transform:scale(1.18)} 100%{transform:scale(1)} }
+
+  .dash { max-width:900px; margin:0 auto; padding-bottom:80px; }
+
+  /* ── Greeting ── */
+  .dash-hero {
+    border-radius:22px; padding:28px 30px 24px;
+    background:linear-gradient(135deg, var(--accent-1) 0%, color-mix(in srgb,var(--accent-1) 70%,#8b5cf6) 100%);
+    margin-bottom:20px; position:relative; overflow:hidden;
+    animation:fadeUp .4s ease both;
+  }
+  .dash-hero::after {
+    content:''; position:absolute; right:-30px; top:-30px;
+    width:180px; height:180px; border-radius:50%;
+    background:rgba(255,255,255,.06);
+  }
+  .dash-greeting { font-size:.8rem; font-weight:600; color:rgba(255,255,255,.75); letter-spacing:.4px; margin-bottom:4px; }
+  .dash-name     { font-family:'Space Grotesk',sans-serif; font-size:1.9rem; font-weight:800; color:white; line-height:1.15; }
+  .dash-date     { font-size:.82rem; color:rgba(255,255,255,.65); margin-top:5px; }
+  .dash-quote    { margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,.18); }
+  .dash-quote-text   { font-size:.88rem; color:rgba(255,255,255,.9); font-style:italic; line-height:1.5; }
+  .dash-quote-author { font-size:.72rem; color:rgba(255,255,255,.55); margin-top:4px; font-weight:600; }
+
+  /* ── Stat chips ── */
+  .stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; animation:fadeUp .4s ease .06s both; }
+  @media(max-width:600px){ .stat-row { grid-template-columns:repeat(2,1fr); } }
+  .stat-chip {
+    background:var(--card-bg); border:1.5px solid var(--border-color);
+    border-radius:16px; padding:14px 16px; display:flex; flex-direction:column; gap:4px;
+    text-decoration:none; transition:transform .15s, box-shadow .15s;
+  }
+  .stat-chip:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.08); }
+  .stat-icon  { font-size:1.3rem; line-height:1; }
+  .stat-value { font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:800; color:var(--text-primary); line-height:1; }
+  .stat-label { font-size:.7rem; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; }
+  .stat-sub   { font-size:.68rem; color:var(--text-secondary); }
+
+  /* ── Two-column layout ── */
+  .dash-cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media(max-width:680px){ .dash-cols { grid-template-columns:1fr; } }
+
+  /* ── Section card ── */
+  .dash-card {
+    background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:18px;
+    padding:18px 18px 14px; animation:fadeUp .4s ease both;
+  }
+  .dc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .dc-title  { font-family:'Space Grotesk',sans-serif; font-size:.9rem; font-weight:700; color:var(--text-primary); }
+  .dc-link   { font-size:.72rem; font-weight:600; color:var(--accent-1); text-decoration:none; opacity:.8; }
+  .dc-link:hover { opacity:1; }
+  .dc-empty  { font-size:.82rem; color:var(--text-secondary); padding:10px 0; }
+
+  /* ── Today's Schedule ── */
+  .schedule-list { display:flex; flex-direction:column; gap:7px; }
+  .sched-item {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:11px; background:var(--hover);
+    text-decoration:none; transition:background .15s;
+  }
+  .sched-item:hover { background:color-mix(in srgb,var(--accent-1) 8%,var(--card-bg)); }
+  .sched-bar   { width:4px; border-radius:99px; align-self:stretch; min-height:28px; flex-shrink:0; }
+  .sched-body  { flex:1; min-width:0; }
+  .sched-label { font-size:.82rem; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sched-meta  { font-size:.68rem; color:var(--text-secondary); margin-top:1px; }
+  .sched-badge { font-size:.62rem; font-weight:700; padding:2px 7px; border-radius:99px; flex-shrink:0; }
+  .sb-class { background:rgba(59,130,246,.1); color:#3b82f6; }
+  .sb-block { background:rgba(99,102,241,.1); color:#6366f1; }
+  .sb-task  { background:rgba(100,116,139,.1); color:#64748b; }
+
+  /* ── Habits ── */
+  .habits-grid { display:flex; flex-direction:column; gap:7px; }
+  .habit-row {
+    display:flex; align-items:center; gap:10px;
+    padding:8px 10px; border-radius:11px; background:var(--hover);
+    transition:background .15s;
+  }
+  .habit-row.done { background:rgba(22,163,74,.07); }
+  .habit-check {
+    width:22px; height:22px; border-radius:50%; border:2px solid var(--border-color);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    cursor:pointer; transition:all .2s; font-size:.7rem;
+  }
+  .habit-check.done { background:rgba(22,163,74,.85); border-color:transparent; color:white; animation:pop .25s ease; }
+  .habit-name  { flex:1; font-size:.84rem; font-weight:600; color:var(--text-primary); }
+  .habit-name.done { text-decoration:line-through; opacity:.5; }
+
+  /* ── Pending tasks ── */
+  .task-list { display:flex; flex-direction:column; gap:7px; }
+  .dash-task {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:11px; background:var(--hover);
+  }
+  .dt-check {
+    width:18px; height:18px; border-radius:50%; border:2px solid var(--border-color);
+    flex-shrink:0; cursor:pointer; transition:all .2s;
+  }
+  .dt-check:hover { border-color:var(--accent-1); }
+  .dt-body  { flex:1; min-width:0; }
+  .dt-name  { font-size:.84rem; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dt-meta  { display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap; }
+  .dt-time  { font-size:.68rem; color:var(--text-secondary); }
+  .dt-pri   { font-size:.62rem; font-weight:700; padding:1px 7px; border-radius:99px; }
+  .dt-pri.p-high   { background:rgba(220,38,38,.1);  color:rgba(185,28,28,.9); }
+  .dt-pri.dt-pri.p-medium { background:rgba(202,138,4,.1);  color:rgba(161,98,7,.9); }
+  .dt-pri.p-low    { background:rgba(22,163,74,.1);  color:rgba(21,128,61,.85); }
+
+  /* ── Exams ── */
+  .exam-list { display:flex; flex-direction:column; gap:7px; }
+  .dash-exam {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:11px; background:var(--hover);
+    text-decoration:none; transition:background .15s;
+  }
+  .dash-exam:hover { background:color-mix(in srgb,var(--accent-1) 6%,var(--card-bg)); }
+  .de-bar   { width:4px; border-radius:99px; align-self:stretch; min-height:28px; flex-shrink:0; }
+  .de-body  { flex:1; min-width:0; }
+  .de-title { font-size:.84rem; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .de-sub   { font-size:.68rem; color:var(--text-secondary); margin-top:1px; }
+  .de-type  { display:inline-block; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; padding:1px 5px; border-radius:4px; }
+  .de-type-exam       { background:rgba(239,68,68,.12);  color:#dc2626; }
+  .de-type-assignment { background:rgba(99,102,241,.12); color:#4f46e5; }
+  .de-type-quiz       { background:rgba(234,179,8,.12);  color:#ca8a04; }
+  .de-type-project    { background:rgba(34,197,94,.12);  color:#16a34a; }
+  .de-badge { font-size:.62rem; font-weight:700; padding:2px 8px; border-radius:99px; white-space:nowrap; flex-shrink:0; }
+  .cd-soon  { background:rgba(220,38,38,.1);  color:rgba(185,28,28,.9); }
+  .cd-week  { background:rgba(202,138,4,.1);  color:rgba(161,98,7,.9); }
+  .cd-later { background:rgba(22,163,74,.1);  color:rgba(21,128,61,.85); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash">
+
+  <!-- Greeting hero -->
+  <div class="dash-hero">
+    <div class="dash-greeting" id="dashGreeting">Good morning,</div>
+    <div class="dash-name">{{ current_user.name or current_user.email.split('@')[0] }} ✦</div>
+    <div class="dash-date">{{ today.strftime('%A, %d %B %Y') }}</div>
+    <div class="dash-quote">
+      <div class="dash-quote-text">"{{ quote_text }}"</div>
+      <div class="dash-quote-author">— {{ quote_author }}</div>
+    </div>
+  </div>
+
+  <!-- Year Goal banner -->
+  {% if current_user.year_goal %}
+  <div style="background:var(--accent-3); border:1.5px solid var(--border-color); border-radius:16px; padding:13px 18px; margin-bottom:14px; display:flex; align-items:center; gap:12px; animation:fadeUp .4s ease .03s both;">
+    <span style="font-size:1.25rem; flex-shrink:0;">🎯</span>
+    <div style="flex:1; min-width:0;">
+      <div style="font-size:.65rem; font-weight:700; letter-spacing:.08em; color:var(--accent-1); margin-bottom:2px;">{{ today.year }} GOAL</div>
+      <div style="font-size:.88rem; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ current_user.year_goal }}</div>
+    </div>
+    <a href="{{ url_for('views.settings') }}" style="font-size:.68rem; font-weight:600; color:var(--text-secondary); text-decoration:none; flex-shrink:0; opacity:.7;">Edit</a>
+  </div>
+  {% endif %}
+
+  <!-- Stat chips -->
+  <div class="stat-row">
+    <a class="stat-chip" href="{{ url_for('views.daily') }}">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value">{{ tasks_done }}<span style="font-size:1rem;opacity:.5">/{{ tasks_today|length }}</span></div>
+      <div class="stat-label">Tasks done</div>
+    </a>
+    <a class="stat-chip" href="{{ url_for('views.habits_monthly', year=today.year, month=today.month) }}">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value">{{ habits_done }}<span style="font-size:1rem;opacity:.5">/{{ habits_all|length }}</span></div>
+      <div class="stat-label">Habits done</div>
+    </a>
+    <a class="stat-chip" href="{{ url_for('views.pomodoro') }}">
+      <div class="stat-icon">⏱</div>
+      <div class="stat-value">{{ focus_mins }}<span style="font-size:.9rem;opacity:.5">m</span></div>
+      <div class="stat-label">Focus today</div>
+    </a>
+    <a class="stat-chip" href="{{ url_for('views.study_timetable') }}">
+      <div class="stat-icon">📅</div>
+      <div class="stat-value">{{ class_count }}</div>
+      <div class="stat-label">Classes today</div>
+    </a>
+  </div>
+
+  <!-- Today's Schedule (full width) -->
+  <div class="dash-card" style="margin-bottom:14px; animation-delay:.1s">
+    <div class="dc-header">
+      <div class="dc-title">Today's Schedule</div>
+      <a class="dc-link" href="{{ url_for('views.timemap') }}">Open timemap →</a>
+    </div>
+    {% if today_slots %}
+    <div class="schedule-list">
+      {% for item in today_slots %}
+      <a class="sched-item" href="{{ item.url }}">
+        <div class="sched-bar" style="background:{{ item.color }}"></div>
+        <div class="sched-body">
+          <div class="sched-label">{{ item.label }}</div>
+          <div class="sched-meta">
+            {{ item.start }}{% if item.end %} – {{ item.end }}{% endif %}
+            {% if item.room %} · 📍 {{ item.room }}{% endif %}
+          </div>
+        </div>
+        {% if item.type == 'class' %}
+          <span class="sched-badge sb-class">Class</span>
+        {% elif item.type == 'block' %}
+          <span class="sched-badge sb-block">Block</span>
+        {% else %}
+          <span class="sched-badge sb-task">Task</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dc-empty">Nothing scheduled yet today — <a href="{{ url_for('views.timemap') }}" style="color:var(--accent-1)">add a time block</a> or <a href="{{ url_for('views.study_timetable') }}" style="color:var(--accent-1)">set up your timetable</a>.</div>
+    {% endif %}
+  </div>
+
+  <!-- Two-col: Habits + Exams -->
+  <div class="dash-cols" style="margin-bottom:14px">
+
+    <!-- Habits check-in -->
+    <div class="dash-card" style="animation-delay:.14s">
+      <div class="dc-header">
+        <div class="dc-title">Habits</div>
+        <a class="dc-link" href="{{ url_for('views.habits_monthly', year=today.year, month=today.month) }}">See all →</a>
+      </div>
+      {% if habits_all %}
+      <div class="habits-grid">
+        {% for h in habits_all %}
+        {% set done = h.id in logged_ids %}
+        <div class="habit-row {% if done %}done{% endif %}" id="hrow-{{ h.id }}">
+          <div class="habit-check {% if done %}done{% endif %}" id="hcheck-{{ h.id }}"
+               onclick="toggleHabit({{ h.id }}, '{{ today_str }}')">
+            {% if done %}✓{% endif %}
+          </div>
+          <span class="habit-name {% if done %}done{% endif %}" id="hname-{{ h.id }}">{{ h.name }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="dc-empty">No habits yet — <a href="{{ url_for('views.habits_monthly', year=today.year, month=today.month) }}" style="color:var(--accent-1)">add some</a>.</div>
+      {% endif %}
+    </div>
+
+    <!-- Upcoming exams -->
+    <div class="dash-card" style="animation-delay:.18s">
+      <div class="dc-header">
+        <div class="dc-title">Upcoming Deadlines</div>
+        <a class="dc-link" href="{{ url_for('views.study_exams') }}">See all →</a>
+      </div>
+      {% if exams_upcoming %}
+      <div class="exam-list">
+        {% for exam in exams_upcoming %}
+        {% set days_left = (exam.date - today).days %}
+        <a class="dash-exam" href="{{ url_for('views.study_exams') }}">
+          <div class="de-bar" style="background:{{ exam.subject.color }}"></div>
+          <div class="de-body">
+            <div class="de-title">{{ exam.title }}</div>
+            <div class="de-sub">
+              <span class="de-type de-type-{{ exam.exam_type or 'exam' }}">{{ (exam.exam_type or 'exam')|capitalize }}</span>
+              · {{ exam.subject.name }} · {{ exam.date.strftime('%d %b') }}
+            </div>
+          </div>
+          {% if days_left == 0 %}
+            <span class="de-badge cd-soon">Today!</span>
+          {% elif days_left == 1 %}
+            <span class="de-badge cd-soon">Tomorrow</span>
+          {% elif days_left <= 7 %}
+            <span class="de-badge cd-week">{{ days_left }}d</span>
+          {% else %}
+            <span class="de-badge cd-later">{{ days_left }}d</span>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="dc-empty">No upcoming deadlines — enjoy the calm! 🎉</div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Pending tasks -->
+  <div class="dash-card" style="animation-delay:.22s">
+    <div class="dc-header">
+      <div class="dc-title">Today's Tasks</div>
+      <a class="dc-link" href="{{ url_for('views.daily') }}">View all →</a>
+    </div>
+    {% if tasks_pending %}
+    <div class="task-list">
+      {% for task in tasks_pending %}
+      <div class="dash-task" id="dtask-{{ task.id }}">
+        <div class="dt-check" onclick="dashToggle({{ task.id }}, '{{ today_str }}')" title="Mark done"></div>
+        <div class="dt-body">
+          <div class="dt-name">{{ task.content }}</div>
+          <div class="dt-meta">
+            {% if task.priority %}
+              <span class="dt-pri p-{{ task.priority }}">{{ task.priority|title }}</span>
+            {% endif %}
+            {% if task.due_time %}
+              <span class="dt-time">⏰ {{ task.due_time }}{% if task.end_time %} – {{ task.end_time }}{% endif %}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% elif tasks_today %}
+    <div class="dc-empty" style="color:rgba(22,163,74,.8); font-weight:600">All tasks done for today! 🎉</div>
+    {% else %}
+    <div class="dc-empty">No tasks today — <a href="{{ url_for('views.daily') }}" style="color:var(--accent-1)">add some</a>.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+// Sync greeting with local browser time (matches topbar)
+(function() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,';
+  const el = document.getElementById('dashGreeting');
+  if (el) el.textContent = greet;
+})();
+
+const todayStr = '{{ today_str }}';
+
+async function toggleHabit(habitId, dateStr) {
+  const check = document.getElementById('hcheck-' + habitId);
+  const name  = document.getElementById('hname-'  + habitId);
+  const row   = document.getElementById('hrow-'   + habitId);
+  const done  = check.classList.contains('done');
+
+  // Optimistic toggle
+  check.classList.toggle('done', !done);
+  check.textContent = done ? '' : '✓';
+  name.classList.toggle('done', !done);
+  row.classList.toggle('done', !done);
+
+  await fetch(`/habit/toggle/${habitId}/${dateStr}`, { method: 'POST' });
+}
+
+async function dashToggle(taskId, dateStr) {
+  await fetch('/toggle/' + taskId, { method: 'POST' });
+  const el = document.getElementById('dtask-' + taskId);
+  if (el) {
+    el.style.transition = 'opacity .3s, transform .3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(10px)';
+    setTimeout(() => el.remove(), 300);
+  }
+  // update tasks-done chip
+  const chip = document.querySelector('.stat-chip .stat-value');
+  // simple full reload on task toggle to keep counts accurate
+  setTimeout(() => location.reload(), 350);
+}
+</script>
+{% endblock %}

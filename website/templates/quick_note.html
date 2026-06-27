@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Quick Note · monad{% endblock %}
+{% block content %}
+
+<style>
+  .quick-note-container { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .quick-note-card { background: var(--card-bg); border-radius: 24px; padding: 40px; max-width: 500px; width: 100%; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 20px 60px rgba(0,0,0,0.06); animation: slideUp 0.4s ease; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .icon-circle { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 8px 25px var(--glow-color); animation: bounce 1s ease; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-15px)} 50%{transform:translateY(0)} 70%{transform:translateY(-8px)} }
+  
+  .quick-note-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 12px 0 8px; }
+  .task-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 16px 0; padding: 12px 20px; background: var(--hover); border-radius: 14px; display: inline-block; border: 1px solid var(--border-color); }
+  .prompt-text { color: var(--accent-1); font-weight: 600; font-size: 0.95rem; margin: 20px 0; line-height: 1.5; padding: 12px 16px; background: var(--hover); border-radius: 12px; border-left: 3px solid var(--accent-1); text-align: left; display: flex; align-items: flex-start; gap: 10px; }
+  .prompt-text svg { flex-shrink: 0; margin-top: 2px; }
+  .note-input { width: 100%; padding: 14px 18px; border: 2px solid var(--border-color); border-radius: 14px; font-size: 0.95rem; background: var(--input-bg); color: var(--text-primary); resize: vertical; min-height: 60px; font-family: 'Inter', sans-serif; }
+  .note-input:focus { outline: none; border-color: var(--accent-1); box-shadow: 0 0 0 4px var(--glow-color); }
+  .btn-save { margin-top: 16px; padding: 14px 35px; background: var(--accent-1); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 8px 25px var(--glow-color); width: 100%; }
+  .btn-save:hover { opacity: 0.9; }
+  .btn-skip { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; padding: 10px 18px; border-radius: 12px; }
+  .btn-skip:hover { color: var(--text-primary); background: var(--hover); }
+  .char-count { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; text-align: right; }
+  
+  .photo-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+  .photo-btn { display: inline-block; padding: 10px 20px; background: var(--accent-1); color: white; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+  .photo-btn:hover { opacity: 0.9; }
+
+  @media (max-width: 480px) {
+    .quick-note-card { padding: 24px 18px; border-radius: 18px; }
+  }
+</style>
+
+<div class="quick-note-container">
+  <div class="quick-note-card">
+    <div class="icon-circle">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>
+      </svg>
+    </div>
+    <h4>Task Completed!</h4>
+    
+    <div class="task-name">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" style="vertical-align:middle; margin-right:8px;">
+        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+      </svg>
+      {{ task.content }}
+    </div>
+    
+    <div class="prompt-text">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <span>{{ prompt }}</span>
+    </div>
+    
+    <form method="POST" id="quickNoteForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <textarea name="quick_note" class="note-input" placeholder="Type your note here... (optional)" maxlength="200" oninput="updateCount()" id="noteInput"></textarea>
+      <div class="char-count"><span id="charCount">0</span>/200 characters</div>
+      <button type="submit" class="btn-save">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="vertical-align:middle; margin-right:6px;">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/>
+        </svg>
+        Save Note
+      </button>
+    </form>
+    
+    <!-- Photo Upload Section -->
+    <div class="photo-section">
+      <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:10px;">📸 Capture this moment?</p>
+      <form method="POST" action="{{ url_for('views.upload_photo') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="date" value="{{ task.date.strftime('%Y-%m-%d') if task.date else datetime.utcnow().strftime('%Y-%m-%d') }}">
+        <input type="hidden" name="task_id" value="{{ task.id }}">
+        <label class="photo-btn">
+          📷 Take / Upload Photo
+          <input type="file" name="photo" accept="image/*" capture="environment" style="display:none;" onchange="this.form.submit()">
+        </label>
+      </form>
+    </div>
+    
+    <a href="{{ url_for('views.daily') }}" class="btn-skip" style="display:block; margin-top:12px;">Skip for now →</a>
+  </div>
+</div>
+
+<script>
+  function updateCount() { document.getElementById('charCount').textContent = document.getElementById('noteInput').value.length; }
+  document.getElementById('noteInput').focus();
+  document.getElementById('noteInput').addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('quickNoteForm').submit(); } });
+</script>
+
+{% endblock %}
