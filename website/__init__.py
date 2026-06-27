@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
@@ -23,11 +23,15 @@ def create_app():
     app.config['SECRET_KEY'] = secret_key
 
 
-    # ✅ Database path
-    db_path = os.path.join(os.path.dirname(__file__), 'db.sqlite')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # Database (Supabase PostgreSQL)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL environment variable is required")
 
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    
     # ✅ Max upload size: 10 MB
     app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
