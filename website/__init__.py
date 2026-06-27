@@ -71,11 +71,8 @@ def create_app():
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
 
-    # ✅ Import models so db.create_all() knows about them
+    # Import models so SQLAlchemy is aware of them
     from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, DailyPhoto, FocusSession, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark
-    with app.app_context():
-        db.create_all()
-        print("Database checked/initialized successfully!")
 
     # ✅ Login manager setup
     login_manager = LoginManager()
