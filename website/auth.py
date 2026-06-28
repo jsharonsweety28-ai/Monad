@@ -10,6 +10,8 @@ auth = Blueprint('auth', __name__)
 
 
 def _send_otp(email, otp):
+    print("=== OTP: Creating email ===", flush=True)
+
     msg = Message(
         subject='monad: your verification code',
         recipients=[email],
@@ -36,7 +38,12 @@ def _send_otp(email, otp):
 </body>
 </html>"""
     )
+
+    print("=== OTP: About to call mail.send() ===", flush=True)
+
     mail.send(msg)
+
+    print("=== OTP: mail.send() finished successfully ===", flush=True)
 
 
 @auth.route('/login', methods=['GET', 'POST'])
