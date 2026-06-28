@@ -55,6 +55,7 @@ def create_app():
     csrf.init_app(app)
     limiter.init_app(app)
     mail.init_app(app)
+    print(app.config["MAIL_USERNAME"])
     oauth.init_app(app)
     from .storage import get_public_url
     app.jinja_env.globals["get_public_url"] = get_public_url

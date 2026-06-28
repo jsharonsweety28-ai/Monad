@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, session,current_app
 from .models import User
 from . import db, limiter, mail, oauth
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -41,7 +41,18 @@ def _send_otp(email, otp):
 
     print("=== OTP: About to call mail.send() ===", flush=True)
 
-    mail.send(msg)
+    try:
+        print("MAIL_USERNAME:", current_app.config["MAIL_USERNAME"])
+        print("MAIL_SERVER:", current_app.config["MAIL_SERVER"])
+        print("MAIL_PORT:", current_app.config["MAIL_PORT"])
+
+        mail.send(msg)
+
+        print("MAIL SENT SUCCESSFULLY")
+
+    except Exception as e:
+        print("MAIL ERROR:", repr(e))
+        raise
 
     print("=== OTP: mail.send() finished successfully ===", flush=True)
 
