@@ -827,10 +827,13 @@
       selected_habits: selectedHabits.join(', '),
       year_goal:       yearGoal
     };
+    var analyzeController = new AbortController();
+    setTimeout(function() { analyzeController.abort(); }, 12000);
     fetch('/onboarding/analyze', {
       method:  'POST',
       headers: {'Content-Type': 'application/json'},
-      body:    JSON.stringify(profileData)
+      body:    JSON.stringify(profileData),
+      signal:  analyzeController.signal
     })
     .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(ai) {
