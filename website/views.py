@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, abort, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, abort, jsonify, send_from_directory, current_app
 from .storage import upload_file, get_public_url
 from flask_login import login_required, current_user
 from . import db
@@ -305,6 +305,15 @@ DASHBOARD_QUOTES = [
     ("Push yourself, because no one else is going to do it for you.", "Unknown"),
     ("Great things never come from comfort zones.", "Unknown"),
 ]
+
+@views.route('/sw.js')
+def service_worker():
+    response = send_from_directory(
+        os.path.join(current_app.static_folder), 'sw.js'
+    )
+    response.headers['Service-Worker-Allowed'] = '/'
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
 
 @views.route('/')
 def home():
