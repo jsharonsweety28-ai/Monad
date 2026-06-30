@@ -241,6 +241,8 @@
     margin-top: 2px; white-space: nowrap;
   }
 
+  .week-nav-pills-mobile { display: none; }
+
   @media (max-width: 600px) {
     .add-habit-form { flex-direction: column; }
     .btn-add-habit  { width: 100%; text-align: center; }
@@ -252,6 +254,20 @@
     .habit-table th:first-child, .habit-table td:first-child { min-width: 105px; max-width: 105px; }
     .habit-name-cell { font-size: 0.68rem; gap: 5px; }
     .habit-icon { width: 20px; height: 20px; }
+
+    .week-nav-pills-mobile {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 12px;
+    }
+    .week-nav-pills-mobile .hpill {
+      border: none; cursor: pointer; font-family: 'Inter', sans-serif;
+    }
+    .week-range-label { flex: 1; text-align: center; cursor: default; white-space: nowrap; }
+    .habit-table.week-windowed { min-width: 580px; }
+  }
+
+  @media (min-width: 601px) {
+    [data-daynum] { display: table-cell !important; }
   }
 
   /* ── Habit reflection modal ── */
@@ -370,15 +386,15 @@
     </div>
     <div class="habits-nav-pills">
       {% if month == 1 %}
-        <a href="{{ url_for('views.habits_monthly', year=year-1, month=12) }}" class="hpill">← Dec {{ year-1 }}</a>
+        <a id="monthPrevPill" href="{{ url_for('views.habits_monthly', year=year-1, month=12) }}" class="hpill">← Dec {{ year-1 }}</a>
       {% else %}
-        <a href="{{ url_for('views.habits_monthly', year=year, month=month-1) }}" class="hpill">← Prev</a>
+        <a id="monthPrevPill" href="{{ url_for('views.habits_monthly', year=year, month=month-1) }}" class="hpill">← Prev</a>
       {% endif %}
       <a href="{{ url_for('views.habit_streaks', year=year, month=month) }}" class="hpill streak-pill">🔥 Streaks</a>
       {% if month == 12 %}
-        <a href="{{ url_for('views.habits_monthly', year=year+1, month=1) }}" class="hpill">Jan {{ year+1 }} →</a>
+        <a id="monthNextPill" href="{{ url_for('views.habits_monthly', year=year+1, month=1) }}" class="hpill">Jan {{ year+1 }} →</a>
       {% else %}
-        <a href="{{ url_for('views.habits_monthly', year=year, month=month+1) }}" class="hpill">Next →</a>
+        <a id="monthNextPill" href="{{ url_for('views.habits_monthly', year=year, month=month+1) }}" class="hpill">Next →</a>
       {% endif %}
     </div>
   </div>
@@ -439,13 +455,19 @@
     {% set todayMonth = datetime.utcnow().month %}
     {% set todayYear  = datetime.utcnow().year %}
 
+    <div class="week-nav-pills-mobile" id="weekNavMobile">
+      <button type="button" class="hpill" id="weekPrevBtn">‹ Prev week</button>
+      <span class="hpill week-range-label" id="weekRangeLabel">This week</span>
+      <button type="button" class="hpill" id="weekNextBtn">Next week ›</button>
+    </div>
+
     <div class="habit-table-wrap">
       <table class="habit-table">
         <thead>
           <tr>
             <th>Habit</th>
             {% for d in range(1, daysInMonth + 1) %}
-              <th class="{% if d == todayDay and month == todayMonth and year == todayYear %}today-col{% endif %}">
+              <th data-daynum="{{ d }}" class="{% if d == todayDay and month == todayMonth and year == todayYear %}today-col{% endif %}">
                 {{ d }}
               </th>
             {% endfor %}
@@ -497,7 +519,7 @@
                 {% set log  = habit.logs|selectattr('date','equalto',date)|first %}
                 {% set isTodayCol = (d == todayDay and month == todayMonth and year == todayYear) %}
                 {% set is_off = (hprog.required_weekdays is not none and date.weekday() not in hprog.required_weekdays) %}
-                <td class="{% if isTodayCol %}today-col{% endif %}"
+                <td data-daynum="{{ d }}" class="{% if isTodayCol %}today-col{% endif %}"
                     {% if not is_off %}data-href="{{ url_for('views.toggle_habit', id=habit.id, date_str=date.strftime('%Y-%m-%d')) }}" style="cursor:pointer;"{% endif %}>
                   <div class="habit-check {% if log and log.completed %}checked{% elif is_off %}off-day{% endif %}"></div>
                 </td>
@@ -761,6 +783,67 @@ document.querySelectorAll('td[data-href]').forEach(function(td) {
     document.getElementById('habitTipText').textContent = pick.t;
     document.getElementById('habitTip').style.display = 'block';
   }
+})();
+
+/* ── Mobile week windowing ── */
+(function() {
+  var nav = document.getElementById('weekNavMobile');
+  var table = document.querySelector('.habit-table');
+  if (!nav || !table) return;
+
+  var pageYear  = {{ year }};
+  var pageMonth = {{ month }};
+  var daysInMonth = new Date(pageYear, pageMonth, 0).getDate();
+
+  var now = new Date();
+  var isCurrentMonth = (now.getFullYear() === pageYear && now.getMonth() + 1 === pageMonth);
+  var refDay = isCurrentMonth ? now.getDate() : 1;
+
+  function mondayAlignedStart(day) {
+    var d = new Date(pageYear, pageMonth - 1, day);
+    var dow = (d.getDay() + 6) % 7; // 0=Mon … 6=Sun
+    return day - dow;
+  }
+
+  var windowStart = mondayAlignedStart(refDay);
+
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function applyWindow() {
+    var start = Math.max(windowStart, 1);
+    var end = Math.min(windowStart + 6, daysInMonth);
+
+    document.querySelectorAll('[data-daynum]').forEach(function(el) {
+      var d = parseInt(el.dataset.daynum, 10);
+      el.style.display = (d >= start && d <= end) ? '' : 'none';
+    });
+
+    table.classList.add('week-windowed');
+
+    var label = monthNames[pageMonth - 1] + ' ' + start + (end !== start ? '–' + end : '');
+    document.getElementById('weekRangeLabel').textContent = label;
+  }
+
+  function shiftWeek(delta) {
+    var newStart = windowStart + delta * 7;
+    if (newStart + 6 < 1) {
+      var prevPill = document.getElementById('monthPrevPill');
+      if (prevPill) window.location.href = prevPill.href;
+      return;
+    }
+    if (newStart > daysInMonth) {
+      var nextPill = document.getElementById('monthNextPill');
+      if (nextPill) window.location.href = nextPill.href;
+      return;
+    }
+    windowStart = newStart;
+    applyWindow();
+  }
+
+  document.getElementById('weekPrevBtn').addEventListener('click', function() { shiftWeek(-1); });
+  document.getElementById('weekNextBtn').addEventListener('click', function() { shiftWeek(1); });
+
+  applyWindow();
 })();
 </script>
 
