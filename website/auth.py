@@ -4,7 +4,7 @@ from . import db, limiter, mail, oauth
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_mail import Message
-import re, random, secrets, time
+import re, random, secrets, time, socket
 
 auth = Blueprint('auth', __name__)
 
@@ -41,6 +41,8 @@ def _send_otp(email, otp):
 
     print("=== OTP: About to call mail.send() ===", flush=True)
 
+    old_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(8)
     try:
         print("MAIL_USERNAME:", current_app.config["MAIL_USERNAME"])
         print("MAIL_SERVER:", current_app.config["MAIL_SERVER"])
@@ -53,6 +55,8 @@ def _send_otp(email, otp):
     except Exception as e:
         print("MAIL ERROR:", repr(e))
         raise
+    finally:
+        socket.setdefaulttimeout(old_timeout)
 
     print("=== OTP: mail.send() finished successfully ===", flush=True)
 
