@@ -220,6 +220,7 @@
     box-shadow: 0 0 0 4px var(--glow-color), 0 4px 16px rgba(0,0,0,0.05);
   }
   .add-form { display: flex; gap: 10px; align-items: center; }
+  .add-row { display: flex; gap: 10px; align-items: center; width: 100%; }
   .task-input {
     flex: 1; padding: 11px 18px;
     border: none; background: var(--input-bg);
@@ -471,7 +472,10 @@
     .day-greeting { font-size: 1.35rem; }
     .progress-ring { width: 64px; height: 64px; }
     .add-form { flex-direction: column; border-radius: 16px; }
-    .btn-add { width: 100%; text-align: center; border-radius: 99px; }
+    .add-row { flex-wrap: wrap; }
+    .add-row .task-input { flex: 1 1 100%; min-width: 0; }
+    .add-row .btn-details { order: 2; }
+    .btn-add { flex: 1; order: 3; text-align: center; border-radius: 99px; }
   }
 </style>
 
@@ -570,7 +574,7 @@
   <div class="add-card">
     <form method="POST" class="add-form" id="addTaskForm" style="flex-wrap:wrap;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div style="display:flex; gap:10px; align-items:center; width:100%;">
+      <div class="add-row">
         <input type="text" name="task" class="task-input"
                placeholder="Add {{ phase_copy.task_label }}…" required autocomplete="off">
         <button type="button" onclick="toggleAddDetails()" class="btn-details" title="More options" style="opacity:.45;font-size:.75rem">⋯</button>

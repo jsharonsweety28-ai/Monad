@@ -112,7 +112,9 @@
   @media (max-width: 600px) {
     .square-grid { gap: 4px; }
     .day-num { font-size: 0.7rem; padding: 3px 5px; }
-    .day-upload span { font-size: 0.55rem; padding: 4px 6px; }
+    .day-upload { padding: 4px; }
+    .day-upload span { font-size: 0.85rem; padding: 4px 6px; }
+    .day-upload span .upload-label { display: none; }
   }
 </style>
 
@@ -166,7 +168,7 @@
                 {% if photoCount > 1 %}<div class="photo-count">{{ photoCount }}</div>{% endif %}
               {% else %}
                 <div class="day-upload">
-                  <span onclick="event.stopPropagation(); showUpload('{{ dateStr }}')">📸 Upload</span>
+                  <span onclick="event.stopPropagation(); showUpload('{{ dateStr }}')">📸 <span class="upload-label">Upload</span></span>
                 </div>
               {% endif %}
               

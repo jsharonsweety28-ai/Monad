@@ -102,6 +102,7 @@
   }
 
   /* ── Table ── */
+  .table-responsive { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .a-table { width:100%; border-collapse:collapse; font-size:0.84rem; }
   .a-table th {
     padding:10px 14px; text-align:left; color:var(--text-secondary);
@@ -430,6 +431,7 @@
   {% if exams_upcoming %}
   <div class="acard" style="animation-delay:0.26s">
     <div class="acard-title"><div class="acard-icon">📋</div> Upcoming Exams</div>
+    <div class="table-responsive">
     <table class="a-table">
       <thead><tr><th>Exam</th><th>Subject</th><th>Date</th><th>Countdown</th></tr></thead>
       <tbody>
@@ -449,6 +451,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   </div>
   {% endif %}
 

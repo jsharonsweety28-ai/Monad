@@ -219,8 +219,8 @@
   .btn-save-exam:hover { opacity: .9; }
 
   /* study tabs (same as other study pages) */
-  .study-tabs { display:flex; gap:4px; background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:14px; padding:4px; width:fit-content; flex-wrap:wrap; }
-  .stab { padding:7px 16px; border-radius:10px; border:none; font-size:.82rem; font-weight:600; cursor:pointer; background:transparent; color:var(--text-secondary); text-decoration:none; transition:all .18s; display:inline-flex; align-items:center; gap:5px; }
+  .study-tabs { display:flex; gap:4px; background:var(--card-bg); border:1.5px solid var(--border-color); border-radius:14px; padding:4px; width:fit-content; max-width:100%; overflow-x:auto; }
+  .stab { padding:7px 16px; border-radius:10px; border:none; font-size:.82rem; font-weight:600; cursor:pointer; background:transparent; color:var(--text-secondary); text-decoration:none; transition:all .18s; display:inline-flex; align-items:center; gap:5px; flex-shrink:0; }
   .stab.active { background:var(--accent-1); color:white; box-shadow:0 2px 8px var(--glow-color); }
   .stab:not(.active):hover { background:var(--hover); color:var(--text-primary); }
 
