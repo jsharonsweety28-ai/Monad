@@ -280,9 +280,15 @@
     .habit-table.week-windowed [data-daynum] {
       width: auto; min-width: 0;
     }
-    .habit-table.week-windowed .habit-name-cell { font-size: 0.64rem; }
+    .habit-table.week-windowed .habit-name-cell {
+      font-size: 0.64rem; width: 100%; min-width: 0;
+    }
     .habit-table.week-windowed .habit-icon { display: none; }
     .habit-table.week-windowed .freq-badge { display: none; }
+    .habit-table.week-windowed .habit-name-text {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      min-width: 0; flex: 1;
+    }
   }
 
   @media (min-width: 601px) {
@@ -515,7 +521,7 @@
                   {% else %}
                     <div class="habit-icon icon-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div>
                   {% endif %}
-                  {{ habit.name }}
+                  <span class="habit-name-text">{{ habit.name }}</span>
                   {% set hfreq = habit.frequency or 'daily' %}
                   {% if hfreq != 'daily' %}
                     <span class="freq-badge">
