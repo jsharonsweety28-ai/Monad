@@ -244,7 +244,12 @@
   @media (max-width: 600px) {
     .add-habit-form { flex-direction: column; }
     .btn-add-habit  { width: 100%; text-align: center; }
-    .habit-table    { min-width: 600px; font-size: 0.62rem; }
+    .habit-table    { min-width: 900px; font-size: 0.68rem; }
+    .habit-table td { height: 46px; padding: 6px 4px; }
+    .habit-check    { width: 30px; height: 30px; }
+    .habit-check.checked::after { font-size: 14px; }
+    .habit-table th { padding: 12px 5px; font-size: 0.66rem; }
+    .habit-table th:first-child { min-width: 150px; }
   }
 
   /* ── Habit reflection modal ── */
@@ -582,7 +587,7 @@
         <span class="ph-icon">📷</span>
         <span id="reflectPhotoLabelText">Tap to take a photo or upload one</span>
       </label>
-      <input type="file" id="reflectPhotoInput" accept="image/*" capture="environment" onchange="onReflectPhoto(this)">
+      <input type="file" id="reflectPhotoInput" accept="image/*" onchange="onReflectPhoto(this)">
       <div id="reflectPhotoPreview"><img id="reflectPhotoImg" src="" alt="preview"></div>
     </div>
   </div>

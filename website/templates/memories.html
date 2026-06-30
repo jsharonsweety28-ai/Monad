@@ -201,7 +201,7 @@
   <form method="POST" action="{{ url_for('views.upload_photo') }}" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="date" id="uploadDate">
-    <input type="file" name="photo" accept="image/*" capture="environment" required style="margin-bottom:12px; color:var(--text-primary); width:100%;">
+    <input type="file" name="photo" accept="image/*" required style="margin-bottom:12px; color:var(--text-primary); width:100%;">
     <input type="text" name="caption" placeholder="Quick caption (optional)" style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:8px; background:var(--input-bg); color:var(--text-primary); margin-bottom:12px;">
     <div style="display:flex; gap:8px;">
       <button type="submit" style="flex:1; padding:10px; background:var(--accent-1); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Upload</button>

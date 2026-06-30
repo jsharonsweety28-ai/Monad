@@ -506,7 +506,7 @@
     {% set offset = (163 - (pct / 100 * 163))|round|int %}
 
     <div class="progress-ring" onclick="toggleRingPopup()" style="cursor:pointer; position:relative;">
-      <svg viewBox="0 0 60 60" width="80" height="80">
+      <svg viewBox="0 0 60 60" style="width:100%; height:100%; display:block;">
         <circle class="ring-bg" cx="30" cy="30" r="26"/>
         <circle class="ring-fg" cx="30" cy="30" r="26"
                 stroke-dashoffset="{{ offset }}" id="progressRing"/>
