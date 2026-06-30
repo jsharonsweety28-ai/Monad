@@ -938,6 +938,20 @@ def habits_monthly(year, month):
         habit_month = HabitMonth(user_id=current_user.id, year=year, month=month)
         db.session.add(habit_month)
         db.session.commit()
+    # Carry forward habits from the most recent prior month if this month has
+    # none yet, so they don't have to be re-added every month.
+    if not Habit.query.filter_by(habit_month_id=habit_month.id).first():
+        prev_habit_month = (HabitMonth.query
+            .filter_by(user_id=current_user.id)
+            .filter(db.or_(HabitMonth.year < year,
+                            db.and_(HabitMonth.year == year, HabitMonth.month < month)))
+            .order_by(HabitMonth.year.desc(), HabitMonth.month.desc())
+            .first())
+        if prev_habit_month:
+            prev_habits = Habit.query.filter_by(habit_month_id=prev_habit_month.id).all()
+            for h in prev_habits:
+                db.session.add(Habit(name=h.name, frequency=h.frequency, habit_month_id=habit_month.id))
+            db.session.commit()
     if request.method == 'POST':
         habit_name = request.form.get('habit')
         if habit_name:
