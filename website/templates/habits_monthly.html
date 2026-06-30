@@ -263,11 +263,31 @@
       border: none; cursor: pointer; font-family: 'Inter', sans-serif;
     }
     .week-range-label { flex: 1; text-align: center; cursor: default; white-space: nowrap; }
-    .habit-table.week-windowed { min-width: 580px; }
+
+    /* ── Week-windowed: hide secondary columns, fill width evenly ── */
+    .habit-table.week-windowed {
+      min-width: 0; width: 100%; table-layout: fixed;
+    }
+    .habit-table.week-windowed .col-progress,
+    .habit-table.week-windowed .col-streak,
+    .habit-table.week-windowed .col-delete {
+      display: none;
+    }
+    .habit-table.week-windowed .col-name,
+    .habit-table.week-windowed td.col-name {
+      width: 84px; min-width: 84px; max-width: 84px;
+    }
+    .habit-table.week-windowed [data-daynum] {
+      width: auto; min-width: 0;
+    }
+    .habit-table.week-windowed .habit-name-cell { font-size: 0.64rem; }
+    .habit-table.week-windowed .habit-icon { display: none; }
+    .habit-table.week-windowed .freq-badge { display: none; }
   }
 
   @media (min-width: 601px) {
     [data-daynum] { display: table-cell !important; }
+    .col-progress, .col-streak, .col-delete { display: table-cell !important; }
   }
 
   /* ── Habit reflection modal ── */
@@ -465,21 +485,21 @@
       <table class="habit-table">
         <thead>
           <tr>
-            <th>Habit</th>
+            <th class="col-name">Habit</th>
             {% for d in range(1, daysInMonth + 1) %}
               <th data-daynum="{{ d }}" class="{% if d == todayDay and month == todayMonth and year == todayYear %}today-col{% endif %}">
                 {{ d }}
               </th>
             {% endfor %}
-            <th>Progress</th>
-            <th>Streak</th>
-            <th></th>
+            <th class="col-progress">Progress</th>
+            <th class="col-streak">Streak</th>
+            <th class="col-delete"></th>
           </tr>
         </thead>
         <tbody>
           {% for habit in habits %}
             <tr>
-              <td>
+              <td class="col-name">
                 <div class="habit-name-cell">
                   {% set nl = habit.name.lower() %}
                   {% if 'study' in nl or 'exam' in nl or 'homework' in nl or 'read' in nl or 'learn' in nl or 'course' in nl or 'lecture' in nl or 'assignment' in nl %}
@@ -524,7 +544,7 @@
                   <div class="habit-check {% if log and log.completed %}checked{% elif is_off %}off-day{% endif %}"></div>
                 </td>
               {% endfor %}
-              <td>
+              <td class="col-progress">
                 {% set prog = habit_progress[habit.id] %}
                 {% set rate = (prog.done / prog.expected * 100) if prog.expected > 0 else 0 %}
                 {% if rate >= 80 %}<span class="progress-badge great">{{ prog.done }}/{{ prog.expected }}</span>
@@ -535,7 +555,7 @@
                   <span class="week-counter">{{ prog.week_done }}/{{ prog.week_target }} this wk</span>
                 {% endif %}
               </td>
-              <td>
+              <td class="col-streak">
                 {% set streak = namespace(count=0) %}
                 {% for d in range(daysInMonth, 0, -1) %}
                   {% set date = datetime(year, month, d).date() %}
@@ -550,7 +570,7 @@
                   <span style="color:var(--text-secondary); font-size:0.65rem;">—</span>
                 {% endif %}
               </td>
-              <td>
+              <td class="col-delete">
                 <a href="{{ url_for('views.delete_habit', id=habit.id) }}" class="btn-del-habit"
                    onclick="return confirm('Delete this habit?')" title="Delete">✕</a>
               </td>
