@@ -242,8 +242,28 @@
   }
 
   .week-nav-pills-mobile { display: none; }
+  .daily-checklist-mobile { display: none; }
 
   @media (max-width: 600px) {
+    .daily-checklist-mobile {
+      display: block; margin-bottom: 18px;
+      animation: fadeUp 0.4s ease both;
+    }
+    .dc-title {
+      font-weight: 700; font-size: 0.92rem; color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+    .dc-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; padding: 13px 16px; margin-bottom: 8px;
+      background: var(--card-bg); border: 1.5px solid var(--border-color);
+      border-radius: 14px; cursor: pointer; transition: border-color 0.15s;
+    }
+    .dc-row:active { border-color: var(--accent-1); }
+    .dc-row.dc-off { opacity: 0.45; cursor: default; }
+    .dc-name { flex: 1; font-weight: 600; font-size: 0.86rem; color: var(--text-primary); }
+    .dc-check { flex-shrink: 0; margin: 0; }
+
     .add-habit-form { flex-direction: column; }
     .btn-add-habit  { width: 100%; text-align: center; }
     .habit-table    { min-width: 900px; font-size: 0.68rem; }
@@ -480,6 +500,24 @@
     {% set todayDay = datetime.utcnow().day %}
     {% set todayMonth = datetime.utcnow().month %}
     {% set todayYear  = datetime.utcnow().year %}
+    {% set isCurrentMonthPage = (month == todayMonth and year == todayYear) %}
+
+    {% if isCurrentMonthPage %}
+      {% set todayDate = datetime(todayYear, todayMonth, todayDay).date() %}
+      <div class="daily-checklist-mobile" id="dailyChecklistMobile">
+        <div class="dc-title">✅ Today's Habits</div>
+        {% for habit in habits %}
+          {% set hprog = habit_progress[habit.id] %}
+          {% set tlog = habit.logs|selectattr('date','equalto',todayDate)|first %}
+          {% set t_is_off = (hprog.required_weekdays is not none and todayDate.weekday() not in hprog.required_weekdays) %}
+          <div class="dc-row {% if t_is_off %}dc-off{% endif %}"
+               {% if not t_is_off %}data-href="{{ url_for('views.toggle_habit', id=habit.id, date_str=todayDate.strftime('%Y-%m-%d')) }}"{% endif %}>
+            <span class="dc-name">{{ habit.name }}</span>
+            <div class="habit-check dc-check {% if tlog and tlog.completed %}checked{% elif t_is_off %}off-day{% endif %}"></div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
     <div class="week-nav-pills-mobile" id="weekNavMobile">
       <button type="button" class="hpill" id="weekPrevBtn">‹ Prev week</button>
@@ -781,6 +819,40 @@ document.querySelectorAll('td[data-href]').forEach(function(td) {
           check.classList.remove('checked');
           showHabitToast(false, false);
         }
+        var dcCheck = document.querySelector('.dc-row[data-href="' + url + '"] .habit-check');
+        if (dcCheck) dcCheck.classList.toggle('checked', data.completed);
+      })
+      .catch(function() {
+        window.location.href = url;
+      });
+  });
+});
+
+/* ── Today checklist toggle (mobile) ── */
+document.querySelectorAll('.dc-row[data-href]').forEach(function(row) {
+  var habitName = row.querySelector('.dc-name') ? row.querySelector('.dc-name').textContent.trim() : 'Habit';
+
+  row.addEventListener('click', function() {
+    var url = row.dataset.href;
+    var check = row.querySelector('.habit-check');
+    var nowChecked = !check.classList.contains('checked');
+    check.classList.toggle('checked', nowChecked);
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        check.classList.toggle('checked', data.completed);
+        if (data.completed) {
+          showHabitToast(true, false);
+          setTimeout(function() {
+            dismissToast();
+            openReflectModal(data.log_id, habitName);
+          }, 1200);
+        } else {
+          showHabitToast(false, false);
+        }
+        var gridCheck = document.querySelector('td[data-href="' + url + '"] .habit-check');
+        if (gridCheck) gridCheck.classList.toggle('checked', data.completed);
       })
       .catch(function() {
         window.location.href = url;
