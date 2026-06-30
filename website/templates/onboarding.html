@@ -799,12 +799,6 @@
       document.getElementById(id).classList.remove('vis');
     });
 
-    /* reset bird */
-    var bird = document.getElementById('obBird');
-    bird.style.animation = 'none';
-    void bird.offsetWidth;
-    bird.style.animation = '';
-
     /* submit the habits the user selected in step 7 */
     var container = document.getElementById('habitsContainer');
     container.innerHTML = '';
