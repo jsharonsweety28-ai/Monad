@@ -668,6 +668,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+/* Prevent double-submission: disable the submit button the instant any form is submitted. */
+document.addEventListener('submit', function(e) {
+  var form = e.target;
+  if (form.dataset.submitted === 'true') { e.preventDefault(); return; }
+  var btn = form.querySelector('button[type="submit"], input[type="submit"]');
+  if (btn && btn.disabled) { e.preventDefault(); return; }
+  form.dataset.submitted = 'true';
+  if (btn) btn.disabled = true;
+  setTimeout(function() {
+    form.dataset.submitted = 'false';
+    if (btn) btn.disabled = false;
+  }, 5000);
+}, true);
 </script>
 {% if current_user.is_authenticated %}
 <script>
