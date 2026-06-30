@@ -143,6 +143,11 @@
         <input type="text" name="name" value="{{ current_user.name or '' }}" placeholder="Your name"
                style="width:100%; padding:12px 14px; border:2px solid var(--border-color); border-radius:10px; background:var(--input-bg); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:0.95rem; box-sizing:border-box;">
       </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Email</label>
+        <input type="text" value="{{ current_user.email }}" disabled
+               style="width:100%; padding:12px 14px; border:2px solid var(--border-color); border-radius:10px; background:var(--input-bg); color:var(--text-secondary); font-family:'Inter',sans-serif; font-size:0.95rem; box-sizing:border-box; cursor:not-allowed;">
+      </div>
       <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:10px;">Life Phase</label>
       <div class="option-grid">
         {% set phases = [('school','🎒','School'),('college','📚','College'),('working','💼','Working'),('other','🌟','Other')] %}
