@@ -336,8 +336,11 @@
             </div>
             <small style="color:var(--text-secondary); min-width:35px;">{{ h.completed_users|length }}/{{ h.total_members }}</small>
             {% if is_member %}
-              <div class="habit-check {% if current_user.id in h.completed_users %}checked{% endif %}" 
+              <div class="habit-check {% if current_user.id in h.completed_users %}checked{% endif %}"
                    onclick="window.location.href='{{ url_for('views.toggle_community_habit', habit_id=h.habit.id) }}'"></div>
+              <a href="{{ url_for('views.delete_community_habit', habit_id=h.habit.id) }}"
+                 onclick="return confirm('Remove this habit from the community for everyone?')"
+                 title="Delete habit" style="margin-left:8px; color:#ef4444; text-decoration:none; font-size:0.9rem;">✕</a>
             {% endif %}
           </div>
         </div>

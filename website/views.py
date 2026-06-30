@@ -1667,8 +1667,15 @@ def community_detail(community_id):
     community = Community.query.get_or_404(community_id)
     is_member = CommunityMember.query.filter_by(community_id=community_id, user_id=current_user.id).first() is not None
     if request.method == 'POST' and is_member:
-        habit_name = request.form.get('habit_name')
+        habit_name = request.form.get('habit_name', '').strip()
         if habit_name:
+            existing = CommunityHabit.query.filter(
+                CommunityHabit.community_id == community.id,
+                db.func.lower(CommunityHabit.name) == habit_name.lower()
+            ).first()
+            if existing:
+                flash('That habit already exists in this community.', 'info')
+                return redirect(url_for('views.community_detail', community_id=community_id))
             new_habit = CommunityHabit(name=habit_name, community_id=community.id)
             db.session.add(new_habit)
             db.session.flush()
@@ -1791,6 +1798,18 @@ def toggle_community_habit(habit_id):
     if new_status:
         flash(today.strftime("%Y-%m-%d"), 'habit_photo')
     return redirect(request.referrer)
+
+@views.route('/community/habit/delete/<int:habit_id>')
+@login_required
+def delete_community_habit(habit_id):
+    community_habit = CommunityHabit.query.get_or_404(habit_id)
+    if not CommunityMember.query.filter_by(community_id=community_habit.community_id, user_id=current_user.id).first():
+        abort(403)
+    community_id = community_habit.community_id
+    db.session.delete(community_habit)
+    db.session.commit()
+    flash('Habit removed from community.', 'success')
+    return redirect(url_for('views.community_detail', community_id=community_id))
 
 @views.route('/community/leave/<int:community_id>')
 @login_required
