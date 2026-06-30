@@ -317,6 +317,13 @@
 
     <button type="submit" class="btn-save">Save Preferences</button>
   </form>
+
+  <div class="settings-card">
+    <h4>🚪 Account</h4>
+    <a href="{{ url_for('auth.logout') }}" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; background:var(--danger-bg); border:1px solid var(--danger-border); border-radius:10px; color:#dc2626; font-weight:600; font-size:0.9rem; text-decoration:none;">
+      <i class="bi bi-box-arrow-right"></i> Log out
+    </a>
+  </div>
 </div>
 
 <script>
