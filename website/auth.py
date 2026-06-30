@@ -1,22 +1,17 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, session,current_app
 from .models import User
-from . import db, limiter, mail, oauth
+from . import db, limiter, oauth
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
-from flask_mail import Message
-import re, random, secrets, time, socket
+import re, random, secrets, time, os, requests
 
 auth = Blueprint('auth', __name__)
 
 
 def _send_otp(email, otp):
-    print("=== OTP: Creating email ===", flush=True)
+    print("=== OTP: Sending via Brevo ===", flush=True)
 
-    msg = Message(
-        subject='monad: your verification code',
-        recipients=[email],
-        body=f"Your monad verification code is: {otp}\n\nThis code expires in 10 minutes. If you didn't request this, you can safely ignore this email.",
-        html=f"""<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif">
@@ -37,28 +32,36 @@ def _send_otp(email, otp):
   </table>
 </body>
 </html>"""
-    )
 
-    print("=== OTP: About to call mail.send() ===", flush=True)
+    api_key = os.environ.get('BREVO_API_KEY')
+    sender_email = os.environ.get('BREVO_SENDER_EMAIL') or os.environ.get('MAIL_USERNAME')
 
-    old_timeout = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(8)
+    if not api_key:
+        raise RuntimeError("BREVO_API_KEY is missing")
+
     try:
-        print("MAIL_USERNAME:", current_app.config["MAIL_USERNAME"])
-        print("MAIL_SERVER:", current_app.config["MAIL_SERVER"])
-        print("MAIL_PORT:", current_app.config["MAIL_PORT"])
-
-        mail.send(msg)
-
-        print("MAIL SENT SUCCESSFULLY")
+        resp = requests.post(
+            'https://api.brevo.com/v3/smtp/email',
+            headers={
+                'api-key': api_key,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            json={
+                'sender': {'name': 'monad', 'email': sender_email},
+                'to': [{'email': email}],
+                'subject': 'monad: your verification code',
+                'htmlContent': html,
+                'textContent': f"Your monad verification code is: {otp}\n\nThis code expires in 10 minutes. If you didn't request this, you can safely ignore this email.",
+            },
+            timeout=10,
+        )
+        resp.raise_for_status()
+        print("MAIL SENT SUCCESSFULLY via Brevo")
 
     except Exception as e:
         print("MAIL ERROR:", repr(e))
         raise
-    finally:
-        socket.setdefaulttimeout(old_timeout)
-
-    print("=== OTP: mail.send() finished successfully ===", flush=True)
 
 
 @auth.route('/login', methods=['GET', 'POST'])
