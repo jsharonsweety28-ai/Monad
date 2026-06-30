@@ -988,6 +988,7 @@
   let callStartTime = null, callTimerInterval = null;
   let micEnabled = true, camEnabled = true;
   let incomingCallData = null;
+  let callRingTimeout = null;
 
   function showCallState(stateId) {
     ['callStatePerm','callStateOut','callStateIn','callStateActive','callStateEnded']
@@ -1071,6 +1072,15 @@
       .then(d => {
         callId = d.call_id;
         callPollTimer = setInterval(pollCallStatus, 1500);
+        callRingTimeout = setTimeout(function() {
+          if (callRole === 'caller' && callId) {
+            fetch('/connect/call/end', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ call_id: callId })
+            });
+            showEndedState('No answer');
+          }
+        }, 30000);
       });
   }
 
@@ -1107,6 +1117,16 @@
     }, 2000);
   }
 
+  // Fire a system notification if this tab is in the background
+  function notifyIncomingCall(title, body) {
+    if (!document.hidden) return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      const n = new Notification(title, { body: body, icon: '/static/icons/icon-192.png' });
+      n.onclick = function() { window.focus(); n.close(); };
+    } catch (e) {}
+  }
+
   function showIncomingCall(data) {
     incomingCallData = data;
     callId       = data.call_id;
@@ -1114,11 +1134,19 @@
     callPeerId   = data.caller_id;
     callPeerName = data.caller_name;
     callRole     = 'callee';
+    notifyIncomingCall(data.caller_name + ' is calling', data.call_type === 'video' ? '📹 Video call' : '📞 Voice call');
 
     document.getElementById('inAvatar').textContent = (data.caller_name[0] || '?').toUpperCase();
     document.getElementById('inName').textContent   = data.caller_name + ' is calling';
     document.getElementById('inSub').textContent    = data.call_type === 'video' ? '📹 Video call' : '📞 Voice call';
     showCallState('callStateIn');
+
+    // Auto-decline if not answered within 30s
+    setTimeout(function() {
+      if (incomingCallData && incomingCallData.call_id === data.call_id) {
+        declineCall();
+      }
+    }, 30000);
   }
 
   window.acceptCall = async function() {
@@ -1196,6 +1224,7 @@
 
   function showActiveCallUI() {
     clearInterval(callPollTimer); // will restart below for callee; already running for caller
+    if (callRingTimeout) { clearTimeout(callRingTimeout); callRingTimeout = null; }
     showCallState('callStateActive');
     document.getElementById('activeName').textContent = callPeerName;
     micEnabled = true; camEnabled = true;
@@ -1227,6 +1256,7 @@
   function showEndedState(msg) {
     clearInterval(callPollTimer);
     clearInterval(callTimerInterval);
+    if (callRingTimeout) { clearTimeout(callRingTimeout); callRingTimeout = null; }
     const dur = callStartTime
       ? (() => { const s = Math.floor((Date.now() - callStartTime) / 1000);
                  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); })()
@@ -1292,6 +1322,7 @@
   let gcMicOn        = true;
   let gcCamOn        = true;
   let gcPendingIn    = null;       // pending incoming group call data
+  let gcWaitTimeout  = null;       // 30s "no one joined" timeout for initiator
 
   // Initiate a group call from a group chat
   window.initiateGroupCall = async function(type) {
@@ -1319,11 +1350,19 @@
     const data = await res.json();
     gcRoomId   = data.room_id;
 
-    // Show the group call UI
-    showGcallUI(gcGroupName, type);
+    // Show the group call UI in a "waiting for others" state
+    showGcallUI(gcGroupName, type, true);
 
     // Add our own tile
     addGcallTile(currentUserId, 'You', gcLocalStream, true);
+
+    // If no one joins within 30s, end the call automatically
+    gcWaitTimeout = setTimeout(function() {
+      if (gcRoomId && Object.keys(gcPeers).length === 0) {
+        window.leaveGroupCall();
+        alert('No one joined the call.');
+      }
+    }, 30000);
 
     // Start poll — will handle new joiners
     gcPollTimer = setInterval(pollGroupCall, 1500);
@@ -1355,7 +1394,7 @@
       body: JSON.stringify({ room_id: gcRoomId })
     });
 
-    showGcallUI(gcGroupName, gcCallType);
+    showGcallUI(gcGroupName, gcCallType, false);
     addGcallTile(currentUserId, 'You', gcLocalStream, true);
 
     // First poll — get existing participants and send them offers
@@ -1381,6 +1420,10 @@
     document.getElementById('gcallInSub').textContent =
       data.community_name + ' · ' + count + ' participant' + (count !== 1 ? 's' : '');
     document.getElementById('gcallIncoming').style.display = 'flex';
+    notifyIncomingCall(
+      data.initiator_name + ' started a call in ' + data.community_name,
+      data.call_type === 'video' ? '📹 Video call' : '📞 Voice call'
+    );
     // Auto-dismiss after 30s
     setTimeout(dismissGroupIncoming, 30000);
   }
@@ -1390,15 +1433,23 @@
     gcPendingIn = null;
   };
 
-  function showGcallUI(name, type) {
+  function showGcallUI(name, type, waiting) {
     document.getElementById('gcallTitle').textContent = name;
-    document.getElementById('gcallSub').textContent   = type === 'video' ? '📹 Video call' : '📞 Voice call';
+    document.getElementById('gcallSub').textContent   =
+      waiting ? 'Waiting for others to join…' : (type === 'video' ? '📹 Video call' : '📞 Voice call');
     document.getElementById('gcallGrid').innerHTML    = '';
     document.getElementById('gcallOverlay').style.display = 'flex';
     if (type === 'audio') {
       document.getElementById('gcallBtnCam').style.display = 'none';
     }
-    gcMicOn = true; gcCamOn = true; gcStartTime = Date.now();
+    gcMicOn = true; gcCamOn = true;
+    if (!waiting) startGcallTimer();
+  }
+
+  function startGcallTimer() {
+    if (gcTimerIv) return;
+    if (gcWaitTimeout) { clearTimeout(gcWaitTimeout); gcWaitTimeout = null; }
+    gcStartTime = Date.now();
     gcTimerIv = setInterval(() => {
       const s = Math.floor((Date.now() - gcStartTime) / 1000);
       document.getElementById('gcallTimer').textContent =
@@ -1520,6 +1571,12 @@
       gcPeerNames[p.id] = p.name;
       if (!document.getElementById(`gc-tile-${p.id}`)) {
         addGcallTile(p.id, p.name, null, false);
+        // First other participant — exit the "waiting" state and start the timer.
+        if (gcWaitTimeout) {
+          startGcallTimer();
+          document.getElementById('gcallSub').textContent =
+            gcCallType === 'video' ? '📹 Video call' : '📞 Voice call';
+        }
         // New joiner will send US an offer; we wait. But if we joined first, we send them one.
         // Rule: lower ID sends the offer to avoid double-offer.
         if (currentUserId < p.id) {
@@ -1575,6 +1632,8 @@
 
   function endGroupCallUI(msg) {
     clearInterval(gcPollTimer); clearInterval(gcTimerIv);
+    gcTimerIv = null;
+    if (gcWaitTimeout) { clearTimeout(gcWaitTimeout); gcWaitTimeout = null; }
     Object.values(gcPeers).forEach(pc => pc.close());
     gcPeers = {}; gcPeerNames = {};
     if (gcLocalStream) { gcLocalStream.getTracks().forEach(t => t.stop()); gcLocalStream = null; }
