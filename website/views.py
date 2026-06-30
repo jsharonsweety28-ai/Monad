@@ -1581,7 +1581,7 @@ def create_community():
     name = request.form.get('name')
     description = request.form.get('description')
     category = request.form.get('category', 'other')
-    invite_code = request.form.get('invite_code')
+    invite_code = request.form.get('invite_code', '').strip().upper()
     if not invite_code:
         invite_code = generate_invite_code()
     if Community.query.filter_by(invite_code=invite_code).first():
