@@ -2950,24 +2950,33 @@ def send_habit_reminder():
 
 @views.route('/api/push/morning-reminder', methods=['POST', 'GET'])
 def send_morning_reminder():
-    """Daily morning push: task count + upcoming exams. Run at ~8am."""
+    """Morning push at each user's wake_time. Run every 15 min via cron."""
     secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
     if secret != os.environ.get('CRON_SECRET', ''):
         return jsonify({'error': 'unauthorized'}), 401
-    today    = date.today()
+    now      = datetime.utcnow()
+    today    = now.date()
     tomorrow = today + timedelta(days=1)
+    now_min  = now.hour * 60 + now.minute  # current UTC minute-of-day
     subs     = PushSubscription.query.all()
     sent     = 0
     for sub in subs:
         user = User.query.get(sub.user_id)
-        if not user:
+        if not user or not user.wake_time:
+            continue
+        # Parse user's wake_time (stored as "HH:MM", treated as UTC)
+        try:
+            wh, wm  = map(int, user.wake_time.split(':'))
+            wake_min = wh * 60 + wm
+        except Exception:
+            continue
+        # Only fire if current time is within a 15-minute window of their wake time
+        if not (wake_min <= now_min < wake_min + 15):
             continue
         name = user.name.split()[0] if user.name else 'there'
-        # Tasks due today
         tasks_today = Task.query.filter_by(user_id=sub.user_id, completed=False).filter(
             db.func.date(Task.date) == today
         ).all()
-        # Exams today or tomorrow
         exams_soon = Exam.query.join(Subject).filter(
             Subject.user_id == sub.user_id,
             Exam.date.in_([today, tomorrow])
@@ -2981,54 +2990,10 @@ def send_morning_reminder():
                 parts.append(f"{ex.title} {label}")
         if not parts:
             continue
-        body = f"Hey {name}! " + ", ".join(parts) + "."
+        body = f"Good morning, {name}! " + ", ".join(parts) + "."
         ok = _send_push(sub, title='monad · good morning', body=body, url='/daily')
         if ok:
             sent += 1
-    return jsonify({'sent': sent})
-
-@views.route('/api/push/task-due', methods=['POST', 'GET'])
-def send_task_due_reminder():
-    """Task due-time push. Run every 15 min — notifies tasks due in next 15 min."""
-    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
-    if secret != os.environ.get('CRON_SECRET', ''):
-        return jsonify({'error': 'unauthorized'}), 401
-    now   = datetime.utcnow()
-    today = now.date()
-    # Window: tasks whose due_time falls in the next 0–15 minutes
-    now_min   = now.hour * 60 + now.minute
-    win_start = now_min
-    win_end   = now_min + 15
-    subs  = PushSubscription.query.all()
-    sent  = 0
-    for sub in subs:
-        user = User.query.get(sub.user_id)
-        if not user:
-            continue
-        tasks = Task.query.filter(
-            Task.user_id   == sub.user_id,
-            Task.completed == False,
-            db.func.date(Task.date) == today,
-            Task.due_time  != None,
-            Task.reminder_offset != None
-        ).all()
-        for task in tasks:
-            try:
-                h, m   = map(int, task.due_time.split(':'))
-                due_min = h * 60 + m
-                offset  = int(task.reminder_offset or 0)
-                notify_at = due_min + offset   # offset is negative for "before"
-                if win_start <= notify_at < win_end:
-                    label = 'now' if offset == 0 else f"in {abs(offset)} min"
-                    _send_push(
-                        sub,
-                        title='monad · task',
-                        body=f"{task.content} — due {label}",
-                        url='/daily'
-                    )
-                    sent += 1
-            except Exception:
-                continue
     return jsonify({'sent': sent})
 
 @views.route('/study/exams')
