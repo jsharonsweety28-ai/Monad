@@ -3,6 +3,13 @@
 {% block page_title %}connect{% endblock %}
 {% block content %}
 
+<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:60vh; gap:16px; color:var(--text-secondary); text-align:center;">
+  <i class="bi bi-chat-dots" style="font-size:3rem; opacity:0.3;"></i>
+  <div style="font-size:1.1rem; font-weight:600; color:var(--text-primary);">Connect — coming soon</div>
+  <div style="font-size:0.88rem; max-width:320px; line-height:1.6;">Chat and video calls will be available here. Check back soon!</div>
+</div>
+
+{% if false %}
 <style>
   /* ══════════════════════════════════════════
      WRAPPER
@@ -1672,5 +1679,7 @@
     btn.innerHTML = isMuted ? '<i class="bi bi-volume-mute-fill"></i>' : '<i class="bi bi-volume-up-fill"></i>';
   };
 </script>
+
+{% endif %}
 
 {% endblock %}
