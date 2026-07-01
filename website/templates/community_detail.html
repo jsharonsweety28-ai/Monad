@@ -228,18 +228,18 @@
   <!-- Perfect Day Banner -->
   {% if today_is_perfect %}
   <div class="perfect-banner">
-    <div class="perfect-crown"><i class="bi bi-crown-fill"></i></div>
+    <div class="perfect-crown"><i class="bi bi-gem"></i></div>
     <div>
       <div class="perfect-title">Crown Day!</div>
       <div class="perfect-sub">Every member checked in today — the whole crew showed up!</div>
     </div>
     {% if perfect_days > 0 %}
-    <div class="perfect-count-chip">{{ perfect_days }} <i class="bi bi-crown-fill"></i> this month</div>
+    <div class="perfect-count-chip">{{ perfect_days }} <i class="bi bi-gem"></i> this month</div>
     {% endif %}
   </div>
   {% elif perfect_days > 0 %}
   <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--hover);border-radius:12px;margin-bottom:16px;font-size:.82rem;color:var(--text-secondary);">
-    <i class="bi bi-crown-fill"></i>
+    <i class="bi bi-gem"></i>
     <span><strong style="color:var(--text-primary);">{{ perfect_days }} crown day{{ 's' if perfect_days != 1 }}</strong> this month — keep it going!</span>
   </div>
   {% endif %}

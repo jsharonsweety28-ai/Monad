@@ -170,7 +170,7 @@
       <div class="stat-lbl">Stars This Month</div>
     </div>
     <div class="stat-card" style="animation-delay:0.11s">
-      <div class="stat-icon icon-crowns"><i class="bi bi-crown-fill"></i></div>
+      <div class="stat-icon icon-crowns"><i class="bi bi-gem"></i></div>
       <div class="stat-num">{{ total_crowns }}</div>
       <div class="stat-lbl">Crowns This Month</div>
     </div>
@@ -203,9 +203,9 @@
           {% if day.earned or day.crown %}style="animation-delay: {{ loop.index * 0.03 }}s"{% endif %}>
           <span class="star-num">{{ day.day }}</span>
           <span class="star-icon">
-            {% if day.earned and day.crown %}<i class="bi bi-star-fill" style="color:#f59e0b"></i><i class="bi bi-crown-fill" style="color:#a855f7"></i>
+            {% if day.earned and day.crown %}<i class="bi bi-star-fill" style="color:#f59e0b"></i><i class="bi bi-gem" style="color:#a855f7"></i>
             {% elif day.earned %}<i class="bi bi-star-fill" style="color:#f59e0b"></i>
-            {% elif day.crown %}<i class="bi bi-crown-fill" style="color:#a855f7"></i>
+            {% elif day.crown %}<i class="bi bi-gem" style="color:#a855f7"></i>
             {% elif day.is_future %}·
             {% else %}—{% endif %}
           </span>
@@ -221,7 +221,7 @@
 
   <!-- All-time -->
   <div class="alltime-card">
-    <div class="alltime-star"><i class="bi bi-star-fill" style="color:#fde68a"></i> {{ all_time_stars }} · <i class="bi bi-crown-fill" style="color:#e9d5ff"></i> {{ all_time_crowns }}</div>
+    <div class="alltime-star"><i class="bi bi-star-fill" style="color:#fde68a"></i> {{ all_time_stars }} · <i class="bi bi-gem" style="color:#e9d5ff"></i> {{ all_time_crowns }}</div>
     <div class="alltime-lbl">All-Time Stars &amp; Crowns Collected</div>
   </div>
 
