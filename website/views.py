@@ -2948,6 +2948,89 @@ def send_habit_reminder():
                 sent += 1
     return jsonify({'sent': sent})
 
+@views.route('/api/push/morning-reminder', methods=['POST', 'GET'])
+def send_morning_reminder():
+    """Daily morning push: task count + upcoming exams. Run at ~8am."""
+    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
+    if secret != os.environ.get('CRON_SECRET', ''):
+        return jsonify({'error': 'unauthorized'}), 401
+    today    = date.today()
+    tomorrow = today + timedelta(days=1)
+    subs     = PushSubscription.query.all()
+    sent     = 0
+    for sub in subs:
+        user = User.query.get(sub.user_id)
+        if not user:
+            continue
+        name = user.name.split()[0] if user.name else 'there'
+        # Tasks due today
+        tasks_today = Task.query.filter_by(user_id=sub.user_id, completed=False).filter(
+            db.func.date(Task.date) == today
+        ).all()
+        # Exams today or tomorrow
+        exams_soon = Exam.query.join(Subject).filter(
+            Subject.user_id == sub.user_id,
+            Exam.date.in_([today, tomorrow])
+        ).all()
+        parts = []
+        if tasks_today:
+            parts.append(f"{len(tasks_today)} task{'s' if len(tasks_today) != 1 else ''} today")
+        if exams_soon:
+            for ex in exams_soon:
+                label = 'today' if ex.date == today else 'tomorrow'
+                parts.append(f"{ex.title} {label}")
+        if not parts:
+            continue
+        body = f"Hey {name}! " + ", ".join(parts) + "."
+        ok = _send_push(sub, title='monad · good morning', body=body, url='/daily')
+        if ok:
+            sent += 1
+    return jsonify({'sent': sent})
+
+@views.route('/api/push/task-due', methods=['POST', 'GET'])
+def send_task_due_reminder():
+    """Task due-time push. Run every 15 min — notifies tasks due in next 15 min."""
+    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
+    if secret != os.environ.get('CRON_SECRET', ''):
+        return jsonify({'error': 'unauthorized'}), 401
+    now   = datetime.utcnow()
+    today = now.date()
+    # Window: tasks whose due_time falls in the next 0–15 minutes
+    now_min   = now.hour * 60 + now.minute
+    win_start = now_min
+    win_end   = now_min + 15
+    subs  = PushSubscription.query.all()
+    sent  = 0
+    for sub in subs:
+        user = User.query.get(sub.user_id)
+        if not user:
+            continue
+        tasks = Task.query.filter(
+            Task.user_id   == sub.user_id,
+            Task.completed == False,
+            db.func.date(Task.date) == today,
+            Task.due_time  != None,
+            Task.reminder_offset != None
+        ).all()
+        for task in tasks:
+            try:
+                h, m   = map(int, task.due_time.split(':'))
+                due_min = h * 60 + m
+                offset  = int(task.reminder_offset or 0)
+                notify_at = due_min + offset   # offset is negative for "before"
+                if win_start <= notify_at < win_end:
+                    label = 'now' if offset == 0 else f"in {abs(offset)} min"
+                    _send_push(
+                        sub,
+                        title='monad · task',
+                        body=f"{task.content} — due {label}",
+                        url='/daily'
+                    )
+                    sent += 1
+            except Exception:
+                continue
+    return jsonify({'sent': sent})
+
 @views.route('/study/exams')
 @login_required
 def study_exams():

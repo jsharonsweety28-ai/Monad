@@ -468,6 +468,20 @@
   .empty-emoji { font-size: 56px; display: block; margin-bottom: 14px; }
   .empty-state h4 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
 
+  /* ── Time row in add form ── */
+  .time-row {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%;
+  }
+  .time-field-group {
+    display: flex; align-items: center; gap: 5px;
+  }
+  .time-field-label {
+    font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap;
+  }
+  .time-sep {
+    font-size: 0.75rem; color: var(--text-secondary);
+  }
+
   @media (max-width: 600px) {
     .day-greeting { font-size: 1.35rem; }
     .progress-ring { width: 64px; height: 64px; }
@@ -476,6 +490,13 @@
     .add-row .task-input { flex: 1 1 100%; min-width: 0; }
     .add-row .btn-details { order: 2; }
     .btn-add { flex: 1; order: 3; text-align: center; border-radius: 99px; }
+    .add-details { flex-direction: column; gap: 8px; }
+    .add-select { width: 100%; box-sizing: border-box; }
+    .time-row { justify-content: space-between; }
+    .time-field-group { flex: 1; }
+    .add-time { flex: 1; min-width: 0; width: 100%; box-sizing: border-box; }
+    #addReminderOffset { width: 100%; box-sizing: border-box; }
+    #btnRecurring { align-self: flex-start; }
   }
 </style>
 
@@ -587,12 +608,18 @@
           <option value="medium">🟡 Medium</option>
           <option value="low">🟢 Low</option>
         </select>
-        <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-          <input type="time" name="due_time" class="add-time" id="addDueTime" oninput="updateTimePreview('addDueTime','addDuePreview')">
-          {% if current_user.time_format == '12h' %}<span class="time-preview" id="addDuePreview"></span>{% endif %}
-          <span style="font-size:0.75rem; color:var(--text-secondary);">→</span>
-          <input type="time" name="end_time" class="add-time" id="addEndTime" oninput="updateTimePreview('addEndTime','addEndPreview')">
-          {% if current_user.time_format == '12h' %}<span class="time-preview" id="addEndPreview"></span>{% endif %}
+        <div class="time-row">
+          <div class="time-field-group">
+            <span class="time-field-label">From</span>
+            <input type="time" name="due_time" class="add-time" id="addDueTime" oninput="updateTimePreview('addDueTime','addDuePreview')">
+            {% if current_user.time_format == '12h' %}<span class="time-preview" id="addDuePreview"></span>{% endif %}
+          </div>
+          <span class="time-sep">→</span>
+          <div class="time-field-group">
+            <span class="time-field-label">To</span>
+            <input type="time" name="end_time" class="add-time" id="addEndTime" oninput="updateTimePreview('addEndTime','addEndPreview')">
+            {% if current_user.time_format == '12h' %}<span class="time-preview" id="addEndPreview"></span>{% endif %}
+          </div>
         </div>
         <select name="reminder_offset" class="add-select" id="addReminderOffset" style="display:none;">
           <option value="">No reminder</option>
