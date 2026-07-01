@@ -115,7 +115,7 @@
 
 <div class="auth-page">
   <div class="auth-card">
-    <div class="auth-icon">✨</div>
+    <div class="auth-icon"><i class="bi bi-stars" style="font-size:1.5rem"></i></div>
     <h2>Almost there!</h2>
     <p class="subtitle">Email verified for</p>
     <span class="email-chip">{{ email }}</span>
@@ -124,22 +124,22 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <div class="input-group">
-        <span class="input-icon">👤</span>
+        <span class="input-icon"><i class="bi bi-person-fill"></i></span>
         <input type="text" name="name" placeholder="What should we call you?" required autofocus>
       </div>
 
       <div class="input-group">
-        <span class="input-icon">🔐</span>
+        <span class="input-icon"><i class="bi bi-lock-fill"></i></span>
         <input type="password" id="pw" name="password" placeholder="Create a strong password" required>
-        <span class="toggle-pw" onclick="togglePw('pw', this)">👁️</span>
+        <span class="toggle-pw" onclick="togglePw('pw', this)"><i class="bi bi-eye"></i></span>
       </div>
       <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
       <div class="password-hint">✦ At least 7 characters with 1 special character</div>
 
       <div class="input-group">
-        <span class="input-icon">🔐</span>
+        <span class="input-icon"><i class="bi bi-lock-fill"></i></span>
         <input type="password" id="pw2" name="confirm" placeholder="Confirm your password" required>
-        <span class="toggle-pw" onclick="togglePw('pw2', this)">👁️</span>
+        <span class="toggle-pw" onclick="togglePw('pw2', this)"><i class="bi bi-eye"></i></span>
       </div>
       <div id="matchHint" class="match-hint"></div>
 
@@ -147,10 +147,10 @@
     </form>
 
     <div class="features-row">
-      <div class="feature-mini"><span class="fi">📋</span> Tasks</div>
-      <div class="feature-mini"><span class="fi">🎯</span> Habits</div>
-      <div class="feature-mini"><span class="fi">🍅</span> Focus</div>
-      <div class="feature-mini"><span class="fi">🐾</span> Pet</div>
+      <div class="feature-mini"><span class="fi"><i class="bi bi-check2-square"></i></span> Tasks</div>
+      <div class="feature-mini"><span class="fi"><i class="bi bi-bullseye"></i></span> Habits</div>
+      <div class="feature-mini"><span class="fi"><i class="bi bi-stopwatch-fill"></i></span> Focus</div>
+      <div class="feature-mini"><span class="fi"><i class="bi bi-heart-fill"></i></span> Pet</div>
     </div>
   </div>
 </div>
@@ -159,7 +159,7 @@
 function togglePw(id, btn) {
   const inp = document.getElementById(id);
   inp.type = inp.type === 'password' ? 'text' : 'password';
-  btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+  btn.innerHTML = inp.type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
 }
 
 const pw   = document.getElementById('pw');

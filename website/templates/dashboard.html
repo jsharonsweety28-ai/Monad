@@ -301,7 +301,7 @@
               <span class="dt-pri p-{{ task.priority }}">{{ task.priority|title }}</span>
             {% endif %}
             {% if task.due_time %}
-              <span class="dt-time">⏰ {{ task.due_time }}{% if task.end_time %} – {{ task.end_time }}{% endif %}</span>
+              <span class="dt-time"><i class="bi bi-alarm"></i> {{ task.due_time }}{% if task.end_time %} – {{ task.end_time }}{% endif %}</span>
             {% endif %}
           </div>
         </div>

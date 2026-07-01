@@ -144,7 +144,7 @@
   <!-- Hero -->
   <div class="achieve-hero">
     <div>
-      <div class="achieve-title">⭐ Achievements</div>
+      <div class="achieve-title"><i class="bi bi-star-fill" style="color:#f59e0b;margin-right:6px"></i>Achievements</div>
       <div class="achieve-sub">{{ month_name }} · earn a star for every perfect day</div>
       <div style="font-size:0.72rem;font-weight:600;color:var(--accent-1);opacity:0.75;letter-spacing:0.05em;margin-top:4px;">live the legacy</div>
     </div>
@@ -153,34 +153,34 @@
   <!-- Streak banner -->
   {% if current_streak > 0 %}
   <div class="streak-banner">
-    <div class="streak-fire">🔥</div>
+    <div class="streak-fire"><i class="bi bi-fire"></i></div>
     <div class="streak-text">
       <div class="streak-num">{{ current_streak }}-day streak</div>
       <div class="streak-lbl">Keep it going! Don't break the chain.</div>
     </div>
-    <div style="font-size:2rem;">💪</div>
+    <div style="font-size:2rem;"><i class="bi bi-lightning-fill"></i></div>
   </div>
   {% endif %}
 
   <!-- Stats -->
   <div class="stats-row">
     <div class="stat-card" style="animation-delay:0.08s">
-      <div class="stat-icon icon-stars">⭐</div>
+      <div class="stat-icon icon-stars"><i class="bi bi-star-fill"></i></div>
       <div class="stat-num">{{ total_stars }}</div>
       <div class="stat-lbl">Stars This Month</div>
     </div>
     <div class="stat-card" style="animation-delay:0.11s">
-      <div class="stat-icon icon-crowns">👑</div>
+      <div class="stat-icon icon-crowns"><i class="bi bi-crown-fill"></i></div>
       <div class="stat-num">{{ total_crowns }}</div>
       <div class="stat-lbl">Crowns This Month</div>
     </div>
     <div class="stat-card" style="animation-delay:0.14s">
-      <div class="stat-icon icon-streak">🔥</div>
+      <div class="stat-icon icon-streak"><i class="bi bi-fire"></i></div>
       <div class="stat-num">{{ current_streak }}</div>
       <div class="stat-lbl">Current Streak</div>
     </div>
     <div class="stat-card" style="animation-delay:0.18s">
-      <div class="stat-icon icon-best">⚡</div>
+      <div class="stat-icon icon-best"><i class="bi bi-lightning-fill"></i></div>
       <div class="stat-num">{{ max_streak }}</div>
       <div class="stat-lbl">Best Streak</div>
     </div>
@@ -203,9 +203,9 @@
           {% if day.earned or day.crown %}style="animation-delay: {{ loop.index * 0.03 }}s"{% endif %}>
           <span class="star-num">{{ day.day }}</span>
           <span class="star-icon">
-            {% if day.earned and day.crown %}⭐👑
-            {% elif day.earned %}⭐
-            {% elif day.crown %}👑
+            {% if day.earned and day.crown %}<i class="bi bi-star-fill" style="color:#f59e0b"></i><i class="bi bi-crown-fill" style="color:#a855f7"></i>
+            {% elif day.earned %}<i class="bi bi-star-fill" style="color:#f59e0b"></i>
+            {% elif day.crown %}<i class="bi bi-crown-fill" style="color:#a855f7"></i>
             {% elif day.is_future %}·
             {% else %}—{% endif %}
           </span>
@@ -221,7 +221,7 @@
 
   <!-- All-time -->
   <div class="alltime-card">
-    <div class="alltime-star">⭐ {{ all_time_stars }} · 👑 {{ all_time_crowns }}</div>
+    <div class="alltime-star"><i class="bi bi-star-fill" style="color:#fde68a"></i> {{ all_time_stars }} · <i class="bi bi-crown-fill" style="color:#e9d5ff"></i> {{ all_time_crowns }}</div>
     <div class="alltime-lbl">All-Time Stars &amp; Crowns Collected</div>
   </div>
 

@@ -260,7 +260,7 @@
 
   <!-- Hero -->
   <div class="analytics-hero">
-    <div class="analytics-title">📊 Analytics & Insights</div>
+    <div class="analytics-title"><i class="bi bi-bar-chart-fill" style="margin-right:6px"></i>Analytics & Insights</div>
     <div class="analytics-sub">Track where your time and energy goes</div>
   </div>
 
@@ -334,7 +334,7 @@
   <div style="background:linear-gradient(135deg, var(--accent-3) 0%, var(--card-bg) 100%); border:1.5px solid var(--border-color); border-radius:20px; padding:20px 22px; margin-bottom:20px; animation:fadeUp .5s ease both;">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
       <div style="flex:1; min-width:200px;">
-        <div style="font-size:.65rem; font-weight:700; letter-spacing:.1em; color:var(--accent-1); margin-bottom:6px;">🎯 {{ today.year }} GOAL</div>
+        <div style="font-size:.65rem; font-weight:700; letter-spacing:.1em; color:var(--accent-1); margin-bottom:6px;"><i class="bi bi-bullseye"></i> {{ today.year }} GOAL</div>
         <div style="font-size:1.05rem; font-weight:700; color:var(--text-primary); line-height:1.4; margin-bottom:12px;">{{ current_user.year_goal }}</div>
         <div style="height:6px; background:var(--border-color); border-radius:99px; overflow:hidden; max-width:340px;">
           <div style="height:100%; width:{{ pct_through }}%; background:var(--accent-1); border-radius:99px; transition:width 1s ease;"></div>
@@ -361,19 +361,19 @@
   <!-- Stat boxes -->
   <div class="stat-row" style="grid-template-columns:repeat(3,1fr)">
     <div class="stat-box">
-      <div class="stat-box-icon sb-green">✅</div>
+      <div class="stat-box-icon sb-green"><i class="bi bi-check-circle-fill"></i></div>
       <div class="stat-val">{{ "%.0f"|format(weekly_completion_rate) }}%</div>
       <div class="stat-lbl">This Week</div>
       <div class="prog-wrap"><div class="prog-fill" style="width:{{ weekly_completion_rate }}%; background:#10b981;"></div></div>
     </div>
     <div class="stat-box">
-      <div class="stat-box-icon sb-blue">📅</div>
+      <div class="stat-box-icon sb-blue"><i class="bi bi-calendar2-check"></i></div>
       <div class="stat-val">{{ "%.0f"|format(monthly_completion_rate) }}%</div>
       <div class="stat-lbl">This Month</div>
       <div class="prog-wrap"><div class="prog-fill" style="width:{{ monthly_completion_rate }}%; background:#3b82f6;"></div></div>
     </div>
     <div class="stat-box">
-      <div class="stat-box-icon sb-purple">🏆</div>
+      <div class="stat-box-icon sb-purple"><i class="bi bi-trophy-fill"></i></div>
       <div class="stat-val">{{ total_focus_hours|float }}h</div>
       <div class="stat-lbl">Total Focus</div>
     </div>
@@ -382,19 +382,19 @@
   <!-- Focus stats row -->
   <div class="stat-row" style="grid-template-columns:repeat(3,1fr); margin-top:-8px">
     <div class="stat-box">
-      <div class="stat-box-icon sb-orange">⏱</div>
+      <div class="stat-box-icon sb-orange"><i class="bi bi-stopwatch-fill"></i></div>
       {% set th = today_focus_seconds // 3600 %}{% set tm = (today_focus_seconds % 3600) // 60 %}
       <div class="stat-val">{% if th %}{{ th }}h {% endif %}{{ tm }}m</div>
       <div class="stat-lbl">Focus Today</div>
     </div>
     <div class="stat-box">
-      <div class="stat-box-icon sb-green">🔥</div>
+      <div class="stat-box-icon sb-green"><i class="bi bi-fire"></i></div>
       {% set wh = week_focus_seconds // 3600 %}{% set wm = (week_focus_seconds % 3600) // 60 %}
       <div class="stat-val">{% if wh %}{{ wh }}h {% endif %}{{ wm }}m</div>
       <div class="stat-lbl">Focus This Week</div>
     </div>
     <div class="stat-box">
-      <div class="stat-box-icon sb-blue">📆</div>
+      <div class="stat-box-icon sb-blue"><i class="bi bi-calendar-week"></i></div>
       {% set mh = month_focus_seconds // 3600 %}{% set mm_f = (month_focus_seconds % 3600) // 60 %}
       <div class="stat-val">{% if mh %}{{ mh }}h {% endif %}{{ mm_f }}m</div>
       <div class="stat-lbl">Focus This Month</div>
@@ -404,11 +404,11 @@
   <!-- Charts -->
   <div class="chart-grid">
     <div class="acard" style="animation-delay:0.15s">
-      <div class="acard-title"><div class="acard-icon">📅</div> Weekly Tasks</div>
+      <div class="acard-title"><div class="acard-icon"><i class="bi bi-calendar2"></i></div> Weekly Tasks</div>
       <canvas id="weeklyChart"></canvas>
     </div>
     <div class="acard" style="animation-delay:0.2s">
-      <div class="acard-title"><div class="acard-icon">📆</div> Monthly Tasks</div>
+      <div class="acard-title"><div class="acard-icon"><i class="bi bi-calendar3"></i></div> Monthly Tasks</div>
       <canvas id="monthlyChart"></canvas>
     </div>
   </div>
@@ -416,12 +416,12 @@
   <!-- Focus per day + Category breakdown -->
   <div class="chart-grid">
     <div class="acard" style="animation-delay:0.22s">
-      <div class="acard-title"><div class="acard-icon">⏱</div> Focus Minutes This Week</div>
+      <div class="acard-title"><div class="acard-icon"><i class="bi bi-stopwatch"></i></div> Focus Minutes This Week</div>
       <canvas id="focusDayChart"></canvas>
     </div>
     {% if cat_breakdown|length > 1 %}
     <div class="acard" style="animation-delay:0.24s">
-      <div class="acard-title"><div class="acard-icon">📂</div> Tasks by Category</div>
+      <div class="acard-title"><div class="acard-icon"><i class="bi bi-folder-fill"></i></div> Tasks by Category</div>
       <canvas id="catChart"></canvas>
     </div>
     {% endif %}
@@ -430,7 +430,7 @@
   <!-- Upcoming exams -->
   {% if exams_upcoming %}
   <div class="acard" style="animation-delay:0.26s">
-    <div class="acard-title"><div class="acard-icon">📋</div> Upcoming Exams</div>
+    <div class="acard-title"><div class="acard-icon"><i class="bi bi-clipboard-fill"></i></div> Upcoming Exams</div>
     <div class="table-responsive">
     <table class="a-table">
       <thead><tr><th>Exam</th><th>Subject</th><th>Date</th><th>Countdown</th></tr></thead>
@@ -458,7 +458,7 @@
   <!-- Habit performance -->
   {% if habit_stats %}
   <div class="acard" style="animation-delay:0.25s">
-    <div class="acard-title"><div class="acard-icon">🎯</div> Habit Performance</div>
+    <div class="acard-title"><div class="acard-icon"><i class="bi bi-bullseye"></i></div> Habit Performance</div>
     <div class="table-responsive">
       <table class="a-table">
         <thead><tr><th>Habit</th><th>Done</th><th>Streak</th><th>Progress</th></tr></thead>
@@ -467,7 +467,7 @@
           <tr>
             <td>{{ h.name }}</td>
             <td>{{ h.completed }}/{{ h.total }}</td>
-            <td>🔥 {{ h.streak }} days</td>
+            <td><i class="bi bi-fire"></i> {{ h.streak }} days</td>
             <td>
               <div class="habit-prog">
                 <div class="habit-bar"><div class="habit-fill" style="width:{{ h.rate }}%"></div></div>
@@ -485,7 +485,7 @@
   <!-- Focus time by task -->
   {% if task_time_stats %}
   <div class="acard" style="animation-delay:0.3s">
-    <div class="acard-title"><div class="acard-icon">⏱</div> Focus Time by Task</div>
+    <div class="acard-title"><div class="acard-icon"><i class="bi bi-stopwatch"></i></div> Focus Time by Task</div>
     <div class="table-responsive">
       <table class="a-table">
         <thead><tr><th>Task</th><th>Time</th><th>Sessions</th></tr></thead>
@@ -506,7 +506,7 @@
   <!-- Recent sessions timeline -->
   {% if recent_sessions %}
   <div class="acard" style="animation-delay:0.35s">
-    <div class="acard-title"><div class="acard-icon">🕐</div> Recent Sessions</div>
+    <div class="acard-title"><div class="acard-icon"><i class="bi bi-clock-fill"></i></div> Recent Sessions</div>
     {% for s in recent_sessions %}
     <div class="session-row">
       <div class="session-dot" style="background:{% if s.mode == 'pomodoro' %}#ef4444{% elif s.mode == 'timer' %}#3b82f6{% else %}#10b981{% endif %}"></div>

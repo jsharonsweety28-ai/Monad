@@ -117,7 +117,7 @@
 
   <!-- Join by Code -->
   <div class="card">
-    <h4>🔗 Join a Community</h4>
+    <h4><i class="bi bi-link-45deg"></i> Join a Community</h4>
     <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:12px;">Enter the invite code or click a shared link.</p>
     <form method="POST" action="{{ url_for('views.join_community_by_code') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -130,16 +130,16 @@
 
   <!-- Create Community -->
   <div class="card">
-    <h4>✨ Create a Community</h4>
+    <h4><i class="bi bi-plus-circle-fill"></i> Create a Community</h4>
     <form method="POST" action="{{ url_for('views.create_community') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-row">
         <input type="text" name="name" placeholder="Community name" required>
         <select name="category">
-          <option value="study">📚 Study</option>
-          <option value="fitness">💪 Fitness</option>
-          <option value="faith">🙏 Faith</option>
-          <option value="other">🌟 Other</option>
+          <option value="study">Study</option>
+          <option value="fitness">Fitness</option>
+          <option value="faith">Faith</option>
+          <option value="other">Other</option>
         </select>
       </div>
       <div class="form-row">
@@ -158,12 +158,12 @@
         <a href="{{ url_for('views.community_detail', community_id=comm.id) }}" class="comm-card">
           <h5>{{ comm.name }}</h5>
           <p class="desc">{{ comm.description or 'No description' }}</p>
-          <span class="code">🔑 {{ comm.invite_code }}</span>
+          <span class="code"><i class="bi bi-key-fill"></i> {{ comm.invite_code }}</span>
           <div class="meta" style="margin-top:6px;">
             <span class="category-badge cat-{{ comm.category }}">{{ comm.category }}</span>
             <span>{{ comm.members|length }} members</span>
           </div>
-          <span class="invite-link">🔗 {{ request.host_url }}join/{{ comm.invite_code }}</span>
+          <span class="invite-link"><i class="bi bi-link-45deg"></i> {{ request.host_url }}join/{{ comm.invite_code }}</span>
         </a>
       {% endfor %}
     </div>

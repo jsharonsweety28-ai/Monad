@@ -563,7 +563,7 @@
            style="width:18px; height:18px; min-width:18px; border-radius:50%; border:2px solid var(--accent-1); cursor:pointer;"></div>
       <span style="font-size:0.88rem; color:var(--text-primary); font-weight:500;">{{ task.content }}</span>
       {% if task.due_time %}
-      <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:auto; white-space:nowrap;">⏰ {{ fmt_time(task.due_time) }}</span>
+      <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:auto; white-space:nowrap;"><i class="bi bi-alarm"></i> {{ fmt_time(task.due_time) }}</span>
       {% endif %}
     </div>
     {% endfor %}
@@ -673,10 +673,10 @@
                 <span class="task-priority p-{{ task.priority }}">{{ 'High' if task.priority == 'high' else 'Medium' if task.priority == 'medium' else 'Low' }}</span>
               {% endif %}
               {% if task.due_time %}
-                <span class="task-due">⏰ {{ fmt_time(task.due_time) }}{% if task.end_time %} → {{ fmt_time(task.end_time) }}{% endif %}</span>
+                <span class="task-due"><i class="bi bi-alarm"></i> {{ fmt_time(task.due_time) }}{% if task.end_time %} → {{ fmt_time(task.end_time) }}{% endif %}</span>
               {% endif %}
               {% if task.focus_time and task.focus_time > 0 %}
-                <span class="task-time">⏱ {{ (task.focus_time // 60) }}m · {{ task.session_count }} sessions</span>
+                <span class="task-time"><i class="bi bi-stopwatch"></i> {{ (task.focus_time // 60) }}m · {{ task.session_count }} sessions</span>
               {% endif %}
               {% if task.recurring_days %}
                 <span class="task-recurring-badge">🔁 recurring</span>

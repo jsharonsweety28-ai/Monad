@@ -219,34 +219,34 @@
     {% if community.description %}<p style="opacity:0.85;">{{ community.description }}</p>{% endif %}
     {% if community.goal %}
       <div style="margin-top:10px; background:rgba(255,255,255,0.15); border-radius:10px; padding:10px 14px; font-size:0.9rem; font-weight:600;">
-        🎯 {{ community.goal }}
+        <i class="bi bi-bullseye"></i> {{ community.goal }}
       </div>
     {% endif %}
-    <div class="invite-code-badge">🔑 {{ community.invite_code }}</div>
+    <div class="invite-code-badge"><i class="bi bi-key-fill"></i> {{ community.invite_code }}</div>
   </div>
 
   <!-- Perfect Day Banner -->
   {% if today_is_perfect %}
   <div class="perfect-banner">
-    <div class="perfect-crown">👑</div>
+    <div class="perfect-crown"><i class="bi bi-crown-fill"></i></div>
     <div>
       <div class="perfect-title">Crown Day!</div>
       <div class="perfect-sub">Every member checked in today — the whole crew showed up!</div>
     </div>
     {% if perfect_days > 0 %}
-    <div class="perfect-count-chip">{{ perfect_days }} 👑 this month</div>
+    <div class="perfect-count-chip">{{ perfect_days }} <i class="bi bi-crown-fill"></i> this month</div>
     {% endif %}
   </div>
   {% elif perfect_days > 0 %}
   <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--hover);border-radius:12px;margin-bottom:16px;font-size:.82rem;color:var(--text-secondary);">
-    <span>👑</span>
+    <i class="bi bi-crown-fill"></i>
     <span><strong style="color:var(--text-primary);">{{ perfect_days }} crown day{{ 's' if perfect_days != 1 }}</strong> this month — keep it going!</span>
   </div>
   {% endif %}
 
   {% if community.created_by == current_user.id %}
     <div class="card" style="padding:16px;">
-      <h4 style="margin-bottom:10px; font-size:0.95rem;">✏️ Edit Shared Goal</h4>
+      <h4 style="margin-bottom:10px; font-size:0.95rem;"><i class="bi bi-pencil-fill"></i> Edit Shared Goal</h4>
       <form method="POST" action="{{ url_for('views.edit_community_goal', community_id=community.id) }}" style="display:flex; gap:10px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="text" name="goal" value="{{ community.goal or '' }}" placeholder="Set a shared goal for everyone…"
@@ -258,21 +258,21 @@
 
   {% if not is_member %}
     <div class="card" style="text-align:center;">
-      <h4>👋 Join this Community</h4>
+      <h4><i class="bi bi-person-plus-fill"></i> Join this Community</h4>
       <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:12px;">
         Become a member to track habits together.
       </p>
       <form method="POST" action="{{ url_for('views.join_community_by_code') }}" style="display:inline;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="invite_code" value="{{ community.invite_code }}">
-        <button type="submit" class="btn-join">👥 Join Community</button>
+        <button type="submit" class="btn-join"><i class="bi bi-people-fill"></i> Join Community</button>
       </form>
     </div>
   {% endif %}
 
   <!-- Shareable Invite Link -->
   <div class="card" style="text-align:center;">
-    <h4>🔗 Invite Friends</h4>
+    <h4><i class="bi bi-link-45deg"></i> Invite Friends</h4>
     <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:10px;">
       Share this link with friends to join instantly:
     </p>
@@ -280,7 +280,7 @@
       <code class="invite-link-code" id="inviteLink">
         {{ request.host_url }}join/{{ community.invite_code }}
       </code>
-      <button onclick="copyInviteLink()" class="btn-copy">📋 Copy Link</button>
+      <button onclick="copyInviteLink()" class="btn-copy"><i class="bi bi-clipboard-fill"></i> Copy Link</button>
     </div>
     <p style="color:var(--text-secondary); font-size:0.75rem; margin-top:8px;">
       Or share code: <strong style="color:var(--accent-1); font-family:'Space Grotesk',monospace;">{{ community.invite_code }}</strong>
@@ -289,15 +289,15 @@
 
   <!-- Leaderboard -->
   <div class="card">
-    <h4 style="margin-bottom:16px;">🏆 Leaderboard <span style="font-weight:400;font-size:.8rem;color:var(--text-secondary);margin-left:6px;">{{ members|length }} members</span></h4>
+    <h4 style="margin-bottom:16px;"><i class="bi bi-trophy-fill"></i> Leaderboard <span style="font-weight:400;font-size:.8rem;color:var(--text-secondary);margin-left:6px;">{{ members|length }} members</span></h4>
     {% for member in leaderboard %}
       {% set rank = loop.index %}
       <div class="lb-row">
         <!-- Rank -->
         <div class="lb-rank">
-          {% if rank == 1 %}🥇
-          {% elif rank == 2 %}🥈
-          {% elif rank == 3 %}🥉
+          {% if rank == 1 %}<i class="bi bi-award-fill" style="color:#f59e0b"></i>
+          {% elif rank == 2 %}<i class="bi bi-award-fill" style="color:#94a3b8"></i>
+          {% elif rank == 3 %}<i class="bi bi-award-fill" style="color:#b45309"></i>
           {% else %}{{ rank }}{% endif %}
         </div>
         <!-- Avatar -->
@@ -315,7 +315,7 @@
             <div class="lb-today-dot" title="Checked in today"></div>
           {% endif %}
           {% if member_streaks[member.id] > 0 %}
-            <div class="lb-stat-chip streak">🔥 {{ member_streaks[member.id] }}d</div>
+            <div class="lb-stat-chip streak"><i class="bi bi-fire"></i> {{ member_streaks[member.id] }}d</div>
           {% endif %}
           <div class="lb-stat-chip">{{ member_weekly[member.id] }}/7 this week</div>
         </div>
@@ -325,7 +325,7 @@
 
   <!-- Habits -->
   <div class="card">
-    <h4>🎯 Today's Habits</h4>
+    <h4><i class="bi bi-bullseye"></i> Today's Habits</h4>
     {% if habits %}
       {% for h in habits %}
         <div class="habit-row">
@@ -359,7 +359,7 @@
   </div>
 
   {% if is_member %}
-    <a href="{{ url_for('views.leave_community', community_id=community.id) }}" class="btn-leave" onclick="return confirm('Leave this community?')">🚪 Leave Community</a>
+    <a href="{{ url_for('views.leave_community', community_id=community.id) }}" class="btn-leave" onclick="return confirm('Leave this community?')"><i class="bi bi-box-arrow-right"></i> Leave Community</a>
   {% endif %}
 </div>
 

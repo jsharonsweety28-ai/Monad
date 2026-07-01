@@ -442,7 +442,7 @@
               <a class="sb-item {% if active_page == 'habits' %}active{% endif %}" href="{{ url_for('views.habits_monthly', year=current_year, month=current_month) }}" data-tip="Habits">
                 <div class="sb-icon"><i class="bi bi-graph-up-arrow"></i></div>
                 <span class="sb-item-label">Habits</span>
-                <span class="sb-streak">🔥</span>
+                <span class="sb-streak"><i class="bi bi-fire"></i></span>
               </a>
               <a class="sb-item {% if active_page == 'pomodoro' %}active{% endif %}" href="{{ url_for('views.pomodoro') }}" data-tip="Focus timer">
                 <div class="sb-icon"><i class="bi bi-stopwatch"></i></div>
@@ -543,7 +543,7 @@
 
   <div class="main-wrap" id="mainWrap">
     <div class="topbar"><div style="display:flex; align-items:center;"><div class="mobile-menu-btn" id="mobileMenuBtn"><i class="bi bi-list"></i></div><div class="topbar-title-wrap"><span class="topbar-title">{% block page_title %}monad{% endblock %}</span></div></div><div class="topbar-right"><button class="topbar-btn" id="bellBtn" title="Enable reminders" onclick="enableNotifications()" style="position:relative;"><i class="bi bi-bell" id="bellIcon"></i><span id="bellDot" style="display:none; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#f59e0b;"></span></button><button class="topbar-btn" title="Share my progress" onclick="openShareCard()" style="color:var(--accent-1);"><i class="bi bi-share-fill"></i></button><a href="{{ url_for('views.settings') }}" class="topbar-btn" title="Settings"><i class="bi bi-gear"></i></a></div></div>
-    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-wrap">{% for category, message in messages %}<div class="flash-msg flash-{{ 'error' if category == 'error' else category }}"><i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-triangle{% elif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>{% if category == 'habit_photo' %}📸 <a href="#" onclick="showPhotoPopup('{{ message }}')">Take a photo of your progress?</a>{% else %}{{ message }}{% endif %}<button class="flash-close" onclick="this.parentElement.remove()">×</button></div>{% endfor %}</div>{% endif %}{% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-wrap">{% for category, message in messages %}<div class="flash-msg flash-{{ 'error' if category == 'error' else category }}"><i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-triangle{% elif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>{% if category == 'habit_photo' %}<i class="bi bi-camera-fill"></i> <a href="#" onclick="showPhotoPopup('{{ message }}')">Take a photo of your progress?</a>{% else %}{{ message }}{% endif %}<button class="flash-close" onclick="this.parentElement.remove()">×</button></div>{% endfor %}</div>{% endif %}{% endwith %}
     <div class="page-content">{{ self.content() }}</div>
     <footer class="app-footer">© {{ current_year }} monad · built for focus, designed for flow</footer>
   </div>
@@ -559,7 +559,7 @@
 
 <!-- Photo Upload Popup -->
 <div id="photoPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--card-bg,#fff); border:2px solid var(--accent-1,#E07B39); border-radius:16px; padding:24px; z-index:9999; box-shadow:0 20px 60px rgba(0,0,0,0.3); width:90%; max-width:400px; text-align:center; margin:0;">
-  <h4 style="margin-bottom:16px; color:var(--text-primary,#2D2A26);">📸 Capture Your Progress</h4>
+  <h4 style="margin-bottom:16px; color:var(--text-primary,#2D2A26);"><i class="bi bi-camera-fill"></i> Capture Your Progress</h4>
   <form method="POST" action="/upload-photo" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="date" id="popupDate">
@@ -589,7 +589,7 @@ function hidePhotoPopup() {
   const el = document.getElementById('topbarGreeting');
   if (!el) return;
   const h = new Date().getHours();
-  const greet = h < 12 ? 'Good morning ☀️' : h < 17 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   {% if current_user and current_user.is_authenticated and current_user.name %}
   el.textContent = greet + ', {{ current_user.name.split(" ")[0] }}';
   {% else %}
@@ -736,8 +736,8 @@ if ('serviceWorker' in navigator) {
         if (getNotified().includes(task.id)) return;
         markNotified(task.id);
         const label = task.offset === 0
-          ? `⏰ Due now: ${task.content}`
-          : `⏰ Due in 5 min: ${task.content}`;
+          ? `Due now: ${task.content}`
+          : `Due in 5 min: ${task.content}`;
         const n = new Notification('monad', {
           body: label,
           tag:  'task-' + task.id,
@@ -800,8 +800,8 @@ if ('serviceWorker' in navigator) {
         function fire() {
           if (getNotifiedSlots().includes(key)) return;
           markSlotNotified(key);
-          new Notification('📚 Class reminder – ' + sl.subject, {
-            body: sl.reminder_note + '\n🕐 Class at ' + sl.start_time,
+          new Notification('Class reminder – ' + sl.subject, {
+            body: sl.reminder_note + '\nClass at ' + sl.start_time,
             tag: 'tt-' + key,
             requireInteraction: true,
           });
@@ -857,17 +857,17 @@ if ('serviceWorker' in navigator) {
         </div>
         <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
           <div style="font-size:1.6rem; font-weight:700;" id="sc-stars">–</div>
-          <div style="font-size:.7rem; opacity:.8;">⭐ stars this month</div>
+          <div style="font-size:.7rem; opacity:.8;"><i class="bi bi-star-fill"></i> stars this month</div>
         </div>
         <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
           <div style="font-size:1.6rem; font-weight:700;" id="sc-streak">–</div>
-          <div style="font-size:.7rem; opacity:.8;">🔥 day streak</div>
+          <div style="font-size:.7rem; opacity:.8;"><i class="bi bi-fire"></i> day streak</div>
         </div>
       </div>
 
       <!-- Focus bar -->
       <div style="background:rgba(255,255,255,.12); border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:.8rem; opacity:.85;">⏱ Focus today</span>
+        <span style="font-size:.8rem; opacity:.85;"><i class="bi bi-stopwatch-fill"></i> Focus today</span>
         <span style="font-weight:700;" id="sc-focus">– mins</span>
       </div>
 
@@ -942,7 +942,7 @@ function shareCard() {
         navigator.share({
           files: [file],
           title: 'My monad progress',
-          text: 'Check out my productivity stats on monad! 🚀'
+          text: 'Check out my productivity stats on monad!'
         }).catch(() => {});
       } else {
         // Fallback: download the image
