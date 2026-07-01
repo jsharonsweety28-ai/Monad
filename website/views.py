@@ -3068,12 +3068,11 @@ def send_class_reminder():
                     remind_min = rh * 60 + rm
                 except Exception:
                     continue
-                if now_min <= remind_min < win_end:
-                    note = slot.reminder_note or f"{subject.name} at {slot.start_time}"
+                if now_min <= remind_min < win_end and slot.reminder_note:
                     _send_push(
                         sub,
                         title=f'monad · {subject.name}',
-                        body=note,
+                        body=slot.reminder_note,
                         url='/study/timetable'
                     )
                     sent += 1
