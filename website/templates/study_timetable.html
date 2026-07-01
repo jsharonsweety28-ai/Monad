@@ -199,9 +199,9 @@
     <label class="modal-label">Room (optional)</label>
     <input class="modal-input" id="slotRoom" placeholder="e.g. Room 204" autocomplete="off">
     <label class="modal-label">Reminder note (optional)</label>
-    <textarea class="modal-input" id="slotReminder" rows="2" placeholder="e.g. bring chem record note" style="resize:vertical;min-height:56px" oninput="toggleReminderTime()"></textarea>
-    <div id="reminderTimeRow" style="display:none">
-      <label class="modal-label">Notify me at</label>
+    <textarea class="modal-input" id="slotReminder" rows="2" placeholder="e.g. bring chem record note" style="resize:vertical;min-height:56px"></textarea>
+    <div id="reminderTimeRow">
+      <label class="modal-label">Notify me at <span style="font-size:0.75rem;color:var(--text-secondary);font-weight:400;">(push notification time)</span></label>
       <input class="modal-input" type="time" id="slotReminderTime" value="08:00">
     </div>
     <div class="modal-actions">
@@ -215,10 +215,6 @@
 <script>
 let editingSlotId = null;
 
-function toggleReminderTime() {
-  const hasNote = document.getElementById('slotReminder').value.trim().length > 0;
-  document.getElementById('reminderTimeRow').style.display = hasNote ? '' : 'none';
-}
 function openAddSlot(dayIndex) {
   editingSlotId = null;
   document.getElementById('slotModalTitle').textContent = 'Add Class';
@@ -228,7 +224,6 @@ function openAddSlot(dayIndex) {
   document.getElementById('slotRoom').value         = '';
   document.getElementById('slotReminder').value     = '';
   document.getElementById('slotReminderTime').value = '08:00';
-  document.getElementById('reminderTimeRow').style.display = 'none';
   document.getElementById('slotDelBtn').style.display = 'none';
   document.getElementById('slotModal').classList.add('open');
 }
