@@ -2996,6 +2996,48 @@ def send_morning_reminder():
             sent += 1
     return jsonify({'sent': sent})
 
+@views.route('/api/push/task-reminder', methods=['POST', 'GET'])
+def send_task_reminder():
+    """Task reminder push. Run every 15 min — fires when a task's reminder time hits."""
+    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
+    if secret != os.environ.get('CRON_SECRET', ''):
+        return jsonify({'error': 'unauthorized'}), 401
+    now      = datetime.utcnow()
+    today    = now.date()
+    now_min  = now.hour * 60 + now.minute
+    win_end  = now_min + 15
+    subs     = PushSubscription.query.all()
+    sent     = 0
+    for sub in subs:
+        user = User.query.get(sub.user_id)
+        if not user:
+            continue
+        tasks = Task.query.filter(
+            Task.user_id         == sub.user_id,
+            Task.completed       == False,
+            db.func.date(Task.date) == today,
+            Task.due_time        != None,
+            Task.reminder_offset != None
+        ).all()
+        for task in tasks:
+            try:
+                h, m      = map(int, task.due_time.split(':'))
+                due_min   = h * 60 + m
+                offset    = int(task.reminder_offset)   # 0 = at time, -5 = 5 min before
+                notify_at = due_min + offset
+                if now_min <= notify_at < win_end:
+                    label = 'now' if offset == 0 else f"in {abs(offset)} min"
+                    _send_push(
+                        sub,
+                        title='monad · task reminder',
+                        body=f"{task.content} — due {label}",
+                        url='/daily'
+                    )
+                    sent += 1
+            except Exception:
+                continue
+    return jsonify({'sent': sent})
+
 @views.route('/study/exams')
 @login_required
 def study_exams():
