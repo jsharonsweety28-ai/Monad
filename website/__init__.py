@@ -59,6 +59,7 @@ def create_app():
     oauth.init_app(app)
     from .storage import get_public_url
     app.jinja_env.globals["get_public_url"] = get_public_url
+    app.jinja_env.globals["vapid_public_key"] = os.environ.get("VAPID_PUBLIC_KEY", "")
 
     oauth.register(
         name='google',
@@ -75,7 +76,7 @@ def create_app():
     app.register_blueprint(auth, url_prefix='/')
 
     # Import models so SQLAlchemy is aware of them
-    from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, DailyPhoto, FocusSession, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark
+    from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, DailyPhoto, FocusSession, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark, PushSubscription
 
     # ✅ Login manager setup
     login_manager = LoginManager()

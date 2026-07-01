@@ -244,6 +244,14 @@ class ExamResult(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     marks      = db.relationship('SubjectMark', backref='exam_result', lazy=True, cascade='all, delete-orphan')
 
+class PushSubscription(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    endpoint   = db.Column(db.Text, nullable=False, unique=True)
+    p256dh     = db.Column(db.Text, nullable=False)
+    auth       = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class SubjectMark(db.Model):
     id             = db.Column(db.Integer, primary_key=True)
     exam_result_id = db.Column(db.Integer, db.ForeignKey('exam_result.id'), nullable=False)

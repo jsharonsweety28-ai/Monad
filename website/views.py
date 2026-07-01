@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from .storage import upload_file, get_public_url
 from flask_login import login_required, current_user
 from . import db
-from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, FocusSession, DailyPhoto, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Note, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark
+from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, FocusSession, DailyPhoto, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Note, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark, PushSubscription
+import base64
 from datetime import datetime, timedelta, timezone, date
 import calendar
 import json
@@ -2870,6 +2871,82 @@ def timetable_reminders_today():
     result.sort(key=lambda x: x['start_time'])
     earliest = min(all_starts) if all_starts else None
     return jsonify({'slots': result, 'earliest_class': earliest})
+
+# ── Push Notifications ────────────────────────────────────────────────────────
+
+def _send_push(subscription, title, body, url='/'):
+    try:
+        from pywebpush import webpush, WebPushException
+        pem = base64.b64decode(os.environ.get('VAPID_PRIVATE_KEY', '')).decode()
+        webpush(
+            subscription_info={
+                'endpoint': subscription.endpoint,
+                'keys': {'p256dh': subscription.p256dh, 'auth': subscription.auth}
+            },
+            data=json.dumps({'title': title, 'body': body, 'url': url}),
+            vapid_private_key=pem,
+            vapid_claims={'sub': 'mailto:' + os.environ.get('BREVO_SENDER_EMAIL', 'letsgomonad@gmail.com')}
+        )
+        return True
+    except Exception as e:
+        print(f'Push error: {e}')
+        return False
+
+@views.route('/push/subscribe', methods=['POST'])
+@login_required
+def push_subscribe():
+    data = request.get_json()
+    if not data or not data.get('endpoint'):
+        return jsonify({'error': 'invalid'}), 400
+    existing = PushSubscription.query.filter_by(endpoint=data['endpoint']).first()
+    if existing:
+        existing.p256dh = data['keys']['p256dh']
+        existing.auth   = data['keys']['auth']
+    else:
+        sub = PushSubscription(
+            user_id  = current_user.id,
+            endpoint = data['endpoint'],
+            p256dh   = data['keys']['p256dh'],
+            auth     = data['keys']['auth']
+        )
+        db.session.add(sub)
+    db.session.commit()
+    return jsonify({'status': 'ok'})
+
+@views.route('/api/push/habit-reminder', methods=['POST', 'GET'])
+def send_habit_reminder():
+    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
+    if secret != os.environ.get('CRON_SECRET', ''):
+        return jsonify({'error': 'unauthorized'}), 401
+    today = date.today()
+    subs  = PushSubscription.query.all()
+    sent  = 0
+    for sub in subs:
+        user = User.query.get(sub.user_id)
+        if not user:
+            continue
+        habit_month = HabitMonth.query.filter_by(
+            user_id=sub.user_id, year=today.year, month=today.month
+        ).first()
+        if not habit_month:
+            continue
+        habits = Habit.query.filter_by(habit_month_id=habit_month.id).all()
+        if not habits:
+            continue
+        all_done = all(
+            HabitLog.query.filter_by(habit_id=h.id, date=today, completed=True).first()
+            for h in habits
+        )
+        if not all_done:
+            ok = _send_push(
+                sub,
+                title='monad · habits',
+                body=f"Hey {user.name or 'there'}! Don't forget your habits today.",
+                url=f'/habits/{today.year}/{today.month}'
+            )
+            if ok:
+                sent += 1
+    return jsonify({'sent': sent})
 
 @views.route('/study/exams')
 @login_required

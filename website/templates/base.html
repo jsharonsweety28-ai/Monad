@@ -751,12 +751,36 @@ if ('serviceWorker' in navigator) {
     setInterval(pollReminders, 30000);
   }
 
+  function urlBase64ToUint8Array(b64) {
+    const pad = '='.repeat((4 - b64.length % 4) % 4);
+    const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+  }
+
+  async function subscribePush() {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) return;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array('{{ vapid_public_key }}')
+      });
+      await fetch('/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+        body: JSON.stringify(sub.toJSON())
+      });
+    } catch(e) { console.log('Push subscribe failed', e); }
+  }
+
   window.enableNotifications = function() {
     if (Notification.permission === 'granted') {
-      setGrantedUI(); startPolling(); return;
+      setGrantedUI(); startPolling(); subscribePush(); return;
     }
     Notification.requestPermission().then(p => {
-      if (p === 'granted') { setGrantedUI(); startPolling(); }
+      if (p === 'granted') { setGrantedUI(); startPolling(); subscribePush(); }
     });
   };
 

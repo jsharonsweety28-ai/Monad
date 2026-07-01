@@ -26,3 +26,23 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request).catch(() => caches.match(event.request))
   );
 });
+
+self.addEventListener('push', function(event) {
+  var data = {};
+  try { data = event.data.json(); } catch(e) {}
+  var title   = data.title || 'monad';
+  var options = {
+    body:    data.body || '',
+    icon:    '/static/icons/icon-192.png',
+    badge:   '/static/icons/icon-72.png',
+    data:    { url: data.url || '/' },
+    vibrate: [200, 100, 200]
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  var url = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+  event.waitUntil(clients.openWindow(url));
+});
