@@ -78,6 +78,13 @@ def create_app():
     # Import models so SQLAlchemy is aware of them
     from .models import User, Task, HabitMonth, Habit, HabitLog, DailyJournal, DailyPhoto, FocusSession, Community, CommunityMember, CommunityHabit, CommunityHabitLog, Achievement, TimeBlock, Category, Subject, ClassSlot, Exam, StudyNote, Message, StudentProfile, ExamResult, SubjectMark, PushSubscription
 
+    # Create any missing tables (safe — skips tables that already exist)
+    with app.app_context():
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f'db.create_all warning: {e}')
+
     # ✅ Login manager setup
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
