@@ -21,6 +21,8 @@ def create_app():
     if not secret_key:
         raise RuntimeError('SECRET_KEY environment variable is required')
     app.config['SECRET_KEY'] = secret_key
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE']   = True
 
 
     # Database (Supabase PostgreSQL)

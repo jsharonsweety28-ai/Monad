@@ -3,6 +3,7 @@ from .models import User
 from . import db, limiter, oauth
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
+from authlib.integrations.base_client.errors import MismatchingStateError
 import re, random, secrets, time, os, requests
 
 auth = Blueprint('auth', __name__)
@@ -299,7 +300,11 @@ def google_login():
 
 @auth.route('/auth/google/callback')
 def google_callback():
-    token     = oauth.google.authorize_access_token()
+    try:
+        token = oauth.google.authorize_access_token()
+    except MismatchingStateError:
+        flash('Google sign-in failed — please try again.', category='error')
+        return redirect(url_for('auth.login'))
     user_info = token.get('userinfo')
     if not user_info:
         flash('Google login failed. Please try again.', category='error')
