@@ -5,57 +5,91 @@
 
 <style>
   .memories-page { max-width: 1000px; margin: 0 auto; }
-  .memories-header { background: var(--header-gradient); border-radius: 20px; padding: 24px; color: white; text-align: center; margin-bottom: 24px; box-shadow: 0 8px 25px var(--glow-color); }
-  .memories-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; }
+
+  .memories-header {
+    background: var(--accent-1);
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
+    padding: 24px;
+    color: white;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 4px 4px 0 var(--text-primary);
+  }
+  .memories-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
   .mem-nav { display: flex; justify-content: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-  .mem-nav a { padding: 8px 18px; background: rgba(255,255,255,0.2); border-radius: 20px; color: white; text-decoration: none; font-weight: 600; font-size: 0.85rem; }
+  .mem-nav a {
+    padding: 8px 18px;
+    background: white;
+    border: 2px solid var(--text-primary);
+    border-radius: 6px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0 var(--text-primary);
+    transition: all 0.15s;
+  }
+  .mem-nav a:hover { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .mem-nav a:active { transform: translate(3px,3px); box-shadow: none; }
 
   .square-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
 
   @media (max-width: 600px) {
     .square-grid { gap: 6px; }
-    .memories-header { padding: 16px; border-radius: 14px; }
+    .memories-header { padding: 16px; border-radius: 8px; }
     .mem-nav a { padding: 6px 12px; font-size: 0.78rem; }
     .day-num { font-size: 0.78rem; padding: 5px 6px; }
   }
-  
+
   .day-square {
     aspect-ratio: 1;
     background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
     position: relative;
     display: flex;
     flex-direction: column;
+    box-shadow: 3px 3px 0 var(--text-primary);
   }
-  .day-square:hover { border-color: var(--accent-1); box-shadow: 0 4px 15px var(--glow-color); transform: translateY(-2px); }
-  .day-square.empty { background: var(--input-bg); cursor: default; }
-  .day-square.empty:hover { border-color: var(--border-color); box-shadow: none; transform: none; }
-  .day-square.today { border: 2px solid var(--accent-1); }
+  .day-square:hover { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .day-square.empty { background: var(--body-bg); cursor: default; border-color: var(--text-primary); opacity: 0.35; box-shadow: none; }
+  .day-square.empty:hover { transform: none; box-shadow: none; }
+  .day-square.today { border-color: var(--accent-1); box-shadow: 3px 3px 0 var(--accent-1); }
+  .day-square.today:hover { box-shadow: 2px 2px 0 var(--accent-1); }
   .day-square.future { opacity: 0.4; cursor: default; }
-  .day-square.future:hover { transform: none; }
-  
+  .day-square.future:hover { transform: none; box-shadow: 3px 3px 0 var(--text-primary); }
+
   .day-num {
     padding: 6px 8px;
-    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
     font-size: 0.85rem;
     color: var(--text-primary);
     background: var(--card-bg);
     z-index: 1;
     flex-shrink: 0;
+    border-bottom: 2px solid var(--text-primary);
+    text-transform: uppercase;
   }
-  .today .day-num { background: transparent; color: var(--accent-1); font-weight: 800; }
-  
+  .today .day-num { background: var(--accent-3); color: var(--accent-1); }
+
   .day-photo {
     flex: 1;
     width: 100%;
     object-fit: cover;
     display: block;
   }
-  
+
   .day-upload {
     flex: 1;
     min-height: 0;
@@ -68,37 +102,36 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
-    min-height: 22px;
-    background: var(--input-bg);
-    border: 1.5px dashed var(--border-color);
+    width: 24px;
+    height: 24px;
+    min-height: 24px;
+    background: var(--body-bg);
+    border: 2px solid var(--text-primary);
     color: var(--text-secondary);
-    border-radius: 50%;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.78rem;
+    font-weight: 700;
+    font-size: 0.85rem;
     line-height: 1;
     transition: all 0.15s;
   }
   .day-upload span:hover {
-    background: var(--glow-color);
+    background: var(--accent-3);
     border-color: var(--accent-1);
     color: var(--accent-1);
-    transform: scale(1.08);
   }
   .day-upload span .upload-label { display: none; }
-  
+
   .photo-count {
     position: absolute;
     bottom: 4px;
     right: 4px;
-    background: rgba(0,0,0,0.6);
+    background: var(--text-primary);
     color: white;
     padding: 2px 6px;
-    border-radius: 8px;
+    border-radius: 4px;
     font-size: 0.6rem;
-    font-weight: 600;
+    font-weight: 800;
   }
 
   .day-indicators {
@@ -111,11 +144,26 @@
   .day-indicator {
     width: 7px;
     height: 7px;
-    border-radius: 50%;
+    border-radius: 2px;
+    border: 1px solid var(--text-primary);
   }
-  .dot-journal { background: #10b981; }
+  .dot-journal { background: #10b981; border-color: #10b981; }
 
-  .upload-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: var(--card-bg); border: 2px solid var(--accent-1); border-radius: 16px; padding: 24px; z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 90%; max-width: 400px; text-align: center; }
+  .upload-popup {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    background: var(--card-bg);
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
+    padding: 24px;
+    z-index: 9999;
+    box-shadow: 6px 6px 0 var(--text-primary);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
   .upload-popup.show { display: block; }
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
   .overlay.show { display: block; }

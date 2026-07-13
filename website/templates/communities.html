@@ -7,70 +7,90 @@
   .comm-page { max-width: 800px; margin: 0 auto; }
 
   .comm-header {
-    background: var(--header-gradient);
-    border-radius: 20px;
+    background: var(--accent-1);
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
     padding: 24px;
     color: white;
     text-align: center;
     margin-bottom: 24px;
-    box-shadow: 0 8px 25px var(--glow-color);
+    box-shadow: 4px 4px 0 var(--text-primary);
   }
   .comm-header h2 {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 800;
+    text-transform: uppercase;
   }
 
   .card {
     background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
     padding: 24px;
     margin-bottom: 20px;
+    box-shadow: 4px 4px 0 var(--text-primary);
   }
-  .card h4 { font-weight: 700; color: var(--text-primary); margin-bottom: 14px; font-size: 1rem; }
+  .card h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    font-size: 1rem;
+  }
 
   .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .form-row input, .form-row select {
     flex: 1; min-width: 150px;
     padding: 12px 14px;
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
-    background: var(--input-bg);
+    border: 2px solid var(--text-primary);
+    border-radius: 6px;
+    background: var(--card-bg);
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
     font-size: 0.9rem;
+    outline: none;
   }
-  .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent-1); }
-  
+  .form-row input:focus, .form-row select:focus {
+    border-color: var(--accent-1);
+    box-shadow: 3px 3px 0 var(--accent-1);
+  }
+
   .btn-primary {
     padding: 12px 24px;
     background: var(--accent-1);
     color: white;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
+    border: 2px solid var(--text-primary);
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
     cursor: pointer;
     font-size: 0.9rem;
     white-space: nowrap;
+    box-shadow: 4px 4px 0 var(--text-primary);
+    transition: transform 0.1s, box-shadow 0.1s;
   }
-  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .btn-primary:active { box-shadow: none; transform: translate(4px, 4px); }
 
   .comm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
   .comm-card {
     background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
     padding: 18px;
     text-decoration: none;
     color: var(--text-primary);
     display: block;
-    transition: all 0.2s;
+    box-shadow: 4px 4px 0 var(--text-primary);
+    transition: transform 0.1s, box-shadow 0.1s;
   }
-  .comm-card:hover { border-color: var(--accent-1); box-shadow: 0 4px 15px var(--glow-color); }
-  .comm-card h5 { font-weight: 700; margin-bottom: 4px; }
+  .comm-card:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .comm-card h5 { font-family: 'Space Grotesk', sans-serif; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; }
   .comm-card .desc { color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 8px; }
-  .comm-card .code { font-family: 'Space Grotesk', monospace; font-size: 0.75rem; color: var(--accent-1); font-weight: 600; }
+  .comm-card .code { font-family: 'Space Grotesk', monospace; font-size: 0.75rem; color: var(--accent-1); font-weight: 700; }
   .comm-card .meta { font-size: 0.75rem; color: var(--text-secondary); }
   .comm-card .invite-link {
     display: block;
@@ -83,18 +103,20 @@
   .category-badge {
     display: inline-block;
     padding: 3px 10px;
-    border-radius: 12px;
+    border-radius: 4px;
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1.5px solid;
   }
-  .cat-study { background: rgba(59,130,246,0.1); color: #3b82f6; }
-  .cat-fitness { background: rgba(239,68,68,0.1); color: #ef4444; }
-  .cat-faith { background: rgba(139,92,246,0.1); color: #8b5cf6; }
-  .cat-other { background: rgba(245,158,11,0.1); color: #f59e0b; }
+  .cat-study   { background: rgba(59,130,246,0.1);  color: #3b82f6;  border-color: #3b82f6; }
+  .cat-fitness { background: rgba(239,68,68,0.1);   color: #ef4444;  border-color: #ef4444; }
+  .cat-faith   { background: rgba(139,92,246,0.1);  color: #8b5cf6;  border-color: #8b5cf6; }
+  .cat-other   { background: rgba(245,158,11,0.1);  color: #f59e0b;  border-color: #f59e0b; }
 
   @media (max-width: 600px) {
     .comm-page { padding: 0 2px; }
-    .comm-header { padding: 18px 16px; border-radius: 14px; }
+    .comm-header { padding: 18px 16px; }
     .card { padding: 16px; }
     .form-row { flex-direction: column; }
     .form-row input, .form-row select { min-width: unset; width: 100%; }

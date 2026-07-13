@@ -18,15 +18,16 @@
     animation: fadeUp .4s ease .05s both;
   }
   .su-icon {
-    width: 72px; height: 72px; border-radius: 22px; margin: 0 auto 16px;
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2, #a78bfa));
+    width: 72px; height: 72px; border-radius: 8px; margin: 0 auto 16px;
+    background: var(--accent-1);
     display: flex; align-items: center; justify-content: center;
     font-size: 2rem;
-    box-shadow: 0 8px 24px var(--glow-color);
+    border: 3px solid var(--text-primary); box-shadow: 4px 4px 0 var(--text-primary);
   }
   .su-title {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 1.7rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;
+    text-transform: uppercase;
   }
   .su-sub {
     font-size: .9rem; color: var(--text-secondary); line-height: 1.5;
@@ -34,9 +35,9 @@
 
   /* ── Card ── */
   .su-card {
-    background: var(--card-bg); border: 1.5px solid var(--border-color);
-    border-radius: 24px; padding: 28px;
-    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    background: var(--card-bg); border: 3px solid var(--text-primary);
+    border-radius: 8px; padding: 28px;
+    box-shadow: 4px 4px 0 var(--text-primary);
     animation: floatIn .5s ease .1s both;
   }
 
@@ -45,51 +46,55 @@
     display: flex; gap: 8px; margin-bottom: 22px;
   }
   .su-type-btn {
-    flex: 1; padding: 10px 0; border-radius: 12px; font-size: .85rem; font-weight: 700;
-    border: 1.5px solid var(--border-color); background: var(--hover);
+    flex: 1; padding: 10px 0; border-radius: 6px; font-size: .82rem; font-weight: 800;
+    border: 2px solid var(--text-primary); background: var(--hover);
     color: var(--text-secondary); cursor: pointer; transition: all .18s;
     display: flex; align-items: center; justify-content: center; gap: 6px;
+    box-shadow: 3px 3px 0 var(--text-primary);
+    font-family: 'Space Grotesk', sans-serif; text-transform: uppercase;
   }
   .su-type-btn.active {
-    background: var(--accent-1); color: white; border-color: var(--accent-1);
-    box-shadow: 0 3px 12px var(--glow-color);
+    background: var(--accent-1); color: white; border-color: var(--text-primary);
+    box-shadow: 3px 3px 0 var(--text-primary);
   }
-  .su-type-btn:not(.active):hover { border-color: var(--accent-1); color: var(--accent-1); }
+  .su-type-btn:hover { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--text-primary); }
 
   /* ── Fields ── */
   .su-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .su-field { display: flex; flex-direction: column; gap: 5px; }
   .su-field.full { grid-column: 1 / -1; }
   .su-label {
-    font-size: .72rem; font-weight: 700; color: var(--text-secondary);
-    text-transform: uppercase; letter-spacing: .5px;
+    font-size: .72rem; font-weight: 800; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: .5px; font-family: 'Space Grotesk', sans-serif;
   }
   .su-input {
-    padding: 10px 14px; border-radius: 12px;
-    border: 1.5px solid var(--border-color); background: var(--input-bg, var(--hover));
+    padding: 10px 14px; border-radius: 6px;
+    border: 2px solid var(--text-primary); background: var(--hover);
     color: var(--text-primary); font-size: .88rem; font-family: 'Inter', sans-serif;
     outline: none; transition: border-color .15s, box-shadow .15s;
   }
-  .su-input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px var(--glow-color); }
+  .su-input:focus { border-color: var(--accent-1); box-shadow: 3px 3px 0 var(--accent-1); }
   .su-input::placeholder { color: var(--text-secondary); }
 
   /* ── CTA ── */
   .su-cta {
     margin-top: 24px; width: 100%; padding: 14px;
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2, #a78bfa));
-    color: white; border: none; border-radius: 14px;
-    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
-    cursor: pointer; transition: opacity .2s, transform .15s;
-    box-shadow: 0 4px 16px var(--glow-color);
+    background: var(--accent-1);
+    color: white; border: 2px solid var(--text-primary); border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 800;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 4px 4px 0 var(--text-primary);
     display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-transform: uppercase;
   }
-  .su-cta:hover { opacity: .9; transform: translateY(-1px); }
+  .su-cta:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .su-cta:active { box-shadow: none; transform: translate(4px,4px); }
 
   /* ── Skip link ── */
   .su-skip {
     display: block; text-align: center; margin-top: 14px;
     font-size: .8rem; color: var(--text-secondary);
-    text-decoration: none; transition: color .15s;
+    text-decoration: none; transition: color .15s; font-weight: 700;
   }
   .su-skip:hover { color: var(--text-primary); }
 

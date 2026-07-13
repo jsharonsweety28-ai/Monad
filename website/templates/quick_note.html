@@ -4,30 +4,31 @@
 
 <style>
   .quick-note-container { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .quick-note-card { background: var(--card-bg); border-radius: 24px; padding: 40px; max-width: 500px; width: 100%; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 20px 60px rgba(0,0,0,0.06); animation: slideUp 0.4s ease; }
+  .quick-note-card { background: var(--card-bg); border-radius: 8px; padding: 40px; max-width: 500px; width: 100%; text-align: center; border: 3px solid var(--text-primary); box-shadow: 6px 6px 0 var(--text-primary); animation: slideUp 0.4s ease; }
   @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-  
-  .icon-circle { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 8px 25px var(--glow-color); animation: bounce 1s ease; }
+
+  .icon-circle { width: 70px; height: 70px; border-radius: 8px; background: var(--accent-1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 3px solid var(--text-primary); box-shadow: 4px 4px 0 var(--text-primary); animation: bounce 1s ease; }
   @keyframes bounce { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-15px)} 50%{transform:translateY(0)} 70%{transform:translateY(-8px)} }
-  
-  .quick-note-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 12px 0 8px; }
-  .task-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 16px 0; padding: 12px 20px; background: var(--hover); border-radius: 14px; display: inline-block; border: 1px solid var(--border-color); }
-  .prompt-text { color: var(--accent-1); font-weight: 600; font-size: 0.95rem; margin: 20px 0; line-height: 1.5; padding: 12px 16px; background: var(--hover); border-radius: 12px; border-left: 3px solid var(--accent-1); text-align: left; display: flex; align-items: flex-start; gap: 10px; }
+
+  .quick-note-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 12px 0 8px; text-transform: uppercase; }
+  .task-name { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 16px 0; padding: 12px 20px; background: var(--hover); border-radius: 6px; display: inline-block; border: 2px solid var(--text-primary); }
+  .prompt-text { color: var(--accent-1); font-weight: 700; font-size: 0.95rem; margin: 20px 0; line-height: 1.5; padding: 12px 16px; background: var(--hover); border-radius: 6px; border-left: 4px solid var(--accent-1); border: 2px solid var(--text-primary); text-align: left; display: flex; align-items: flex-start; gap: 10px; }
   .prompt-text svg { flex-shrink: 0; margin-top: 2px; }
-  .note-input { width: 100%; padding: 14px 18px; border: 2px solid var(--border-color); border-radius: 14px; font-size: 0.95rem; background: var(--input-bg); color: var(--text-primary); resize: vertical; min-height: 60px; font-family: 'Inter', sans-serif; }
-  .note-input:focus { outline: none; border-color: var(--accent-1); box-shadow: 0 0 0 4px var(--glow-color); }
-  .btn-save { margin-top: 16px; padding: 14px 35px; background: var(--accent-1); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 8px 25px var(--glow-color); width: 100%; }
-  .btn-save:hover { opacity: 0.9; }
-  .btn-skip { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; padding: 10px 18px; border-radius: 12px; }
-  .btn-skip:hover { color: var(--text-primary); background: var(--hover); }
-  .char-count { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; text-align: right; }
-  
-  .photo-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); }
-  .photo-btn { display: inline-block; padding: 10px 20px; background: var(--accent-1); color: white; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
-  .photo-btn:hover { opacity: 0.9; }
+  .note-input { width: 100%; padding: 14px 18px; border: 2px solid var(--text-primary); border-radius: 6px; font-size: 0.95rem; background: var(--hover); color: var(--text-primary); resize: vertical; min-height: 60px; font-family: 'Inter', sans-serif; }
+  .note-input:focus { outline: none; border-color: var(--accent-1); box-shadow: 3px 3px 0 var(--accent-1); }
+  .btn-save { margin-top: 16px; padding: 14px 35px; background: var(--accent-1); color: white; border: 2px solid var(--text-primary); border-radius: 6px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 4px 4px 0 var(--text-primary); width: 100%; font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; transition: all .2s; }
+  .btn-save:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .btn-save:active { box-shadow: none; transform: translate(4px,4px); }
+  .btn-skip { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; padding: 10px 18px; border-radius: 6px; border: 2px solid transparent; transition: all .15s; }
+  .btn-skip:hover { color: var(--text-primary); background: var(--hover); border-color: var(--text-primary); }
+  .char-count { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; text-align: right; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+
+  .photo-section { margin-top: 20px; padding-top: 16px; border-top: 2px solid var(--text-primary); }
+  .photo-btn { display: inline-block; padding: 10px 20px; background: var(--card-bg); color: var(--text-primary); border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 800; border: 2px solid var(--text-primary); box-shadow: 3px 3px 0 var(--text-primary); font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; transition: all .2s; }
+  .photo-btn:hover { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--text-primary); }
 
   @media (max-width: 480px) {
-    .quick-note-card { padding: 24px 18px; border-radius: 18px; }
+    .quick-note-card { padding: 24px 18px; border-radius: 8px; }
   }
 </style>
 

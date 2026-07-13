@@ -12,14 +12,14 @@
   }
 
   /* ── Logo ── */
-  .ob-logo { display: flex; align-items: center; gap: 9px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:.97rem; color:var(--text-primary); margin-bottom:32px; }
-  .ob-logo-icon { width:30px; height:30px; border-radius:8px; object-fit:cover; }
+  .ob-logo { display: flex; align-items: center; gap: 9px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:.97rem; color:var(--text-primary); margin-bottom:32px; text-transform:uppercase; }
+  .ob-logo-icon { width:30px; height:30px; border-radius:6px; object-fit:cover; border:2px solid var(--text-primary); }
 
   /* ── Progress dots ── */
   .ob-dots { display:flex; gap:7px; margin-bottom:32px; align-items:center; }
-  .ob-dot { width:8px; height:8px; border-radius:50%; background:var(--border-color); transition:all .35s ease; flex-shrink:0; }
-  .ob-dot.active { background:var(--accent-1); width:22px; border-radius:99px; }
-  .ob-dot.done   { background:var(--accent-1); opacity:.35; }
+  .ob-dot { width:8px; height:8px; border-radius:4px; background:var(--text-primary); opacity:.2; transition:all .35s ease; flex-shrink:0; }
+  .ob-dot.active { background:var(--accent-1); width:22px; border-radius:4px; opacity:1; border:2px solid var(--text-primary); }
+  .ob-dot.done   { background:var(--accent-1); opacity:.45; }
 
   /* ── Step card ── */
   .ob-card { width:100%; max-width:500px; }
@@ -28,13 +28,13 @@
   @keyframes obIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 
   /* ── Typography ── */
-  .ob-q   { font-family:'Space Grotesk',sans-serif; font-size:1.65rem; font-weight:800; color:var(--text-primary); margin-bottom:6px; line-height:1.22; letter-spacing:-.4px; }
-  .ob-sub { font-size:.88rem; color:var(--text-secondary); margin-bottom:22px; }
-  .ob-sec-label { display:block; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-secondary); margin-bottom:10px; }
+  .ob-q   { font-family:'Space Grotesk',sans-serif; font-size:1.65rem; font-weight:800; color:var(--text-primary); margin-bottom:6px; line-height:1.22; text-transform:uppercase; }
+  .ob-sub { font-size:.88rem; color:var(--text-secondary); margin-bottom:22px; font-weight:600; }
+  .ob-sec-label { display:block; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; color:var(--text-secondary); margin-bottom:10px; font-family:'Space Grotesk',sans-serif; }
 
   /* ── Message ── */
   .ob-msg { min-height:20px; margin:12px 0 16px; }
-  .ob-msg-inner { display:block; font-size:.87rem; color:var(--text-secondary); text-align:center; animation:msgIn 250ms ease both; line-height:1.55; }
+  .ob-msg-inner { display:block; font-size:.87rem; color:var(--text-secondary); text-align:center; animation:msgIn 250ms ease both; line-height:1.55; font-weight:600; }
   @keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
   /* ── Tiles ── */
@@ -46,88 +46,94 @@
   .ob-tiles.c6 { grid-template-columns:repeat(3,1fr); }
 
   .ob-tile {
-    padding:13px 10px; border-radius:14px; text-align:center;
-    background:var(--card-bg); border:1.5px solid var(--border-color);
+    padding:13px 10px; border-radius:6px; text-align:center;
+    background:var(--card-bg); border:2px solid var(--text-primary);
     cursor:pointer; transition:all .18s ease;
-    font-size:.82rem; font-weight:600; color:var(--text-primary);
+    font-size:.8rem; font-weight:800; color:var(--text-primary);
     user-select:none; line-height:1.3;
+    box-shadow:3px 3px 0 var(--text-primary);
+    font-family:'Space Grotesk',sans-serif; text-transform:uppercase;
   }
-  .ob-tile:hover { border-color:var(--accent-1); transform:translateY(-2px); }
+  .ob-tile:hover { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--text-primary); border-color:var(--accent-1); }
   .ob-tile.selected {
     border-color:var(--accent-1);
-    background:color-mix(in srgb, var(--accent-1) 9%, var(--card-bg));
-    transform:scale(1.04);
-    box-shadow:0 0 0 2.5px color-mix(in srgb,var(--accent-1) 28%,transparent), 0 6px 20px var(--glow-color);
+    background:var(--accent-3);
+    transform:translate(2px,2px);
+    box-shadow:2px 2px 0 var(--accent-1);
   }
   .ob-tile-icon { font-size:1.45rem; display:block; margin-bottom:4px; line-height:1; }
 
   /* ── Theme tiles ── */
-  .ob-theme-swatch { width:100%; height:36px; border-radius:8px; margin-bottom:5px; }
+  .ob-theme-swatch { width:100%; height:36px; border-radius:4px; margin-bottom:5px; border:2px solid var(--text-primary); }
 
   /* ── Input ── */
   .ob-input {
-    width:100%; padding:13px 16px; border-radius:14px;
-    border:1.5px solid var(--border-color); background:var(--input-bg);
+    width:100%; padding:13px 16px; border-radius:6px;
+    border:2px solid var(--text-primary); background:var(--hover);
     color:var(--text-primary); font-size:1rem; font-family:'Inter',sans-serif;
-    outline:none; transition:border-color .2s; margin-bottom:14px;
+    outline:none; transition:border-color .2s, box-shadow .2s; margin-bottom:14px;
   }
-  .ob-input:focus { border-color:var(--accent-1); }
+  .ob-input:focus { border-color:var(--accent-1); box-shadow:3px 3px 0 var(--accent-1); }
   .ob-input::placeholder { color:var(--text-secondary); }
 
   /* ── Live greeting ── */
   .ob-greeting {
     text-align:center; min-height:24px; margin-bottom:18px;
-    font-size:.97rem; font-weight:600; color:var(--accent-1);
-    animation:msgIn 300ms ease both;
+    font-size:.97rem; font-weight:800; color:var(--accent-1);
+    animation:msgIn 300ms ease both; font-family:'Space Grotesk',sans-serif; text-transform:uppercase;
   }
 
   /* ── Time row ── */
   .ob-time-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px; }
-  .ob-time-lbl { font-size:.74rem; font-weight:600; color:var(--text-secondary); margin-bottom:5px; }
+  .ob-time-lbl { font-size:.72rem; font-weight:800; color:var(--text-secondary); margin-bottom:5px; text-transform:uppercase; font-family:'Space Grotesk',sans-serif; }
 
   /* ── Goal section (fades in) ── */
-  .ob-goal-section { margin-top:20px; padding-top:18px; border-top:1px solid var(--border-color); }
+  .ob-goal-section { margin-top:20px; padding-top:18px; border-top:2px solid var(--text-primary); }
 
   /* ── Button ── */
   .ob-btn {
     width:100%; padding:14px; background:var(--accent-1); color:white;
-    border:none; border-radius:14px; font-weight:700; font-size:.95rem;
-    cursor:pointer; transition:all .22s; font-family:'Inter',sans-serif;
-    margin-top:4px;
+    border:2px solid var(--text-primary); border-radius:6px; font-weight:800; font-size:.95rem;
+    cursor:pointer; transition:all .2s; font-family:'Space Grotesk',sans-serif;
+    margin-top:4px; box-shadow:4px 4px 0 var(--text-primary); text-transform:uppercase;
   }
-  .ob-btn:hover:not(:disabled) { opacity:.88; transform:translateY(-2px); }
-  .ob-btn:disabled { opacity:.35; cursor:default; transform:none; }
+  .ob-btn:hover:not(:disabled) { transform:translate(2px,2px); box-shadow:2px 2px 0 var(--text-primary); }
+  .ob-btn:active:not(:disabled) { transform:translate(4px,4px); box-shadow:none; }
+  .ob-btn:disabled { opacity:.35; cursor:default; transform:none; box-shadow:none; }
 
   /* ── Habit pills (step 7) ── */
   .ob-habit-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
   .ob-habit-pill {
-    padding:8px 15px; border-radius:99px; cursor:pointer; user-select:none;
-    background:var(--card-bg); border:1.5px solid var(--border-color);
-    font-size:.82rem; font-weight:600; color:var(--text-primary);
+    padding:8px 15px; border-radius:6px; cursor:pointer; user-select:none;
+    background:var(--card-bg); border:2px solid var(--text-primary);
+    font-size:.78rem; font-weight:800; color:var(--text-primary);
     transition:all .18s ease; display:flex; align-items:center; gap:6px;
+    box-shadow:2px 2px 0 var(--text-primary);
+    font-family:'Space Grotesk',sans-serif; text-transform:uppercase;
   }
-  .ob-habit-pill:hover { border-color:var(--accent-1); transform:translateY(-1px); }
+  .ob-habit-pill:hover { transform:translate(2px,2px); box-shadow:none; border-color:var(--accent-1); }
   .ob-habit-pill.selected {
     border-color:var(--accent-1);
-    background:color-mix(in srgb, var(--accent-1) 10%, var(--card-bg));
-    box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-1) 22%,transparent);
+    background:var(--accent-3);
+    box-shadow:2px 2px 0 var(--accent-1); transform:translate(1px,1px);
   }
   .ob-habit-pill.selected::before { content:'✓ '; font-weight:800; color:var(--accent-1); }
   .ob-custom-pill {
-    padding:7px 12px; border-radius:99px; display:flex; align-items:center; gap:6px;
-    background:color-mix(in srgb,var(--accent-1) 10%,var(--card-bg));
-    border:1.5px solid var(--accent-1); font-size:.8rem; font-weight:600; color:var(--text-primary);
+    padding:7px 12px; border-radius:6px; display:flex; align-items:center; gap:6px;
+    background:var(--accent-3);
+    border:2px solid var(--accent-1); font-size:.78rem; font-weight:800; color:var(--text-primary);
+    font-family:'Space Grotesk',sans-serif; text-transform:uppercase;
   }
   .ob-custom-pill button { background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size:.85rem; padding:0; line-height:1; }
 
   /* ── Step 8: Building ── */
   .ob-building { text-align:center; padding:10px 0; }
-  .ob-build-title { font-family:'Space Grotesk',sans-serif; font-size:1.45rem; font-weight:800; color:var(--text-primary); margin-bottom:28px; }
+  .ob-build-title { font-family:'Space Grotesk',sans-serif; font-size:1.45rem; font-weight:800; color:var(--text-primary); margin-bottom:28px; text-transform:uppercase; }
   .ob-checklist { list-style:none; padding:0; margin:0 0 32px; text-align:left; max-width:280px; margin-left:auto; margin-right:auto; }
   .ob-checklist li {
     font-size:.88rem; color:var(--text-secondary); padding:7px 0;
     display:flex; align-items:center; gap:10px;
-    opacity:0; transform:translateX(-14px); transition:all .4s ease;
+    opacity:0; transform:translateX(-14px); transition:all .4s ease; font-weight:600;
   }
   .ob-checklist li.vis { opacity:1; transform:translateX(0); }
   .ob-checklist li .ck { color:var(--accent-1); font-weight:800; font-size:.9rem; flex-shrink:0; }
@@ -140,17 +146,18 @@
 
   /* ── Step 8: Welcome ── */
   .ob-welcome { text-align:center; }
-  .ob-welcome-h { font-family:'Space Grotesk',sans-serif; font-size:2rem; font-weight:800; color:var(--text-primary); margin-bottom:22px; animation:obIn .4s ease both; }
+  .ob-welcome-h { font-family:'Space Grotesk',sans-serif; font-size:2rem; font-weight:800; color:var(--text-primary); margin-bottom:22px; animation:obIn .4s ease both; text-transform:uppercase; }
   .ob-summary-card {
-    background:var(--card-bg); border:1.5px solid var(--border-color);
-    border-radius:18px; padding:18px 22px; margin-bottom:16px; text-align:left;
+    background:var(--card-bg); border:3px solid var(--text-primary);
+    border-radius:8px; padding:18px 22px; margin-bottom:16px; text-align:left;
+    box-shadow:4px 4px 0 var(--text-primary);
     animation:obIn .45s ease .08s both;
   }
-  .ob-sum-row { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid var(--border-color); font-size:.83rem; }
+  .ob-sum-row { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid var(--text-primary); font-size:.83rem; }
   .ob-sum-row:last-child { border-bottom:none; }
-  .ob-sum-lbl { color:var(--text-secondary); }
-  .ob-sum-val { font-weight:700; color:var(--text-primary); text-align:right; max-width:220px; }
-  .ob-persona { font-size:.9rem; color:var(--text-secondary); line-height:1.72; margin-bottom:24px; animation:obIn .5s ease .16s both; }
+  .ob-sum-lbl { color:var(--text-secondary); font-weight:700; text-transform:uppercase; font-family:'Space Grotesk',sans-serif; font-size:.72rem; }
+  .ob-sum-val { font-weight:800; color:var(--text-primary); text-align:right; max-width:220px; font-family:'Space Grotesk',sans-serif; }
+  .ob-persona { font-size:.9rem; color:var(--text-secondary); line-height:1.72; margin-bottom:24px; animation:obIn .5s ease .16s both; font-weight:600; }
   .ob-enter-btn { animation:obIn .5s ease .24s both; }
 
   @media (max-width: 540px) {
@@ -160,7 +167,7 @@
     .ob-tiles.c4 { grid-template-columns: 1fr 1fr; }
     .ob-tiles.c5 { grid-template-columns: 1fr 1fr; }
     .ob-tiles.c6 { grid-template-columns: 1fr 1fr 1fr; }
-    .ob-tile { padding: 11px 8px; font-size: .78rem; }
+    .ob-tile { padding: 11px 8px; font-size: .72rem; }
     .ob-tile-icon { font-size: 1.25rem; }
     .ob-theme-swatch { height: 28px; }
   }

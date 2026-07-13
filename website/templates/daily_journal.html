@@ -7,74 +7,102 @@
   .journal-page { max-width: 700px; margin: 0 auto; }
 
   .journal-header {
-    background: var(--header-gradient);
-    border-radius: 20px;
+    background: var(--accent-1);
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
     padding: 24px;
     color: white;
     text-align: center;
     margin-bottom: 24px;
-    box-shadow: 0 8px 25px var(--glow-color);
+    box-shadow: 4px 4px 0 var(--text-primary);
   }
   .journal-header h2 {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 800;
+    text-transform: uppercase;
     margin-bottom: 4px;
   }
-  .journal-header .date-sub { opacity: 0.85; font-size: 0.9rem; }
+  .journal-header .date-sub { opacity: 0.9; font-size: 0.9rem; font-weight: 600; }
   .journal-nav { display: flex; justify-content: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
   .journal-nav a {
     padding: 8px 18px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 20px;
-    color: white;
+    background: white;
+    border: 2px solid var(--text-primary);
+    border-radius: 6px;
+    color: var(--text-primary);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.85rem;
-    transition: all 0.2s;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0 var(--text-primary);
+    transition: all 0.15s;
   }
-  .journal-nav a:hover { background: rgba(255,255,255,0.35); }
+  .journal-nav a:hover { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .journal-nav a:active { transform: translate(3px,3px); box-shadow: none; }
 
   .banner {
-    border-radius: 16px;
+    border-radius: 8px;
     padding: 20px;
     text-align: center;
     margin-bottom: 20px;
-    border: 1px solid;
+    border: 3px solid var(--text-primary);
+    box-shadow: 4px 4px 0 var(--text-primary);
   }
-  .banner.new { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: #f59e0b; }
-  .banner.done { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); color: #10b981; }
+  .banner.new { background: var(--accent-3); color: var(--text-primary); }
+  .banner.done { background: var(--card-bg); color: var(--text-primary); }
   .banner .emoji { font-size: 40px; display: block; margin-bottom: 8px; }
 
   .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
   .summary-card {
     background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
     padding: 18px;
+    box-shadow: 4px 4px 0 var(--text-primary);
   }
-  .summary-card h5 { font-weight: 700; color: var(--text-primary); margin-bottom: 10px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-  .summary-card.done { border-left: 4px solid #10b981; }
-  .summary-card.missed { border-left: 4px solid #ef4444; }
-  .summary-card.habits { border-left: 4px solid #f59e0b; }
+  .summary-card h5 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .summary-card.done { border-left: 6px solid #10b981; }
+  .summary-card.missed { border-left: 6px solid #ef4444; }
+  .summary-card.habits { border-left: 6px solid var(--accent-1); }
 
-  .task-mini { padding: 6px 0; font-size: 0.85rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; }
+  .task-mini { padding: 6px 0; font-size: 0.85rem; color: var(--text-primary); border-bottom: 1px solid var(--text-primary); display: flex; align-items: center; gap: 8px; }
   .task-mini:last-child { border-bottom: none; }
-  .task-mini .note { color: var(--accent-1); font-size: 0.78rem; margin-left: auto; }
+  .task-mini .note { color: var(--accent-1); font-size: 0.78rem; margin-left: auto; font-weight: 700; }
 
-  .habit-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid var(--border-color); }
+  .habit-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid var(--text-primary); }
   .habit-row:last-child { border-bottom: none; }
-  .habit-row .status { font-weight: 600; }
+  .habit-row .status { font-weight: 700; }
   .habit-row .status.yes { color: #10b981; }
   .habit-row .status.no { color: #ef4444; }
 
   .journal-form-card {
     background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border: 3px solid var(--text-primary);
+    border-radius: 8px;
     padding: 24px;
+    box-shadow: 4px 4px 0 var(--text-primary);
   }
-  .journal-form-card h4 { font-weight: 700; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .journal-form-card h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
   .mood-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
   .mood-opt { text-align: center; }
@@ -82,58 +110,72 @@
   .mood-emoji {
     font-size: 40px;
     padding: 12px 14px;
-    border-radius: 16px;
-    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    border: 2px solid var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
     display: block;
-    background: var(--input-bg);
+    background: var(--card-bg);
     line-height: 1;
   }
-  .mood-opt input:checked + .mood-emoji { 
-    border-color: var(--accent-1); 
-    background: var(--hover); 
-    transform: scale(1.1); 
-    box-shadow: 0 4px 15px var(--glow-color);
+  .mood-opt input:checked + .mood-emoji {
+    border-color: var(--accent-1);
+    border-width: 3px;
+    background: var(--accent-3);
+    box-shadow: 3px 3px 0 var(--text-primary);
   }
-  .mood-label { 
-    font-size: 0.72rem; 
-    color: var(--text-secondary); 
-    margin-top: 6px; 
+  .mood-label {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
   }
 
   .input-group { margin-bottom: 16px; }
-  .input-group label { display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; font-size: 0.85rem; }
+  .input-group label {
+    display: block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
   .input-group textarea {
     width: 100%;
     padding: 12px;
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    background: var(--input-bg);
+    border: 2px solid var(--text-primary);
+    border-radius: 6px;
+    background: var(--card-bg);
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
     resize: vertical;
     min-height: 70px;
     font-size: 0.9rem;
+    box-sizing: border-box;
   }
-  .input-group textarea:focus { outline: none; border-color: var(--accent-1); }
+  .input-group textarea:focus { outline: none; border-color: var(--accent-1); box-shadow: 3px 3px 0 var(--accent-1); }
 
   .btn-save {
     width: 100%;
     padding: 14px;
     background: var(--accent-1);
     color: white;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
+    border: 2px solid var(--text-primary);
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
     font-size: 1rem;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.2s;
+    box-shadow: 4px 4px 0 var(--text-primary);
+    transition: all 0.15s;
   }
-  .btn-save:hover { opacity: 0.9; }
+  .btn-save:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--text-primary); }
+  .btn-save:active { transform: translate(4px,4px); box-shadow: none; }
 
   @media (max-width: 600px) {
     .summary-grid { grid-template-columns: 1fr; }
