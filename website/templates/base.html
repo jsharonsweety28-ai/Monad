@@ -61,11 +61,11 @@
     {% endif %}
     {% if user_theme == 'dark' %}
     :root {
-      --nav-bg: #0a0a0a; --footer-bg: #0a0a0a; --accent-1: #bb86fc; --accent-2: #03dac6; --accent-3: #1f1a2e;
-      --glow-color: rgba(187,134,252,0.4); --body-bg: #121212; --card-bg: #1e1e1e; --text-primary: #e8e8e8;
-      --text-secondary: #b0b0b0; --border-color: #2a2a2a; --input-bg: #272727; --hover: #2a2a2a;
-      --header-gradient: linear-gradient(135deg, #bb86fc, #03dac6);
-      --danger-bg: rgba(239,68,68,0.15); --danger-border: rgba(239,68,68,0.3);
+      --nav-bg: #1c1c1e; --footer-bg: #1c1c1e; --accent-1: #e0884a; --accent-2: #f0a060; --accent-3: #2a1e12;
+      --glow-color: rgba(224,136,74,0.25); --body-bg: #0d0d0d; --card-bg: #1c1c1e; --text-primary: #f2f2f2;
+      --text-secondary: #8e8e93; --border-color: #3a3a3c; --input-bg: #2c2c2e; --hover: #252525;
+      --header-gradient: linear-gradient(135deg, #e0884a, #c06020);
+      --danger-bg: rgba(239,68,68,0.15); --danger-border: rgba(239,68,68,0.35); --danger-text: #ff6b6b;
     }
     {% endif %}
     {% if user_theme == 'haikyuu' %}
@@ -188,14 +188,14 @@
     {% endif %}
     {% if user_theme == 'dark' %}
     .sidebar, .topbar {
-      --text-primary: #e8e8e8; --text-secondary: #b0b0b0;
-      --border-color: rgba(255,255,255,0.1); --hover: rgba(255,255,255,0.08);
+      --text-primary: #f2f2f2; --text-secondary: #8e8e93;
+      --border-color: rgba(255,255,255,0.08); --hover: #252525;
     }
-    .sidebar { border-right-color: rgba(255,255,255,0.2); }
-    .sb-logo { border-bottom-color: rgba(255,255,255,0.15); }
-    .sb-toggle, .sb-logo-icon { border-color: rgba(255,255,255,0.3); box-shadow: none; }
-    .sb-item.active { border-color: rgba(255,255,255,0.3); box-shadow: none; }
-    .sb-footer { border-top-color: rgba(255,255,255,0.1); }
+    .sidebar { border-right-color: #3a3a3c; }
+    .sb-logo { border-bottom-color: #3a3a3c; }
+    .sb-toggle, .sb-logo-icon { border-color: #3a3a3c; box-shadow: none; }
+    .sb-item.active { border-color: #e0884a; box-shadow: 2px 2px 0 #e0884a; }
+    .sb-footer { border-top-color: #3a3a3c; }
     {% endif %}
 
     /* ── Collapsible section headers ── */
