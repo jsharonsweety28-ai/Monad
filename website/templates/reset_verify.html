@@ -12,26 +12,16 @@
   .auth-page {
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
     padding: 24px;
-    background: linear-gradient(170deg, #FDF6F0 0%, #FFFDF9 40%, #FDF6F0 100%);
-    position: relative; overflow: hidden;
-  }
-  .auth-page::before {
-    content: ''; position: absolute; width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(224,123,57,0.05) 0%, transparent 70%);
-    bottom: -200px; left: -200px; border-radius: 50%;
-  }
-  .auth-page::after {
-    content: ''; position: absolute; width: 350px; height: 350px;
-    background: radial-gradient(circle, rgba(245,166,35,0.04) 0%, transparent 70%);
-    top: -150px; right: -150px; border-radius: 50%;
+    background: var(--bg);
   }
 
   .auth-card {
-    background: var(--white); border-radius: 24px; padding: 48px 40px;
+    background: var(--white);
+    border: 3px solid var(--text); border-radius: 8px; padding: 44px 40px;
     width: 100%; max-width: 440px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.03);
-    border: 1px solid var(--border); position: relative; z-index: 1;
-    animation: slideUp 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    box-shadow: 6px 6px 0 var(--text);
+    position: relative; z-index: 1;
+    animation: slideUp 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(30px); }
@@ -39,43 +29,42 @@
   }
 
   .auth-icon {
-    width: 56px; height: 56px; border-radius: 16px; background: var(--hover);
+    width: 52px; height: 52px; border-radius: 8px; background: var(--hover);
+    border: 3px solid var(--text);
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 28px; font-size: 24px;
-    animation: float 3s ease-in-out infinite;
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-8px); }
+    margin: 0 auto 24px; font-size: 22px;
+    box-shadow: 3px 3px 0 var(--text);
   }
 
   .auth-card h2 {
-    font-size: 24px; font-weight: 750; color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px; font-weight: 800; color: var(--text);
     text-align: center; margin-bottom: 6px; letter-spacing: -0.5px;
+    text-transform: uppercase;
   }
   .subtitle { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; line-height: 1.5; }
   .email-chip { display: block; text-align: center; color: var(--accent); font-weight: 650; font-size: 0.9rem; margin-bottom: 28px; }
 
   .otp-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
   .otp-box {
-    width: 52px; height: 60px; border: 2px solid var(--border); border-radius: 14px;
+    width: 52px; height: 60px; border: 2px solid var(--text); border-radius: 6px;
     background: var(--card); color: var(--text); font-size: 1.6rem; font-weight: 800;
     text-align: center; font-family: 'Inter', sans-serif;
     transition: border-color .2s, box-shadow .2s; outline: none; caret-color: var(--accent);
   }
-  .otp-box:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(224,123,57,0.1); }
+  .otp-box:focus { border-color: var(--accent); box-shadow: 3px 3px 0 var(--accent); }
 
   .btn-primary {
-    width: 100%; padding: 15px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: white; border: none; border-radius: 14px;
-    font-size: 1rem; font-weight: 650; cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(224,123,57,0.25);
-    letter-spacing: 0.3px; font-family: 'Inter', sans-serif;
+    width: 100%; padding: 14px;
+    background: var(--accent);
+    color: white; border: 2px solid var(--text); border-radius: 6px;
+    font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px;
+    box-shadow: 4px 4px 0 var(--text);
+    letter-spacing: 0.5px; font-family: 'Space Grotesk', sans-serif;
+    text-transform: uppercase; transition: box-shadow 0.12s, transform 0.12s;
   }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(224,123,57,0.35); }
-  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:hover { box-shadow: 2px 2px 0 var(--text); transform: translate(2px, 2px); }
+  .btn-primary:active { box-shadow: none; transform: translate(4px, 4px); }
 
   .resend-row { text-align: center; margin-top: 20px; font-size: 0.88rem; color: var(--muted); }
   .resend-row button {
