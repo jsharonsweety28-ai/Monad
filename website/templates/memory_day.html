@@ -174,15 +174,15 @@
     </h4>
     
     {% if all_photos %}
-      <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:10px;">⭐ = shown in calendar view. Click "Set as final" to choose which photo appears.</p>
+      <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:10px;"><i class="bi bi-star-fill"></i> = shown in calendar view. Click "Set as final" to choose which photo appears.</p>
       <div class="photo-grid">
         {% for photo in all_photos %}
           <div class="photo-item">
             <img src="{{ get_public_url(photo.filename) }}" alt="Memory" onerror="this.style.display='none';this.parentElement.querySelector('.error-msg').style.display='block';">
-            <div class="error-msg" style="display:none; padding:20px; text-align:center; color:var(--text-secondary);">📷 Image not found</div>
+            <div class="error-msg" style="display:none; padding:20px; text-align:center; color:var(--text-secondary);"><i class="bi bi-camera-fill"></i> Image not found</div>
             {% if photo.caption %}<div class="caption">{{ photo.caption }}</div>{% endif %}
             <div class="time">{{ photo.created_at.strftime('%I:%M %p') if photo.created_at else '' }}</div>
-            {% if photo.is_final %}<div class="final-badge">⭐ Final</div>{% endif %}
+            {% if photo.is_final %}<div class="final-badge"><i class="bi bi-star-fill"></i> Final</div>{% endif %}
             <a href="{{ url_for('views.set_final_photo', photo_id=photo.id) }}" class="set-final-btn">
               {% if photo.is_final %}Change final{% else %}Set as final{% endif %}
             </a>
@@ -201,7 +201,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="date" value="{{ day_date.strftime('%Y-%m-%d') }}">
         <label>
-          📸 Add Photo
+          <i class="bi bi-camera-fill"></i> Add Photo
           <input type="file" name="photo" accept="image/*" onchange="this.form.submit()">
         </label>
       </form>
@@ -216,16 +216,16 @@
         Journal Entry
       </h4>
       <p style="font-size:0.9rem;"><strong>Mood:</strong>
-        {% if journal.mood == 'great' %}🌟 Great
-        {% elif journal.mood == 'good' %}😊 Good
-        {% elif journal.mood == 'okay' %}😐 Okay
-        {% elif journal.mood == 'bad' %}😔 Bad
-        {% elif journal.mood == 'terrible' %}😞 Terrible
+        {% if journal.mood == 'great' %}<i class="bi bi-star-fill"></i> Great
+        {% elif journal.mood == 'good' %}<i class="bi bi-emoji-smile"></i> Good
+        {% elif journal.mood == 'okay' %}<i class="bi bi-emoji-neutral"></i> Okay
+        {% elif journal.mood == 'bad' %}<i class="bi bi-emoji-frown"></i> Bad
+        {% elif journal.mood == 'terrible' %}<i class="bi bi-emoji-frown"></i> Terrible
         {% else %}Not set{% endif %}
       </p>
-      {% if journal.accomplishments %}<p style="font-size:0.85rem; margin-top:8px;"><strong>🏆 Wins:</strong> {{ journal.accomplishments }}</p>{% endif %}
-      {% if journal.learnings %}<p style="font-size:0.85rem; margin-top:4px;"><strong>📚 Learned:</strong> {{ journal.learnings }}</p>{% endif %}
-      {% if journal.gratitude %}<p style="font-size:0.85rem; margin-top:4px;"><strong>🙏 Grateful:</strong> {{ journal.gratitude }}</p>{% endif %}
+      {% if journal.accomplishments %}<p style="font-size:0.85rem; margin-top:8px;"><strong><i class="bi bi-trophy-fill"></i> Wins:</strong> {{ journal.accomplishments }}</p>{% endif %}
+      {% if journal.learnings %}<p style="font-size:0.85rem; margin-top:4px;"><strong><i class="bi bi-book-fill"></i> Learned:</strong> {{ journal.learnings }}</p>{% endif %}
+      {% if journal.gratitude %}<p style="font-size:0.85rem; margin-top:4px;"><strong><i class="bi bi-heart-fill"></i> Grateful:</strong> {{ journal.gratitude }}</p>{% endif %}
     </div>
   {% endif %}
 
@@ -238,9 +238,9 @@
     {% if tasks %}
       {% for task in tasks %}
         <div class="task-item">
-          {% if task.completed %}✅{% else %}○{% endif %}
+          {% if task.completed %}<i class="bi bi-check-square-fill"></i>{% else %}○{% endif %}
           {{ task.content }}
-          {% if task.quick_note %}<small style="color:var(--accent-1); margin-left:auto;">💬 {{ task.quick_note }}</small>{% endif %}
+          {% if task.quick_note %}<small style="color:var(--accent-1); margin-left:auto;"><i class="bi bi-chat-dots-fill"></i> {{ task.quick_note }}</small>{% endif %}
         </div>
       {% endfor %}
     {% else %}<p style="color:var(--text-secondary); font-size:0.85rem;">No tasks for this day.</p>{% endif %}
@@ -258,11 +258,11 @@
           <div class="habit-row-top">
             <span>{{ h.name }}</span>
             <span class="{% if h.done %}yes{% else %}no{% endif %}">
-              {% if h.done %}✅ Done{% else %}❌ Missed{% endif %}
+              {% if h.done %}<i class="bi bi-check-square-fill"></i> Done{% else %}<i class="bi bi-x-circle-fill"></i> Missed{% endif %}
             </span>
           </div>
           {% if h.reflection %}
-            <div class="habit-reflection">💬 {{ h.reflection }}</div>
+            <div class="habit-reflection"><i class="bi bi-chat-dots-fill"></i> {{ h.reflection }}</div>
           {% endif %}
           {% if h.photo %}
             <div class="habit-reflect-photo">

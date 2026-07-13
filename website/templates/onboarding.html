@@ -235,10 +235,10 @@
       <div class="ob-q">Which stage are you in right now?</div>
       <div style="margin-bottom:20px"></div>
       <div class="ob-tiles c2" id="lifeTiles">
-        <div class="ob-tile" data-val="school"  onclick="pickLife(this)"><span class="ob-tile-icon">🏫</span>School</div>
-        <div class="ob-tile" data-val="college" onclick="pickLife(this)"><span class="ob-tile-icon">🎓</span>College</div>
-        <div class="ob-tile" data-val="working" onclick="pickLife(this)"><span class="ob-tile-icon">💼</span>Working</div>
-        <div class="ob-tile" data-val="other"   onclick="pickLife(this)"><span class="ob-tile-icon">✨</span>Other</div>
+        <div class="ob-tile" data-val="school"  onclick="pickLife(this)"><span class="ob-tile-icon"><i class="bi bi-building-fill"></i></span>School</div>
+        <div class="ob-tile" data-val="college" onclick="pickLife(this)"><span class="ob-tile-icon"><i class="bi bi-mortarboard-fill"></i></span>College</div>
+        <div class="ob-tile" data-val="working" onclick="pickLife(this)"><span class="ob-tile-icon"><i class="bi bi-briefcase-fill"></i></span>Working</div>
+        <div class="ob-tile" data-val="other"   onclick="pickLife(this)"><span class="ob-tile-icon"><i class="bi bi-stars"></i></span>Other</div>
       </div>
       <div class="ob-msg" id="lifeMsg"></div>
     </div>
@@ -276,10 +276,10 @@
       <div class="ob-q">What are your biggest challenges right now?</div>
       <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;text-align:center">Pick all that apply.</div>
       <div class="ob-tiles c2" id="challengeTiles">
-        <div class="ob-tile" data-val="focus"       onclick="pickChallenge(this)"><span class="ob-tile-icon">🎯</span>Focus</div>
-        <div class="ob-tile" data-val="consistency" onclick="pickChallenge(this)"><span class="ob-tile-icon">📅</span>Consistency</div>
-        <div class="ob-tile" data-val="overwhelmed" onclick="pickChallenge(this)"><span class="ob-tile-icon">🌊</span>Too Much To Manage</div>
-        <div class="ob-tile" data-val="energy"      onclick="pickChallenge(this)"><span class="ob-tile-icon">⚡</span>Low Energy</div>
+        <div class="ob-tile" data-val="focus"       onclick="pickChallenge(this)"><span class="ob-tile-icon"><i class="bi bi-bullseye"></i></span>Focus</div>
+        <div class="ob-tile" data-val="consistency" onclick="pickChallenge(this)"><span class="ob-tile-icon"><i class="bi bi-calendar-fill"></i></span>Consistency</div>
+        <div class="ob-tile" data-val="overwhelmed" onclick="pickChallenge(this)"><span class="ob-tile-icon"><i class="bi bi-water"></i></span>Too Much To Manage</div>
+        <div class="ob-tile" data-val="energy"      onclick="pickChallenge(this)"><span class="ob-tile-icon"><i class="bi bi-lightning-charge-fill"></i></span>Low Energy</div>
       </div>
       <div class="ob-msg" id="challengeMsg"></div>
       <button class="ob-btn" id="challengeBtn" disabled onclick="goNext()">Continue →</button>
@@ -292,21 +292,21 @@
       <div class="ob-q">How do you work best?</div>
       <div style="margin-bottom:20px"></div>
       <div class="ob-tiles c3" id="workTiles">
-        <div class="ob-tile" data-val="deep"     onclick="pickWork(this)"><span class="ob-tile-icon">🔭</span>Deep Focus</div>
-        <div class="ob-tile" data-val="flexible" onclick="pickWork(this)"><span class="ob-tile-icon">🌊</span>Flexible Flow</div>
-        <div class="ob-tile" data-val="mixed"    onclick="pickWork(this)"><span class="ob-tile-icon">⚖️</span>Mix of Both</div>
+        <div class="ob-tile" data-val="deep"     onclick="pickWork(this)"><span class="ob-tile-icon"><i class="bi bi-eye-fill"></i></span>Deep Focus</div>
+        <div class="ob-tile" data-val="flexible" onclick="pickWork(this)"><span class="ob-tile-icon"><i class="bi bi-water"></i></span>Flexible Flow</div>
+        <div class="ob-tile" data-val="mixed"    onclick="pickWork(this)"><span class="ob-tile-icon"><i class="bi bi-clipboard-check-fill"></i></span>Mix of Both</div>
       </div>
       <div class="ob-msg" id="workMsg"></div>
 
       <div id="goalSection" style="display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--border-color)">
         <span class="ob-sec-label" style="margin-bottom:10px;text-transform:none;font-size:.82rem;letter-spacing:0;color:var(--text-primary);font-weight:700">Pick up to 2 goals.</span>
         <div class="ob-tiles c3" id="goalTiles">
-          <div class="ob-tile" data-val="productivity" onclick="pickGoal(this)"><span class="ob-tile-icon">🚀</span>Productivity</div>
-          <div class="ob-tile" data-val="habits"       onclick="pickGoal(this)"><span class="ob-tile-icon">🌱</span>Better Habits</div>
-          <div class="ob-tile" data-val="study"        onclick="pickGoal(this)"><span class="ob-tile-icon">📚</span>Study</div>
-          <div class="ob-tile" data-val="health"       onclick="pickGoal(this)"><span class="ob-tile-icon">💪</span>Health</div>
-          <div class="ob-tile" data-val="mental"       onclick="pickGoal(this)"><span class="ob-tile-icon">🧘</span>Mental Clarity</div>
-          <div class="ob-tile" data-val="career"       onclick="pickGoal(this)"><span class="ob-tile-icon">💼</span>Career</div>
+          <div class="ob-tile" data-val="productivity" onclick="pickGoal(this)"><span class="ob-tile-icon"><i class="bi bi-lightning-charge-fill"></i></span>Productivity</div>
+          <div class="ob-tile" data-val="habits"       onclick="pickGoal(this)"><span class="ob-tile-icon"><i class="bi bi-flower1"></i></span>Better Habits</div>
+          <div class="ob-tile" data-val="study"        onclick="pickGoal(this)"><span class="ob-tile-icon"><i class="bi bi-book-fill"></i></span>Study</div>
+          <div class="ob-tile" data-val="health"       onclick="pickGoal(this)"><span class="ob-tile-icon"><i class="bi bi-shield-fill"></i></span>Health</div>
+          <div class="ob-tile" data-val="mental"       onclick="pickGoal(this)"><span class="ob-tile-icon"><i class="bi bi-moon-stars-fill"></i></span>Mental Clarity</div>
+          <div class="ob-tile" data-val="career"       onclick="pickGoal(this)"><span class="ob-tile-icon"><i class="bi bi-briefcase-fill"></i></span>Career</div>
         </div>
         <div class="ob-msg" id="goalMsg"></div>
         <button type="button" class="ob-btn" id="goalBtn" onclick="goNext()" disabled>Continue →</button>
@@ -325,12 +325,12 @@
              oninput="onYearGoalInput(this)"
              onkeydown="if(event.key==='Enter'){event.preventDefault();goNext();}">
       <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;" id="yearGoalSuggestions">
-        <span class="ob-habit-pill" onclick="setYearGoal(this)">🎓 Graduate with honours</span>
-        <span class="ob-habit-pill" onclick="setYearGoal(this)">💼 Land my first job</span>
-        <span class="ob-habit-pill" onclick="setYearGoal(this)">📚 Improve my GPA</span>
-        <span class="ob-habit-pill" onclick="setYearGoal(this)">💪 Get consistently fit</span>
-        <span class="ob-habit-pill" onclick="setYearGoal(this)">🧠 Build a daily study habit</span>
-        <span class="ob-habit-pill" onclick="setYearGoal(this)">🚀 Launch a side project</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)"><i class="bi bi-mortarboard-fill"></i> Graduate with honours</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)"><i class="bi bi-briefcase-fill"></i> Land my first job</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)"><i class="bi bi-book-fill"></i> Improve my GPA</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)"><i class="bi bi-shield-fill"></i> Get consistently fit</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)"><i class="bi bi-lightbulb-fill"></i> Build a daily study habit</span>
+        <span class="ob-habit-pill" onclick="setYearGoal(this)"><i class="bi bi-stars"></i> Launch a side project</span>
       </div>
       <div style="display:flex; gap:10px;">
         <button type="button" class="ob-btn" id="yearGoalBtn" onclick="goNext()">Continue →</button>

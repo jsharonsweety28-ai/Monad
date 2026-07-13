@@ -662,11 +662,11 @@
 
 <div class="config-page" id="configPage">
   <div class="config-card">
-    <h2>⚡ Focus Room</h2>
+    <h2><i class="bi bi-lightning-charge-fill"></i> Focus Room</h2>
     <p class="config-subtitle">Set your vibe, pick a task, and dive in.</p>
 
     <div class="session-vibe" id="sessionVibeStrip">
-      <div class="session-vibe-icon" id="vibeIcon">🍅</div>
+      <div class="session-vibe-icon" id="vibeIcon"><i class="bi bi-stopwatch-fill"></i></div>
       <div class="session-vibe-text">
         <strong id="vibeTitle">Pomodoro · 25 min</strong>
         <span id="vibeSubtitle">One focused block. You've got this.</span>
@@ -676,9 +676,9 @@
     <div class="config-group">
       <label>Mode</label>
       <div class="mode-chips" id="modeChips">
-        <div class="mode-chip active" data-mode="pomodoro">🍅 Pomodoro</div>
-        <div class="mode-chip" data-mode="timer">⏱️ Timer</div>
-        <div class="mode-chip" data-mode="stopwatch">⏱️ Stopwatch</div>
+        <div class="mode-chip active" data-mode="pomodoro"><i class="bi bi-stopwatch-fill"></i> Pomodoro</div>
+        <div class="mode-chip" data-mode="timer"><i class="bi bi-hourglass-split"></i> Timer</div>
+        <div class="mode-chip" data-mode="stopwatch"><i class="bi bi-hourglass-split"></i> Stopwatch</div>
       </div>
     </div>
     <div class="config-group" id="timerConfig" style="display:none;">
@@ -715,12 +715,12 @@
     <div class="config-group">
       <label>Ambient Sound (click to preview)</label>
       <div class="sound-chips" id="cfgSounds">
-        <span class="sound-chip active" data-sound="none" onclick="previewSound('none', this)">🔇 None</span>
-        <span class="sound-chip" data-sound="rain" onclick="previewSound('rain', this)">🌧️ Rain</span>
-        <span class="sound-chip" data-sound="lofi" onclick="previewSound('lofi', this)">🎵 Lofi</span>
-        <span class="sound-chip" data-sound="cafe" onclick="previewSound('cafe', this)">☕ Cafe</span>
-        <span class="sound-chip" data-sound="forest" onclick="previewSound('forest', this)">🌿 Forest</span>
-        <span class="sound-chip" id="customSoundChip" data-sound="custom" onclick="previewSound('custom', this)" style="display:none;">🎧 Custom</span>
+        <span class="sound-chip active" data-sound="none" onclick="previewSound('none', this)"><i class="bi bi-volume-mute-fill"></i> None</span>
+        <span class="sound-chip" data-sound="rain" onclick="previewSound('rain', this)"><i class="bi bi-cloud-rain"></i> Rain</span>
+        <span class="sound-chip" data-sound="lofi" onclick="previewSound('lofi', this)"><i class="bi bi-music-note-beamed"></i> Lofi</span>
+        <span class="sound-chip" data-sound="cafe" onclick="previewSound('cafe', this)"><i class="bi bi-cup-hot"></i> Cafe</span>
+        <span class="sound-chip" data-sound="forest" onclick="previewSound('forest', this)"><i class="bi bi-tree"></i> Forest</span>
+        <span class="sound-chip" id="customSoundChip" data-sound="custom" onclick="previewSound('custom', this)" style="display:none;"><i class="bi bi-headphones"></i> Custom</span>
       </div>
       <div class="sound-status" id="soundStatus"></div>
       <div class="custom-sound-row">
@@ -733,7 +733,7 @@
   </div>
 
   <div class="garden-section">
-    <h3>⏱️ Recent Sessions <span class="garden-count" id="gardenCount"></span></h3>
+    <h3><i class="bi bi-hourglass-split"></i> Recent Sessions <span class="garden-count" id="gardenCount"></span></h3>
     <div class="study-board" id="studyBoard">
       <div class="garden-grid" id="gardenGrid"></div>
     </div>
@@ -750,7 +750,7 @@
       <div class="fs-completion-flash" id="completionFlash"></div>
     </div>
 
-    <div class="fs-break-label" id="fsBreakLabel">☕ Break Time</div>
+    <div class="fs-break-label" id="fsBreakLabel"><i class="bi bi-cup-hot"></i> Break Time</div>
     <a href="#" class="fs-close" onclick="endSession(); return false;" title="Exit (Esc)">✕</a>
 
     <p class="fs-task-label" id="fsTaskLabel"></p>
@@ -776,7 +776,7 @@
     <div class="fs-controls">
       <button class="fs-btn" onclick="resetTimer()" title="Reset (R)">↺</button>
       <button class="fs-btn fs-btn-play" id="fsPlayBtn" onclick="toggleTimer()" title="Play/Pause (Space)">▶</button>
-      <button class="fs-btn" id="fsSaveBtn" onclick="saveStopwatch()" style="display:none;" title="Save session">💾</button>
+      <button class="fs-btn" id="fsSaveBtn" onclick="saveStopwatch()" style="display:none;" title="Save session"><i class="bi bi-floppy-fill"></i></button>
     </div>
   </div>
 
@@ -802,9 +802,9 @@
   }
 
   const VIBE_CONFIG = {
-    pomodoro: { icon: '🍅', subtitles: ['One focused block. You\'ve got this.', 'Deep work starts now.', 'plan and pursue.'] },
-    timer:    { icon: '⏱️', subtitles: ['Your custom countdown.', 'Lock in and go.', 'plan and pursue.'] },
-    stopwatch: { icon: '🏃', subtitles: ['Track every minute.', 'Flow at your own pace.', 'plan and pursue.'] },
+    pomodoro: { icon: '<i class="bi bi-stopwatch-fill"></i>', subtitles: ['One focused block. You\'ve got this.', 'Deep work starts now.', 'plan and pursue.'] },
+    timer:    { icon: '<i class="bi bi-hourglass-split"></i>', subtitles: ['Your custom countdown.', 'Lock in and go.', 'plan and pursue.'] },
+    stopwatch: { icon: '<i class="bi bi-speedometer2"></i>', subtitles: ['Track every minute.', 'Flow at your own pace.', 'plan and pursue.'] },
   };
 
   function updateVibeStrip() {
@@ -815,7 +815,7 @@
     const subEl = document.getElementById('vibeSubtitle');
     const strip = document.getElementById('sessionVibeStrip');
 
-    iconEl.textContent = cfg.icon;
+    iconEl.innerHTML = cfg.icon;
     iconEl.style.transform = 'scale(0.8) rotate(-10deg)';
     setTimeout(() => { iconEl.style.transform = 'scale(1) rotate(0)'; }, 50);
 
@@ -1047,7 +1047,7 @@
         return `
         <div class="session-card${cls}" style="animation-delay:${i * 0.04}s"
              title="${label} · ${s.session_mins} min">
-          <span class="sc-icon">⚡</span>
+          <span class="sc-icon"><i class="bi bi-lightning-charge-fill"></i></span>
           <div class="sc-body">
             <span class="sc-task">${label}</span>
             <span class="sc-meta">${s.date}${s.wilted ? ' · ended early' : ''}</span>
@@ -1122,7 +1122,7 @@
       sessionsDone++;
       saveSession(m);
       celebrateCompletion();
-      showToast(`Session saved — ${m} min ⚡`);
+      showToast(`Session saved — ${m} min <i class="bi bi-lightning-charge-fill"></i>`);
     }
     resetTimer();
   }
@@ -1152,7 +1152,7 @@
     updateDots();
     updatePet('complete');
 
-    showToast(`Session complete — ${d} min saved! 🎉`);
+    showToast(`Session complete — ${d} min saved! <i class="bi bi-stars"></i>`);
 
     if (mode === 'pomodoro') {
       const breakLen = (sessionsDone % 4 === 0) ? 15 * 60 : 5 * 60;

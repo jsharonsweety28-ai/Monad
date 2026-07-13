@@ -114,7 +114,7 @@
     <div class="subj-hero-content">
       {% if subject.code %}<div class="subj-code">{{ subject.code }}</div>{% endif %}
       <div class="subj-name">{{ subject.name }}</div>
-      {% if subject.teacher %}<div class="subj-teacher">👩‍🏫 {{ subject.teacher }}</div>{% endif %}
+      {% if subject.teacher %}<div class="subj-teacher"><i class="bi bi-person-fill"></i> {{ subject.teacher }}</div>{% endif %}
       <div class="subj-stats">
         <span class="subj-stat">{{ subject.slots|length }} class slot{{ 's' if subject.slots|length != 1 }}</span>
         <span class="subj-stat">{{ upcoming_exams|length }} upcoming exam{{ 's' if upcoming_exams|length != 1 }}</span>
@@ -140,7 +140,7 @@
       <div class="slot-pill" style="border-color:color-mix(in srgb,{{ subject.color }} 40%,var(--border-color)); background:color-mix(in srgb,{{ subject.color }} 8%,var(--card-bg))">
         <span class="slot-day">{{ day_names[sl.day_of_week] }}</span>
         <span class="slot-time">{{ sl.start_time }} – {{ sl.end_time }}</span>
-        {% if sl.room %}<span class="slot-room">📍 {{ sl.room }}</span>{% endif %}
+        {% if sl.room %}<span class="slot-room"><i class="bi bi-geo-alt-fill"></i> {{ sl.room }}</span>{% endif %}
       </div>
       {% endfor %}
     </div>
@@ -200,7 +200,7 @@
         {% endif %}
         {% if note.file_path %}
           <a class="nc-file" href="{{ get_public_url(note.file_path) }}" target="_blank">
-            {% if note.file_type in ['pdf'] %}📄{% elif note.file_type in ['png','jpg','jpeg','gif','webp'] %}🖼{% else %}📎{% endif %}
+            {% if note.file_type in ['pdf'] %}<i class="bi bi-file-earmark-fill"></i>{% elif note.file_type in ['png','jpg','jpeg','gif','webp'] %}<i class="bi bi-image-fill"></i>{% else %}<i class="bi bi-paperclip"></i>{% endif %}
             {{ note.title }}
           </a>
         {% endif %}
@@ -252,10 +252,10 @@
     <input class="modal-input" id="examTitle" placeholder="e.g. Midterm Exam" autocomplete="off">
     <label class="modal-label">Type</label>
     <select class="modal-select" id="examType">
-      <option value="exam">📝 Exam</option>
-      <option value="assignment">📄 Assignment</option>
-      <option value="quiz">⚡ Quiz</option>
-      <option value="project">🎯 Project</option>
+      <option value="exam"><i class="bi bi-pencil-square"></i> Exam</option>
+      <option value="assignment"><i class="bi bi-file-earmark-fill"></i> Assignment</option>
+      <option value="quiz"><i class="bi bi-lightning-charge-fill"></i> Quiz</option>
+      <option value="project"><i class="bi bi-bullseye"></i> Project</option>
     </select>
     <label class="modal-label">Date & Time</label>
     <div class="modal-row">

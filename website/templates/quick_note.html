@@ -69,13 +69,13 @@
     
     <!-- Photo Upload Section -->
     <div class="photo-section">
-      <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:10px;">📸 Capture this moment?</p>
+      <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:10px;"><i class="bi bi-camera-fill"></i> Capture this moment?</p>
       <form method="POST" action="{{ url_for('views.upload_photo') }}" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="date" value="{{ task.date.strftime('%Y-%m-%d') if task.date else datetime.utcnow().strftime('%Y-%m-%d') }}">
         <input type="hidden" name="task_id" value="{{ task.id }}">
         <label class="photo-btn">
-          📷 Take / Upload Photo
+          <i class="bi bi-camera-fill"></i> Take / Upload Photo
           <input type="file" name="photo" accept="image/*" style="display:none;" onchange="this.form.submit()">
         </label>
       </form>

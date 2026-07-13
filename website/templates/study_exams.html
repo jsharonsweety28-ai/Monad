@@ -88,7 +88,7 @@
 
   {% if not exams %}
     <div class="empty-exams">
-      <div style="font-size:3rem;margin-bottom:12px">📋</div>
+      <div style="font-size:3rem;margin-bottom:12px"><i class="bi bi-clipboard-fill"></i></div>
       <p>No upcoming exams or deadlines. Enjoy the peace!</p>
     </div>
   {% else %}
@@ -109,8 +109,8 @@
               <div class="ec-subject" style="color:{{ subj.color }}">{{ subj.name }}</div>
               <div class="ec-meta">
                 <span class="ec-chip">{{ exam.exam_type|title }}</span>
-                <span class="ec-chip">📅 {{ exam.date.strftime('%d %b %Y') }}{% if exam.time %} · {{ exam.time }}{% endif %}</span>
-                {% if exam.weightage %}<span class="ec-chip">⚖️ {{ exam.weightage }}%</span>{% endif %}
+                <span class="ec-chip"><i class="bi bi-calendar-fill"></i> {{ exam.date.strftime('%d %b %Y') }}{% if exam.time %} · {{ exam.time }}{% endif %}</span>
+                {% if exam.weightage %}<span class="ec-chip"><i class="bi bi-clipboard-check-fill"></i> {{ exam.weightage }}%</span>{% endif %}
               </div>
             </div>
             <div class="ec-actions">
@@ -152,10 +152,10 @@
     <input class="modal-input" id="examTitle" placeholder="e.g. Midterm Exam" autocomplete="off">
     <label class="modal-label">Type</label>
     <select class="modal-select" id="examType">
-      <option value="exam">📝 Exam</option>
-      <option value="assignment">📄 Assignment</option>
-      <option value="quiz">⚡ Quiz</option>
-      <option value="project">🎯 Project</option>
+      <option value="exam"><i class="bi bi-pencil-square"></i> Exam</option>
+      <option value="assignment"><i class="bi bi-file-earmark-fill"></i> Assignment</option>
+      <option value="quiz"><i class="bi bi-lightning-charge-fill"></i> Quiz</option>
+      <option value="project"><i class="bi bi-bullseye"></i> Project</option>
     </select>
     <label class="modal-label">Date & Time</label>
     <div class="modal-row">

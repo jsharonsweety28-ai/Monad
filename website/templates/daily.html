@@ -461,7 +461,7 @@
   <!-- Greeting + Progress Ring -->
   <div class="day-hero">
     <div class="day-hero-left">
-      <div class="day-greeting" id="greetingText">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} 👋</div>
+      <div class="day-greeting" id="greetingText">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} <i class="bi bi-person-fill"></i></div>
       <div style="font-size:0.7rem;font-weight:600;color:var(--accent-1);opacity:0.7;letter-spacing:0.04em;margin-bottom:4px;">plan and pursue</div>
       <div class="day-sub">
         <span>{{ today.strftime('%A, %B %d') }}</span>
@@ -499,7 +499,7 @@
         padding:12px 16px; min-width:160px; box-shadow:0 6px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
         z-index:100; text-align:center; white-space:nowrap;
       ">
-        <div style="font-size:1.3rem; margin-bottom:4px;">🔥 {{ task_streak }}-day streak</div>
+        <div style="font-size:1.3rem; margin-bottom:4px;"><i class="bi bi-fire"></i> {{ task_streak }}-day streak</div>
         <div style="font-size:0.8rem; color:var(--text-secondary);">
           {% if vs_yesterday > 0 %}+{{ vs_yesterday }} vs yesterday{% elif vs_yesterday < 0 %}{{ vs_yesterday }} vs yesterday{% else %}same as yesterday{% endif %}
         </div>
@@ -533,7 +533,7 @@
     border-radius: 16px; padding: 14px 16px; margin-bottom: 16px;
     animation: fadeUp 0.4s ease both;
   ">
-    <div style="font-size:0.75rem; font-weight:600; color:var(--accent-1); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:10px;">⭐ Today's Big {{ [big3|length, 3]|min }}</div>
+    <div style="font-size:0.75rem; font-weight:600; color:var(--accent-1); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:10px;"><i class="bi bi-star-fill"></i> Today's Big {{ [big3|length, 3]|min }}</div>
     {% for task in big3[:3] %}
     <div style="display:flex; align-items:center; gap:10px; {% if not loop.last %}margin-bottom:8px;{% endif %}">
       <div class="task-check" onclick="window.location.href='{{ url_for('views.toggle_task', id=task.id) }}'"
@@ -560,9 +560,9 @@
       <div class="add-details" id="addDetails" style="display:none; width:100%;">
         <select name="priority" class="add-select">
           <option value="">No priority</option>
-          <option value="high">🔴 High</option>
-          <option value="medium">🟡 Medium</option>
-          <option value="low">🟢 Low</option>
+          <option value="high"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#ef4444;border:1px solid #2D2A26"></span> High</option>
+          <option value="medium"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b;border:1px solid #2D2A26"></span> Medium</option>
+          <option value="low"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#10b981;border:1px solid #2D2A26"></span> Low</option>
         </select>
         <div class="time-row">
           <div class="time-field-group">
@@ -582,12 +582,12 @@
           <option value="-5">5 min before</option>
           <option value="0">At task time</option>
         </select>
-        <button type="button" class="btn-details" id="btnRecurring" onclick="toggleRecurring()" title="Set recurring days" style="font-size:0.85rem;">🔁</button>
+        <button type="button" class="btn-details" id="btnRecurring" onclick="toggleRecurring()" title="Set recurring days" style="font-size:0.85rem;"><i class="bi bi-arrow-repeat"></i></button>
       </div>
       <div id="addCatRow" style="display:none; width:100%; margin-top:8px;">
         <div class="cat-input-wrap">
           <input list="catSuggestions" name="category" id="addCategoryInput" class="add-cat-input"
-                 placeholder="📂 Category (e.g. Math, Work, Personal…)" autocomplete="off"
+                 placeholder="Category (e.g. Math, Work, Personal…)" autocomplete="off"
                  oninput="onAddCatInput(this)">
           <datalist id="catSuggestions">
             {% for c in used_categories %}<option value="{{ c }}">{% endfor %}
@@ -662,9 +662,9 @@
                 <span class="task-time"><i class="bi bi-stopwatch"></i> {{ (task.focus_time // 60) }}m · {{ task.session_count }} sessions</span>
               {% endif %}
               {% if task.recurring_days %}
-                <span class="task-recurring-badge">🔁 recurring</span>
+                <span class="task-recurring-badge"><i class="bi bi-arrow-repeat"></i> recurring</span>
               {% elif task.recurring_task_id %}
-                <span class="task-recurring-badge">🔁</span>
+                <span class="task-recurring-badge"><i class="bi bi-arrow-repeat"></i></span>
               {% endif %}
               {% if task.category %}
                 {% set col = cat_colors.get(task.category, '#E07B39') %}
@@ -710,10 +710,10 @@
           </div>
           <div class="focus-popup" id="focusPopup{{ task.id }}">
             <a href="{{ url_for('views.pomodoro', task_id=task.id, mode='pomodoro') }}" class="focus-opt">
-              <span class="fo-icon fo-pomo">🍅</span> Pomodoro · 25 min
+              <span class="fo-icon fo-pomo"><i class="bi bi-stopwatch-fill"></i></span> Pomodoro · 25 min
             </a>
             <a href="{{ url_for('views.pomodoro', task_id=task.id, mode='timer') }}" class="focus-opt">
-              <span class="fo-icon fo-timer">⏱</span> Timer
+              <span class="fo-icon fo-timer"><i class="bi bi-hourglass-split"></i></span> Timer
             </a>
             <a href="{{ url_for('views.pomodoro', task_id=task.id, mode='stopwatch') }}" class="focus-opt">
               <span class="fo-icon fo-stop">▶</span> Stopwatch
@@ -724,7 +724,7 @@
     </ul>
   {% else %}
     <div class="empty-state">
-      <span class="empty-emoji">✨</span>
+      <span class="empty-emoji"><i class="bi bi-stars"></i></span>
       <h4>{{ phase_copy.greeting }}</h4>
       <p>{{ phase_copy.empty }}</p>
     </div>
@@ -767,7 +767,7 @@
 <!-- Reschedule Task Modal -->
 <div class="edit-overlay" id="rescheduleOverlay" onclick="if(event.target===this)closeRescheduleModal()">
   <div class="edit-modal">
-    <h3>📅 Reschedule Task</h3>
+    <h3><i class="bi bi-calendar-fill"></i> Reschedule Task</h3>
     <p id="rescheduleTaskName" style="font-size:0.88rem; color:var(--text-secondary); margin:-10px 0 18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></p>
 
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
@@ -796,7 +796,7 @@
 <!-- Edit Task Modal -->
 <div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEditModal()">
   <div class="edit-modal">
-    <h3>✏️ Edit Task</h3>
+    <h3><i class="bi bi-pencil"></i> Edit Task</h3>
     <form method="POST" id="editForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="edit-field">
@@ -807,9 +807,9 @@
         <label class="edit-label">Priority</label>
         <select name="priority" id="editPriority" class="edit-select">
           <option value="">No priority</option>
-          <option value="high">🔴 High</option>
-          <option value="medium">🟡 Medium</option>
-          <option value="low">🟢 Low</option>
+          <option value="high"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#ef4444;border:1px solid #2D2A26"></span> High</option>
+          <option value="medium"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b;border:1px solid #2D2A26"></span> Medium</option>
+          <option value="low"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#10b981;border:1px solid #2D2A26"></span> Low</option>
         </select>
       </div>
       <div class="edit-field">
@@ -881,8 +881,8 @@
     const h = new Date().getHours();
     const name = "{{ current_user.name.split()[0] if current_user.name else 'there' }}";
     const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    const emoji = h < 12 ? '☀️' : h < 17 ? '🌤️' : '🌙';
-    document.getElementById('greetingText').textContent = greet + ', ' + name + ' ' + emoji;
+    const icon = h < 12 ? '<i class="bi bi-sun"></i>' : h < 17 ? '<i class="bi bi-cloud-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+    document.getElementById('greetingText').innerHTML = greet + ', ' + name + ' ' + icon;
 
     // Hide insight card if dismissed today
     const insightKey = 'insightDismissed_' + new Date().toDateString();

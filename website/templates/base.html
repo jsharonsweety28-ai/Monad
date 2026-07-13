@@ -624,7 +624,7 @@
                 <span class="sb-item-label">Weekly tasks</span>
               </a>
               <a class="sb-item {% if active_page == 'timemap' %}active{% endif %}" href="{{ url_for('views.timemap') }}" data-tip="Time Map">
-                <div class="sb-icon"><i class="bi bi-clock-history"></i></div>
+                <div class="sb-icon"><i class="bi bi-map-fill"></i></div>
                 <span class="sb-item-label">Time Map</span>
               </a>
             </nav>
@@ -660,7 +660,7 @@
           <div class="sb-sect-body" id="sect-study">
             <nav class="sb-nav">
               <a class="sb-item {% if active_page in ['study','exams','timetable'] %}active{% endif %}" href="{{ url_for('views.study_subjects') }}" data-tip="Study">
-                <div class="sb-icon"><i class="bi bi-book-fill"></i></div>
+                <div class="sb-icon"><i class="bi bi-mortarboard-fill"></i></div>
                 <span class="sb-item-label">Study</span>
               </a>
 
@@ -1042,7 +1042,7 @@ if ('serviceWorker' in navigator) {
 <div id="shareOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;">
   <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:24px; padding:28px; max-width:420px; width:90%; position:relative; max-height:90vh; overflow-y:auto;">
     <button onclick="closeShareCard()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text-secondary);">×</button>
-    <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1rem; margin-bottom:16px; color:var(--text-primary);">Share your progress ✨</h3>
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1rem; margin-bottom:16px; color:var(--text-primary);">Share your progress <i class="bi bi-stars"></i></h3>
 
     <!-- The card that gets captured -->
     <div id="shareCard" style="

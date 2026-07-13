@@ -126,35 +126,35 @@
       {% for name, streak in streaks.items() %}
         <div class="streak-card {% if streak >= 21 %}fire{% endif %}">
           <span class="streak-emoji">
-            {% if streak >= 30 %}🔥{% elif streak >= 21 %}⚡{% elif streak >= 14 %}💪{% elif streak >= 7 %}🌟{% elif streak >= 3 %}🌱{% else %}🎯{% endif %}
+            {% if streak >= 30 %}<i class="bi bi-fire"></i>{% elif streak >= 21 %}<i class="bi bi-lightning-charge-fill"></i>{% elif streak >= 14 %}<i class="bi bi-shield-fill"></i>{% elif streak >= 7 %}<i class="bi bi-star-fill"></i>{% elif streak >= 3 %}<i class="bi bi-flower1"></i>{% else %}<i class="bi bi-bullseye"></i>{% endif %}
           </span>
           <div class="streak-num">{{ streak }}</div>
           <div class="streak-label">Day Streak</div>
           <div class="streak-name">{{ name }}</div>
-          {% if streak >= 30 %}<span class="streak-badge badge-fire">🔥 LEGENDARY</span>
-          {% elif streak >= 21 %}<span class="streak-badge badge-fire">🔥 On Fire</span>
-          {% elif streak >= 14 %}<span class="streak-badge badge-great">💪 Strong</span>
-          {% elif streak >= 7 %}<span class="streak-badge badge-good">⭐ Building</span>
-          {% elif streak >= 3 %}<span class="streak-badge badge-start">🌱 Starting</span>
-          {% else %}<span class="streak-badge badge-start">🎯 Keep Going</span>{% endif %}
+          {% if streak >= 30 %}<span class="streak-badge badge-fire"><i class="bi bi-fire"></i> LEGENDARY</span>
+          {% elif streak >= 21 %}<span class="streak-badge badge-fire"><i class="bi bi-fire"></i> On Fire</span>
+          {% elif streak >= 14 %}<span class="streak-badge badge-great"><i class="bi bi-shield-fill"></i> Strong</span>
+          {% elif streak >= 7 %}<span class="streak-badge badge-good"><i class="bi bi-star-fill"></i> Building</span>
+          {% elif streak >= 3 %}<span class="streak-badge badge-start"><i class="bi bi-flower1"></i> Starting</span>
+          {% else %}<span class="streak-badge badge-start"><i class="bi bi-bullseye"></i> Keep Going</span>{% endif %}
         </div>
       {% endfor %}
     </div>
 
     <div class="milestones">
-      <h5>🏆 Streak Milestones</h5>
+      <h5><i class="bi bi-trophy-fill"></i> Streak Milestones</h5>
       <div class="ms-grid">
-        <div class="ms-item"><div class="ms-emoji">🎯</div><div class="ms-days">3 Days</div><div class="ms-label">Getting Started</div></div>
-        <div class="ms-item"><div class="ms-emoji">🌟</div><div class="ms-days">7 Days</div><div class="ms-label">1 Week</div></div>
-        <div class="ms-item"><div class="ms-emoji">💪</div><div class="ms-days">14 Days</div><div class="ms-label">2 Weeks</div></div>
-        <div class="ms-item"><div class="ms-emoji">🔥</div><div class="ms-days">21 Days</div><div class="ms-label">Habit Formed</div></div>
-        <div class="ms-item"><div class="ms-emoji">⚡</div><div class="ms-days">30 Days</div><div class="ms-label">1 Month</div></div>
-        <div class="ms-item"><div class="ms-emoji">👑</div><div class="ms-days">60 Days</div><div class="ms-label">Legend</div></div>
+        <div class="ms-item"><div class="ms-emoji"><i class="bi bi-bullseye"></i></div><div class="ms-days">3 Days</div><div class="ms-label">Getting Started</div></div>
+        <div class="ms-item"><div class="ms-emoji"><i class="bi bi-star-fill"></i></div><div class="ms-days">7 Days</div><div class="ms-label">1 Week</div></div>
+        <div class="ms-item"><div class="ms-emoji"><i class="bi bi-shield-fill"></i></div><div class="ms-days">14 Days</div><div class="ms-label">2 Weeks</div></div>
+        <div class="ms-item"><div class="ms-emoji"><i class="bi bi-fire"></i></div><div class="ms-days">21 Days</div><div class="ms-label">Habit Formed</div></div>
+        <div class="ms-item"><div class="ms-emoji"><i class="bi bi-lightning-charge-fill"></i></div><div class="ms-days">30 Days</div><div class="ms-label">1 Month</div></div>
+        <div class="ms-item"><div class="ms-emoji"><i class="bi bi-gem"></i></div><div class="ms-days">60 Days</div><div class="ms-label">Legend</div></div>
       </div>
     </div>
   {% else %}
     <div class="empty-state">
-      <div style="font-size:60px;">📊</div>
+      <div style="font-size:60px;"><i class="bi bi-bar-chart-fill"></i></div>
       <h4>No streaks yet</h4>
       <p>Start tracking habits daily to build streaks!</p>
     </div>

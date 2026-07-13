@@ -2622,8 +2622,6 @@ Return ONLY valid JSON:
 @login_required
 def study_subjects():
     profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
-    if not profile and request.args.get('skip') != '1':
-        return render_template('study_setup.html', active_page='study')
     subjects = Subject.query.filter_by(user_id=current_user.id).order_by(Subject.name).all()
     today = datetime.now(timezone.utc).date()
     dow   = today.weekday()  # 0=Mon … 5=Sat, 6=Sun

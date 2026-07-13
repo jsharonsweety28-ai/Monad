@@ -146,11 +146,11 @@
     <a class="subject-card" href="{{ url_for('views.study_subject_detail', id=s.id) }}">
       <div class="sc-top" style="background:{{ s.color }}">
         {% if s.code %}<span class="sc-code">{{ s.code }}</span>{% endif %}
-        <span style="font-size:2rem">📁</span>
+        <span style="font-size:2rem"><i class="bi bi-folder-fill"></i></span>
       </div>
       <div class="sc-body">
         <div class="sc-name">{{ s.name }}</div>
-        {% if s.teacher %}<div class="sc-teacher">👩‍🏫 {{ s.teacher }}</div>{% endif %}
+        {% if s.teacher %}<div class="sc-teacher"><i class="bi bi-person-fill"></i> {{ s.teacher }}</div>{% endif %}
         <div class="sc-footer">
           <span class="sc-stat">{{ s.exams|selectattr('date', 'ge', today)|list|length }} exam{{ 's' if s.exams|selectattr('date','ge',today)|list|length != 1 }}</span>
           <span class="sc-stat">{{ s.notes|length }} note{{ 's' if s.notes|length != 1 }}</span>

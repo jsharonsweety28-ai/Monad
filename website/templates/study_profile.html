@@ -184,14 +184,14 @@
             <div class="sp-photo-wrap" id="photoWrap">
               {% if profile and profile.photo_filename %}
                 <img src="{{ get_public_url(profile.photo_filename) }}" id="photoImg" alt="ID Photo">
-                <span class="sp-photo-placeholder" id="photoPlaceholder" style="display:none">🧑‍🎓</span>
+                <span class="sp-photo-placeholder" id="photoPlaceholder" style="display:none"><i class="bi bi-mortarboard-fill"></i></span>
               {% else %}
-                <span class="sp-photo-placeholder" id="photoPlaceholder">🧑‍🎓</span>
+                <span class="sp-photo-placeholder" id="photoPlaceholder"><i class="bi bi-mortarboard-fill"></i></span>
                 <img src="" id="photoImg" style="display:none" alt="ID Photo">
               {% endif %}
             </div>
             <button class="sp-upload-btn" onclick="event.stopPropagation(); document.getElementById('photoInput').click()">
-              📷 Change photo
+              <i class="bi bi-camera-fill"></i> Change photo
             </button>
             <button class="sp-delete-photo-btn" id="deletePhotoBtn"
                     style="{% if not profile or not profile.photo_filename %}display:none{% endif %}"
@@ -269,9 +269,9 @@
       <!-- Institution type picker -->
       <div style="display:flex;gap:8px;margin-bottom:18px">
         <button type="button" class="sp-type-btn {% if not profile or profile.institution_type != 'college' %}active{% endif %}"
-                id="spTypeSchool" onclick="switchInstType('school')">🏫 School</button>
+                id="spTypeSchool" onclick="switchInstType('school')"><i class="bi bi-building-fill"></i> School</button>
         <button type="button" class="sp-type-btn {% if profile and profile.institution_type == 'college' %}active{% endif %}"
-                id="spTypeCollege" onclick="switchInstType('college')">🎓 College / University</button>
+                id="spTypeCollege" onclick="switchInstType('college')"><i class="bi bi-mortarboard-fill"></i> College / University</button>
       </div>
       <input type="hidden" name="institution_type" id="fInstType"
              value="{{ profile.institution_type or 'school' if profile else 'school' }}">
@@ -352,22 +352,22 @@
   <!-- Stats row -->
   <div class="sp-stats" style="margin-top:28px">
     <div class="sp-stat">
-      <div class="sp-stat-icon">📚</div>
+      <div class="sp-stat-icon"><i class="bi bi-book-fill"></i></div>
       <div class="sp-stat-num">{{ subjects|length }}</div>
       <div class="sp-stat-lbl">Subjects</div>
     </div>
     <div class="sp-stat">
-      <div class="sp-stat-icon">🗓</div>
+      <div class="sp-stat-icon"><i class="bi bi-calendar2-fill"></i></div>
       <div class="sp-stat-num">{{ total_slots }}</div>
       <div class="sp-stat-lbl">Classes/week</div>
     </div>
     <div class="sp-stat">
-      <div class="sp-stat-icon">📋</div>
+      <div class="sp-stat-icon"><i class="bi bi-clipboard-fill"></i></div>
       <div class="sp-stat-num">{{ exams_soon }}</div>
       <div class="sp-stat-lbl">Upcoming exams</div>
     </div>
     <div class="sp-stat">
-      <div class="sp-stat-icon">⏱</div>
+      <div class="sp-stat-icon"><i class="bi bi-hourglass-split"></i></div>
       <div class="sp-stat-num">{{ study_hours }}</div>
       <div class="sp-stat-lbl">Study hrs this month</div>
     </div>

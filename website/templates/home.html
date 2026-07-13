@@ -267,7 +267,7 @@
   .bc-title { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: .97rem; color: var(--text); margin-bottom: 4px; text-transform: uppercase; }
   .bc-desc  { font-size: .77rem; color: var(--muted); line-height: 1.6; }
   .bc-bg    { position: absolute; bottom: -10px; right: -4px; font-size: 5rem; opacity: .05; pointer-events: none; line-height: 1; }
-  .bc-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+  .bc-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; padding-bottom: 4px; }
   .bc-chip  { padding: 3px 9px; border: 2px solid var(--border); border-radius: 3px; font-size: .62rem; font-weight: 700; text-transform: uppercase; }
   .bc-chip.accent { background: var(--accent); color: white; }
   .bc-chip.plain  { background: var(--bg2); color: var(--text); }
@@ -469,12 +469,12 @@
           <div class="dm-title">Today</div>
           <div class="dm-date">{{ current_date if current_date else 'Sunday' }}</div>
         </div>
-        <div class="dm-row done"><div class="dm-chk on">✓</div> Morning workout <span class="dm-badge">🔥 18 days</span></div>
-        <div class="dm-row done"><div class="dm-chk on">✓</div> Read Chapter 4</div>
+        <div class="dm-row done"><div class="dm-chk on"><i class="bi bi-check"></i></div> Morning workout <span class="dm-badge"><i class="bi bi-fire"></i> 18 days</span></div>
+        <div class="dm-row done"><div class="dm-chk on"><i class="bi bi-check"></i></div> Read Chapter 4</div>
         <div class="dm-row"><div class="dm-chk off"></div> Review physics notes</div>
-        <div class="dm-row"><div class="dm-chk off"></div> Physics Exam prep <span class="dm-badge">📚 3 days</span></div>
+        <div class="dm-row"><div class="dm-chk off"></div> Physics Exam prep <span class="dm-badge"><i class="bi bi-book"></i> 3 days</span></div>
         <div class="dm-div"></div>
-        <a href="/sign-up" class="dm-focus-btn">▶ Start Focus Session</a>
+        <a href="/sign-up" class="dm-focus-btn"><i class="bi bi-play-fill"></i> Start Focus Session</a>
       </div>
     </div>
   </section>
@@ -494,10 +494,10 @@
         <h2 class="sec-title reveal">Your schedule,<br>built in one tap.</h2>
         <p class="sec-sub reveal r1" style="margin-top:12px">Gemini reads your tasks, habits, sleep rhythm, and goals — then lays out your entire day. At night, Monad Intelligence shows your momentum score, burnout risk, and what's actually working.</p>
         <div class="ai-chips-row reveal r2">
-          <span class="ai-chip accent">✨ AI Schedule Generator</span>
-          <span class="ai-chip muted">📊 Momentum Score</span>
-          <span class="ai-chip muted">🔥 Burnout Risk</span>
-          <span class="ai-chip muted">⚡ Peak Hour Insights</span>
+          <span class="ai-chip accent"><i class="bi bi-stars"></i> AI Schedule Generator</span>
+          <span class="ai-chip muted"><i class="bi bi-bar-chart-fill"></i> Momentum Score</span>
+          <span class="ai-chip muted"><i class="bi bi-fire"></i> Burnout Risk</span>
+          <span class="ai-chip muted"><i class="bi bi-lightning-charge-fill"></i> Peak Hour Insights</span>
         </div>
       </div>
       <div class="reveal r1">
@@ -525,13 +525,13 @@
         </div>
         <!-- AI Schedule mockup -->
         <div class="sched-mock">
-          <div class="sched-hdr"><span>✨ AI Generated Schedule</span><span style="font-size:.6rem;color:var(--muted)">Today · Gemini</span></div>
+          <div class="sched-hdr"><span><i class="bi bi-stars"></i> AI Generated Schedule</span><span style="font-size:.6rem;color:var(--muted)">Today · Gemini</span></div>
           <div class="sb pers"><span class="sb-t">Morning Routine</span><span class="sb-tm">7:00 – 7:30</span></div>
           <div class="sb hlth"><span class="sb-t">Morning Exercise</span><span class="sb-tm">7:30 – 8:30</span></div>
           <div class="sb stdy"><span class="sb-t">Physics Revision</span><span class="sb-tm">9:00 – 11:00</span></div>
           <div class="sb brk"><span class="sb-t">Lunch Break</span><span class="sb-tm">1:00 – 1:30</span></div>
           <div class="sb work"><span class="sb-t">Chemistry Notes</span><span class="sb-tm">2:00 – 4:00</span></div>
-          <div class="sched-gen">✨ Generate my schedule → powered by Gemini</div>
+          <div class="sched-gen"><i class="bi bi-stars"></i> Generate my schedule → powered by Gemini</div>
         </div>
       </div>
     </div>
@@ -552,13 +552,13 @@
       <!-- Morning: Plan -->
       <div class="flow-step reveal">
         <div class="flow-text">
-          <div class="time-tag t-morning">🌅 Morning</div>
+          <div class="time-tag t-morning"><i class="bi bi-sunrise"></i> Morning</div>
           <h3>Plan with clarity.</h3>
           <p>Start every morning knowing exactly what matters. Add tasks, set priorities, and let AI suggest the perfect day plan based on your schedule and energy.</p>
         </div>
         <div class="flow-visual">
           <div class="flow-card">
-            <div class="fc-head"><span>✅ Today's Tasks</span><span style="font-size:.65rem;color:var(--muted)">3 / 4 done</span></div>
+            <div class="fc-head"><span><i class="bi bi-check-square-fill"></i> Today's Tasks</span><span style="font-size:.65rem;color:var(--muted)">3 / 4 done</span></div>
             <div class="fc-item done"><div class="fc-dot" style="background:var(--accent)"></div> Morning run</div>
             <div class="fc-item done"><div class="fc-dot" style="background:#3b82f6"></div> Read 20 pages</div>
             <div class="fc-item done"><div class="fc-dot" style="background:#8b5cf6"></div> Team standup</div>
@@ -570,13 +570,13 @@
       <!-- Afternoon: Build -->
       <div class="flow-step flip reveal r1">
         <div class="flow-text">
-          <div class="time-tag t-afternoon">☀️ Afternoon</div>
+          <div class="time-tag t-afternoon"><i class="bi bi-sun"></i> Afternoon</div>
           <h3>Build habits that stick.</h3>
           <p>Track your daily habits visually. Watch your streaks grow, earn fire badges, and feel the momentum of a consistent life compound over time.</p>
         </div>
         <div class="flow-visual">
           <div class="flow-card">
-            <div class="fc-head"><span>🎯 Habits</span><span style="font-size:.65rem;color:var(--accent)">🔥 18-day streak</span></div>
+            <div class="fc-head"><span><i class="bi bi-bullseye"></i> Habits</span><span style="font-size:.65rem;color:var(--accent)"><i class="bi bi-fire"></i> 18-day streak</span></div>
             <div style="margin-bottom:10px">
               <div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:4px"><span style="color:var(--text);font-weight:700">Gym</span><span style="color:var(--muted)">5/7 days</span></div>
               <div class="fc-bar-wrap"><div class="fc-bar" style="width:72%"></div></div>
@@ -596,13 +596,13 @@
       <!-- Evening: Study -->
       <div class="flow-step reveal">
         <div class="flow-text">
-          <div class="time-tag t-evening">🌆 Evening</div>
+          <div class="time-tag t-evening"><i class="bi bi-buildings"></i> Evening</div>
           <h3>Study smarter, not harder.</h3>
           <p>Your personal study hub — timetable, subject notes, exam countdowns, and a Focus Room with ambient sounds and real-photo backgrounds by your side.</p>
         </div>
         <div class="flow-visual">
           <div class="flow-card">
-            <div class="fc-head"><span>📚 Study</span></div>
+            <div class="fc-head"><span><i class="bi bi-book-fill"></i> Study</span></div>
             <div class="fc-exam-row">
               <span style="font-weight:700;color:var(--text);font-size:.74rem">Physics</span>
               <span class="fc-days-badge" style="background:rgba(239,68,68,.1);color:#ef4444;border-color:#ef4444">3 days</span>
@@ -615,7 +615,7 @@
               <span style="font-weight:700;color:var(--text);font-size:.74rem">Maths</span>
               <span class="fc-days-badge" style="background:rgba(16,185,129,.1);color:#10b981;border-color:#10b981">14 days</span>
             </div>
-            <div style="margin-top:10px;padding:8px 10px;background:var(--accent);border:2px solid var(--border);border-radius:4px;text-align:center;font-size:.7rem;font-weight:800;color:white;box-shadow:var(--shadow-sm);font-family:'Space Grotesk',sans-serif;text-transform:uppercase">🍅 Start Focus Session</div>
+            <div style="margin-top:10px;padding:8px 10px;background:var(--accent);border:2px solid var(--border);border-radius:4px;text-align:center;font-size:.7rem;font-weight:800;color:white;box-shadow:var(--shadow-sm);font-family:'Space Grotesk',sans-serif;text-transform:uppercase"><i class="bi bi-stopwatch-fill"></i> Start Focus Session</div>
           </div>
         </div>
       </div>
@@ -623,25 +623,25 @@
       <!-- Night: Reflect -->
       <div class="flow-step flip reveal r1">
         <div class="flow-text">
-          <div class="time-tag t-night">🌙 Night</div>
+          <div class="time-tag t-night"><i class="bi bi-moon-stars"></i> Night</div>
           <h3>Reflect and earn your star.</h3>
-          <p>End every day with a moment of gratitude. Journal your mood, wins, and learnings. Complete the day and earn your ⭐ — building a legacy of perfect days.</p>
+          <p>End every day with a moment of gratitude. Journal your mood, wins, and learnings. Complete the day and earn your <i class="bi bi-star-fill" style="color:#E07B39"></i> — building a legacy of perfect days.</p>
         </div>
         <div class="flow-visual">
           <div class="flow-card">
-            <div class="fc-head"><span>📖 Daily Journal</span></div>
+            <div class="fc-head"><span><i class="bi bi-journal-text"></i> Daily Journal</span></div>
             <p style="font-size:.7rem;color:var(--muted);margin-bottom:10px">How are you feeling today?</p>
             <div class="fc-mood-row">
-              <div class="fc-mood-opt">😞</div>
-              <div class="fc-mood-opt">😐</div>
-              <div class="fc-mood-opt sel">😊</div>
-              <div class="fc-mood-opt">😄</div>
-              <div class="fc-mood-opt">🤩</div>
+              <div class="fc-mood-opt"><i class="bi bi-emoji-frown"></i></div>
+              <div class="fc-mood-opt"><i class="bi bi-emoji-neutral"></i></div>
+              <div class="fc-mood-opt sel"><i class="bi bi-emoji-smile"></i></div>
+              <div class="fc-mood-opt"><i class="bi bi-emoji-laughing"></i></div>
+              <div class="fc-mood-opt"><i class="bi bi-emoji-heart-eyes"></i></div>
             </div>
             <div style="margin-top:10px;padding:7px 10px;border:2px solid var(--border);border-radius:4px;background:var(--bg2);font-size:.7rem;color:var(--muted)">
-              Grateful for… <span style="color:var(--text);font-style:italic">a productive focus session today ✨</span>
+              Grateful for… <span style="color:var(--text);font-style:italic">a productive focus session today <i class="bi bi-stars" style="color:#E07B39"></i></span>
             </div>
-            <div style="margin-top:8px;text-align:right;font-size:.7rem;font-weight:800;color:var(--accent);font-family:'Space Grotesk',sans-serif;text-transform:uppercase">Earn today's ⭐ →</div>
+            <div style="margin-top:8px;text-align:right;font-size:.7rem;font-weight:800;color:var(--accent);font-family:'Space Grotesk',sans-serif;text-transform:uppercase">Earn today's <i class="bi bi-star-fill"></i> →</div>
           </div>
         </div>
       </div>
@@ -655,34 +655,34 @@
 <!-- ─── COMMUNITY + CROWNS ─── -->
 <section class="comm-section" id="community">
   <div class="sec-inner">
-    <div class="sec-label">💎 Community accountability</div>
+    <div class="sec-label"><i class="bi bi-gem"></i> Community accountability</div>
     <div class="comm-grid">
       <div class="reveal">
         <div class="comm-mock">
-          <div class="comm-ttl">👥 Study Squad</div>
+          <div class="comm-ttl"><i class="bi bi-people-fill"></i> Study Squad</div>
           <div class="lb-r">
-            <div class="lb-rk">🥇</div>
+            <div class="lb-rk">1</div>
             <div class="lb-av" style="background:#E07B39">AI</div>
             <div class="lb-nm">Aisha</div>
-            <span class="lb-st">🔥 15d</span>
-            <div class="lb-ck">✓</div>
+            <span class="lb-st"><i class="bi bi-fire"></i> 15d</span>
+            <div class="lb-ck"><i class="bi bi-check"></i></div>
           </div>
           <div class="lb-r">
-            <div class="lb-rk">🥈</div>
-            <div class="lb-av" style="background:#8b5cf6">RO</div>
-            <div class="lb-nm">Rosy <span style="font-size:.58rem;color:var(--accent);font-weight:800">you</span></div>
-            <span class="lb-st">🔥 12d</span>
-            <div class="lb-ck">✓</div>
+            <div class="lb-rk">2</div>
+            <div class="lb-av" style="background:#8b5cf6">MA</div>
+            <div class="lb-nm">Maya <span style="font-size:.58rem;color:var(--accent);font-weight:800">you</span></div>
+            <span class="lb-st"><i class="bi bi-fire"></i> 12d</span>
+            <div class="lb-ck"><i class="bi bi-check"></i></div>
           </div>
           <div class="lb-r">
-            <div class="lb-rk">🥉</div>
+            <div class="lb-rk">3</div>
             <div class="lb-av" style="background:#10b981">SA</div>
             <div class="lb-nm">Sam</div>
-            <span class="lb-st">🔥 8d</span>
-            <div class="lb-ck">✓</div>
+            <span class="lb-st"><i class="bi bi-fire"></i> 8d</span>
+            <div class="lb-ck"><i class="bi bi-check"></i></div>
           </div>
           <div class="diamond-ban">
-            <div class="diamond-ico">💎</div>
+            <div class="diamond-ico"><i class="bi bi-gem"></i></div>
             <div>
               <div class="diamond-t">Diamond Day!</div>
               <div class="diamond-s">Every member checked in — the whole crew showed up!</div>
@@ -692,7 +692,7 @@
       </div>
       <div>
         <h2 class="sec-title reveal">Your Crew Keeps<br>You Honest.</h2>
-        <p class="sec-sub reveal r1" style="margin-top:12px">Not just your streak — your crew's streak. Create a private community, share a daily habit, and earn a 💎 Diamond when every single member shows up. Miss one person — no diamond.</p>
+        <p class="sec-sub reveal r1" style="margin-top:12px">Not just your streak — your crew's streak. Create a private community, share a daily habit, and earn a <i class="bi bi-gem"></i> Diamond when every single member shows up. Miss one person — no diamond.</p>
         <div class="comm-steps reveal r2">
           <div class="comm-step">
             <div class="c-num">1</div>
@@ -711,7 +711,7 @@
           <div class="comm-step">
             <div class="c-num">3</div>
             <div class="c-txt">
-              <h4>Earn a 👑 diamond together</h4>
+              <h4>Earn a <i class="bi bi-gem"></i> diamond together</h4>
               <p>All members check in → whole group earns a Diamond. One person misses → no diamond. That's accountability.</p>
             </div>
           </div>
@@ -726,44 +726,44 @@
 <!-- ─── FOCUS ROOM ─── -->
 <section class="focus-section" id="focus">
   <div class="sec-inner">
-    <div class="sec-label">⚡ Deep work, your way</div>
+    <div class="sec-label"><i class="bi bi-lightning-charge-fill"></i> Deep work, your way</div>
     <h2 class="sec-title reveal">Your Personal<br>Focus Room.</h2>
     <p class="sec-sub reveal r1">Three timer modes, four ambient rooms. Lock in with lo-fi beats, rain sounds, a forest, or a café — the room shifts with your vibe. plan and pursue.</p>
 
     <div class="focus-mock reveal r2">
       <div class="fm-modes">
-        <div class="fm-mode active">🍅 Pomodoro</div>
-        <div class="fm-mode off">⏱ Timer</div>
-        <div class="fm-mode off">🏃 Stopwatch</div>
+        <div class="fm-mode active"><i class="bi bi-stopwatch-fill"></i> Pomodoro</div>
+        <div class="fm-mode off"><i class="bi bi-hourglass-split"></i> Timer</div>
+        <div class="fm-mode off"><i class="bi bi-speedometer2"></i> Stopwatch</div>
       </div>
       <div class="fm-timer">25:00</div>
       <div class="fm-sounds">
-        <div class="fm-sound on">☁️ Lo-fi</div>
-        <div class="fm-sound off">🌧 Rain</div>
-        <div class="fm-sound off">🌿 Forest</div>
-        <div class="fm-sound off">☕ Café</div>
-        <div class="fm-sound off">🔇 None</div>
+        <div class="fm-sound on"><i class="bi bi-cloud-fill"></i> Lo-fi</div>
+        <div class="fm-sound off"><i class="bi bi-cloud-rain"></i> Rain</div>
+        <div class="fm-sound off"><i class="bi bi-tree"></i> Forest</div>
+        <div class="fm-sound off"><i class="bi bi-cup-hot"></i> Café</div>
+        <div class="fm-sound off"><i class="bi bi-volume-mute-fill"></i> None</div>
       </div>
     </div>
 
     <div class="focus-chips">
       <div class="focus-chip">
-        <div class="focus-chip-icon">🍅</div>
+        <div class="focus-chip-icon"><i class="bi bi-stopwatch-fill"></i></div>
         <div class="focus-chip-lbl">Pomodoro</div>
         <div class="focus-chip-hint">25 min blocks</div>
       </div>
       <div class="focus-chip">
-        <div class="focus-chip-icon">⏱</div>
+        <div class="focus-chip-icon"><i class="bi bi-hourglass-split"></i></div>
         <div class="focus-chip-lbl">Timer</div>
         <div class="focus-chip-hint">Custom countdown</div>
       </div>
       <div class="focus-chip">
-        <div class="focus-chip-icon">🏃</div>
+        <div class="focus-chip-icon"><i class="bi bi-speedometer2"></i></div>
         <div class="focus-chip-lbl">Stopwatch</div>
         <div class="focus-chip-hint">Flow at your pace</div>
       </div>
       <div class="focus-chip">
-        <div class="focus-chip-icon">🎵</div>
+        <div class="focus-chip-icon"><i class="bi bi-music-note-beamed"></i></div>
         <div class="focus-chip-lbl">Ambient</div>
         <div class="focus-chip-hint">4 soundscapes</div>
       </div>
@@ -784,61 +784,61 @@
       <!-- PLAN — wide -->
       <div class="bc s2" data-bc>
         <div>
-          <span class="bc-icon">✅</span>
+          <span class="bc-icon"><i class="bi bi-check-square-fill"></i></span>
           <div class="bc-title">Plan</div>
           <div class="bc-desc">Daily tasks, weekly views, AI day planning, recurring schedules, and one-click Pomodoro sessions. Never miss what matters.</div>
         </div>
         <div class="bc-chips">
-          <div class="bc-chip accent">🗂 Tasks</div>
-          <div class="bc-chip plain">📅 Calendar</div>
-          <div class="bc-chip plain">🤖 AI Plan</div>
+          <div class="bc-chip accent"><i class="bi bi-folder2-open"></i> Tasks</div>
+          <div class="bc-chip plain"><i class="bi bi-calendar-fill"></i> Calendar</div>
+          <div class="bc-chip plain"><i class="bi bi-robot"></i> AI Plan</div>
         </div>
-        <span class="bc-bg">✅</span>
+        <span class="bc-bg"><i class="bi bi-check-square-fill"></i></span>
       </div>
 
       <!-- BUILD -->
       <div class="bc" data-bc style="transition-delay:.08s">
         <div>
-          <span class="bc-icon">🌱</span>
+          <span class="bc-icon"><i class="bi bi-flower1"></i></span>
           <div class="bc-title">Build</div>
           <div class="bc-desc">Habit tracker with streak counting, monthly grids, and milestone badges.</div>
         </div>
-        <span class="bc-bg">🌱</span>
+        <span class="bc-bg"><i class="bi bi-flower1"></i></span>
       </div>
 
       <!-- STUDY -->
       <div class="bc" data-bc style="transition-delay:.16s">
         <div>
-          <span class="bc-icon">📚</span>
+          <span class="bc-icon"><i class="bi bi-book-fill"></i></span>
           <div class="bc-title">Study</div>
           <div class="bc-desc">Subjects, timetable, exam countdowns, notes, and your student profile ID card.</div>
         </div>
-        <span class="bc-bg">📚</span>
+        <span class="bc-bg"><i class="bi bi-book-fill"></i></span>
       </div>
 
       <!-- ANALYTICS -->
       <div class="bc" data-bc style="transition-delay:.24s">
         <div>
-          <span class="bc-icon">📊</span>
+          <span class="bc-icon"><i class="bi bi-bar-chart-fill"></i></span>
           <div class="bc-title">Analyse</div>
           <div class="bc-desc">Weekly and monthly breakdowns of your focus time, task completion, habit streaks, and study hours — all in one dashboard.</div>
         </div>
-        <span class="bc-bg">📊</span>
+        <span class="bc-bg"><i class="bi bi-bar-chart-fill"></i></span>
       </div>
 
       <!-- REFLECT — wide -->
       <div class="bc s2" data-bc style="transition-delay:.32s">
         <div>
-          <span class="bc-icon">🌙</span>
+          <span class="bc-icon"><i class="bi bi-moon-stars-fill"></i></span>
           <div class="bc-title">Reflect</div>
           <div class="bc-desc">Daily mood journal, photo memories, gratitude logs, and a star calendar that shows every perfect day — building your legacy one evening at a time.</div>
         </div>
         <div class="bc-chips">
-          <div class="bc-chip plain">📖 Journal</div>
-          <div class="bc-chip plain">📸 Memories</div>
-          <div class="bc-chip accent">⭐ Stars</div>
+          <div class="bc-chip plain"><i class="bi bi-journal-text"></i> Journal</div>
+          <div class="bc-chip plain"><i class="bi bi-camera-fill"></i> Memories</div>
+          <div class="bc-chip accent"><i class="bi bi-star-fill"></i> Stars</div>
         </div>
-        <span class="bc-bg">🌙</span>
+        <span class="bc-bg"><i class="bi bi-moon-stars-fill"></i></span>
       </div>
     </div>
   </div>
@@ -849,22 +849,22 @@
 <!-- ─── BUILT FOR STUDENTS ─── -->
 <section class="student-section" id="students">
   <div class="sec-inner">
-    <div class="sec-label">🎓 Student-first</div>
+    <div class="sec-label"><i class="bi bi-mortarboard-fill"></i> Student-first</div>
     <h2 class="sec-title reveal">Built for Students.<br>Actually.</h2>
     <p class="sec-sub reveal r1">Deadlines, timetables, exam countdowns, subject notes — monad speaks your language. Built from the ground up for students, not boardrooms.</p>
     <div class="student-grid">
       <!-- Timetable card -->
       <div class="stud-card" data-sc>
-        <div class="stud-hd">📅 Today's Timetable</div>
+        <div class="stud-hd"><i class="bi bi-calendar-fill"></i> Today's Timetable</div>
         <div class="tt-row"><span class="tt-time">8:00</span><span class="tt-sub">Mathematics</span><span class="tt-rm">Rm 204</span></div>
         <div class="tt-row"><span class="tt-time">10:00</span><span class="tt-sub">Physics</span><span class="tt-rm">Lab 3</span></div>
         <div class="tt-row"><span class="tt-time">1:00</span><span class="tt-sub">Chemistry</span><span class="tt-rm">Rm 108</span></div>
         <div class="tt-row"><span class="tt-time">3:00</span><span class="tt-sub">English</span><span class="tt-rm">Rm 301</span></div>
-        <div style="margin-top:10px;font-size:.66rem;color:var(--muted)">📣 Reminder 10 min before each class</div>
+        <div style="margin-top:10px;font-size:.66rem;color:var(--muted)"><i class="bi bi-megaphone-fill"></i> Reminder 10 min before each class</div>
       </div>
       <!-- Exam countdown card -->
       <div class="stud-card" data-sc style="transition-delay:.1s">
-        <div class="stud-hd">📝 Upcoming Exams</div>
+        <div class="stud-hd"><i class="bi bi-file-earmark-text-fill"></i> Upcoming Exams</div>
         <div class="ex-row"><span class="ex-sub">Physics</span><span class="ex-badge" style="background:rgba(239,68,68,.1);color:#ef4444;border-color:#ef4444">3 days</span></div>
         <div class="ex-row"><span class="ex-sub">Chemistry</span><span class="ex-badge" style="background:rgba(245,158,11,.1);color:#d97706;border-color:#d97706">8 days</span></div>
         <div class="ex-row"><span class="ex-sub">Mathematics</span><span class="ex-badge" style="background:rgba(16,185,129,.1);color:#10b981;border-color:#10b981">14 days</span></div>
@@ -873,14 +873,14 @@
       </div>
       <!-- Student profile card -->
       <div class="stud-card" data-sc style="transition-delay:.2s">
-        <div class="stud-hd">🪪 Study Profile</div>
+        <div class="stud-hd"><i class="bi bi-person-badge-fill"></i> Study Profile</div>
         <div class="sid-card">
           <div class="sid-inst">State University · CSE Dept.</div>
-          <div class="sid-name">Rosy</div>
+          <div class="sid-name">Maya</div>
           <div class="sid-roll">Roll No: 21CS045</div>
           <div class="sid-bot">
             <div class="sid-yr">3rd Year · Semester 5</div>
-            <div style="font-size:1.3rem">⭐</div>
+            <div style="font-size:1.3rem"><i class="bi bi-star-fill" style="color:#E07B39"></i></div>
           </div>
         </div>
         <div style="font-size:.68rem;color:var(--muted);line-height:1.65">Your digital study identity — institution, year, subjects, and achievements all in one place.</div>
@@ -894,14 +894,14 @@
 <!-- ─── MEMORIES + ACHIEVEMENTS ─── -->
 <section class="achieve-section" id="memories">
   <div class="sec-inner">
-    <div class="sec-label">📸 gather and grow · ⭐ live the legacy</div>
+    <div class="sec-label"><i class="bi bi-camera-fill"></i> gather and grow · <i class="bi bi-star-fill"></i> live the legacy</div>
     <h2 class="sec-title reveal">Every Day Counts.</h2>
     <p class="sec-sub reveal r1">Upload a photo after a habit. Write a journal entry. Earn a star for every perfect day. Watch your month fill up — and your legacy take shape.</p>
 
     <div class="achieve-mock-row reveal r2">
       <!-- Memory calendar mock -->
       <div class="ach-card">
-        <div class="ach-card-title">📸 June Memories</div>
+        <div class="ach-card-title"><i class="bi bi-camera-fill"></i> June Memories</div>
         <div class="star-cal">
           {% set mem_colors = ['#E07B39','#F5A623','#10b981','#3b82f6','#8b5cf6','#ef4444'] %}
           {% for d in range(1, 31) %}
@@ -922,28 +922,28 @@
 
       <!-- Achievements mock -->
       <div class="ach-card">
-        <div class="ach-card-title">⭐ June Stars</div>
+        <div class="ach-card-title"><i class="bi bi-star-fill"></i> June Stars</div>
         <div class="star-cal">
           {% for i in range(30) %}
             <div class="star-sq {% if i < 22 and i not in [3,8,13] %}lit{% endif %}">
-              {% if i < 22 and i not in [3,8,13] %}⭐{% endif %}
+              {% if i < 22 and i not in [3,8,13] %}<i class="bi bi-star-fill"></i>{% endif %}
             </div>
           {% endfor %}
         </div>
         <div style="margin-top:14px;border-top:2px solid var(--border);padding-top:12px;">
           <div class="streak-row">
             <span class="streak-name">Morning run</span>
-            <span class="streak-fire">🔥</span>
+            <span class="streak-fire"><i class="bi bi-fire"></i></span>
             <span class="streak-days">14d</span>
           </div>
           <div class="streak-row">
             <span class="streak-name">Read 20 pages</span>
-            <span class="streak-fire">🔥</span>
+            <span class="streak-fire"><i class="bi bi-fire"></i></span>
             <span class="streak-days">9d</span>
           </div>
           <div class="streak-row">
             <span class="streak-name">No phone after 10</span>
-            <span class="streak-fire">🔥</span>
+            <span class="streak-fire"><i class="bi bi-fire"></i></span>
             <span class="streak-days">6d</span>
           </div>
         </div>

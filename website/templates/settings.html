@@ -145,7 +145,7 @@
   <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="settings-card">
-      <h4>👤 Profile</h4>
+      <h4><i class="bi bi-person-fill"></i> Profile</h4>
       <div style="margin-bottom:14px;">
         <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Display Name</label>
         <input type="text" name="name" value="{{ current_user.name or '' }}" placeholder="Your name"
@@ -158,12 +158,12 @@
       </div>
       <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:10px;">Life Phase</label>
       <div class="option-grid">
-        {% set phases = [('school','🎒','School'),('college','📚','College'),('working','💼','Working'),('other','🌟','Other')] %}
+        {% set phases = [('school','<i class="bi bi-bag-fill"></i>','School'),('college','<i class="bi bi-book-fill"></i>','College'),('working','<i class="bi bi-briefcase-fill"></i>','Working'),('other','<i class="bi bi-star-fill"></i>','Other')] %}
         {% for val, icon, label in phases %}
           <label class="option-card">
             <input type="radio" name="life_phase" value="{{ val }}" {% if current_user.life_phase == val %}checked{% endif %}>
             <div class="opt-content">
-              <span class="opt-icon">{{ icon }}</span>
+              <span class="opt-icon">{{ icon | safe }}</span>
               <span class="opt-label">{{ label }}</span>
             </div>
           </label>
@@ -172,12 +172,12 @@
     </div>
 
     <div class="settings-card">
-      <h4>⚙️ Features</h4>
+      <h4><i class="bi bi-gear-fill"></i> Features</h4>
       <p style="font-size:.82rem;color:var(--text-secondary);margin:0 0 16px">Turn off sections you don't need — they'll be hidden from the sidebar.</p>
 
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border-color)">
         <div>
-          <div style="font-size:.9rem;font-weight:600;color:var(--text-primary)">📚 Study Section</div>
+          <div style="font-size:.9rem;font-weight:600;color:var(--text-primary)"><i class="bi bi-book-fill"></i> Study Section</div>
           <div style="font-size:.77rem;color:var(--text-secondary);margin-top:2px">Subjects, timetable, exams &amp; marks</div>
         </div>
         <label class="feat-toggle">
@@ -188,7 +188,7 @@
     </div>
 
     <div class="settings-card">
-      <h4>🎨 Theme</h4>
+      <h4><i class="bi bi-palette-fill"></i> Theme</h4>
       <input type="hidden" name="theme" id="themeVal" value="{{ current_user.theme or 'default' }}">
       <div class="theme-preview-grid" id="themeGrid">
 
@@ -205,7 +205,7 @@
               </div>
             </div>
           </div>
-          <span class="theme-tile-label">🌙 Cream</span>
+          <span class="theme-tile-label"><i class="bi bi-moon-stars-fill"></i> Cream</span>
         </div>
 
         <div class="theme-tile {% if current_user.theme == 'ocean' %}selected{% endif %}" data-val="ocean"
@@ -221,7 +221,7 @@
               </div>
             </div>
           </div>
-          <span class="theme-tile-label">🌊 Ocean</span>
+          <span class="theme-tile-label"><i class="bi bi-water"></i> Ocean</span>
         </div>
 
         <div class="theme-tile {% if current_user.theme == 'forest' %}selected{% endif %}" data-val="forest"
@@ -237,7 +237,7 @@
               </div>
             </div>
           </div>
-          <span class="theme-tile-label">🌿 Forest</span>
+          <span class="theme-tile-label"><i class="bi bi-tree"></i> Forest</span>
         </div>
 
         <div class="theme-tile {% if current_user.theme == 'sunset' %}selected{% endif %}" data-val="sunset"
@@ -253,7 +253,7 @@
               </div>
             </div>
           </div>
-          <span class="theme-tile-label">🌅 Sunset</span>
+          <span class="theme-tile-label"><i class="bi bi-sunrise"></i> Sunset</span>
         </div>
 
         <div class="theme-tile {% if current_user.theme == 'dark' %}selected{% endif %}" data-val="dark"
@@ -269,7 +269,7 @@
               </div>
             </div>
           </div>
-          <span class="theme-tile-label">🌑 Dark</span>
+          <span class="theme-tile-label"><i class="bi bi-circle-fill"></i> Dark</span>
         </div>
 
         <div class="theme-tile {% if current_user.theme == 'haikyuu' %}selected{% endif %}" data-val="haikyuu"
@@ -285,14 +285,14 @@
               </div>
             </div>
           </div>
-          <span class="theme-tile-label">🏐 Haikyuu</span>
+          <span class="theme-tile-label"><i class="bi bi-circle"></i> Haikyuu</span>
         </div>
 
       </div>
     </div>
 
     <div class="settings-card">
-      <h4>🎯 Goals</h4>
+      <h4><i class="bi bi-bullseye"></i> Goals</h4>
 
       <!-- Year goal -->
       <div style="margin-bottom:16px">
@@ -304,19 +304,19 @@
     </div>
 
     <div class="settings-card">
-      <h4>🕐 Time Format</h4>
+      <h4><i class="bi bi-clock"></i> Time Format</h4>
       <div class="option-grid">
         <label class="option-card">
           <input type="radio" name="time_format" value="12h" {% if (current_user.time_format or '12h') == '12h' %}checked{% endif %}>
           <div class="opt-content">
-            <span class="opt-icon">🕐</span>
+            <span class="opt-icon"><i class="bi bi-clock"></i></span>
             <span class="opt-label">12-hour<br><small style="font-weight:400;font-size:0.72rem;color:var(--text-secondary);">2:30 PM</small></span>
           </div>
         </label>
         <label class="option-card">
           <input type="radio" name="time_format" value="24h" {% if current_user.time_format == '24h' %}checked{% endif %}>
           <div class="opt-content">
-            <span class="opt-icon">🕑</span>
+            <span class="opt-icon"><i class="bi bi-clock"></i></span>
             <span class="opt-label">24-hour<br><small style="font-weight:400;font-size:0.72rem;color:var(--text-secondary);">14:30</small></span>
           </div>
         </label>
@@ -327,7 +327,7 @@
   </form>
 
   <div class="settings-card">
-    <h4>🚪 Account</h4>
+    <h4><i class="bi bi-door-open-fill"></i> Account</h4>
     <a href="{{ url_for('auth.logout') }}" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; background:var(--danger-bg); border:1px solid var(--danger-border); border-radius:10px; color:#dc2626; font-weight:600; font-size:0.9rem; text-decoration:none;">
       <i class="bi bi-box-arrow-right"></i> Log out
     </a>

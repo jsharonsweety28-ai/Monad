@@ -167,7 +167,7 @@
   <!-- Year Goal banner -->
   {% if current_user.year_goal %}
   <div style="background:var(--accent-3); border:1.5px solid var(--border-color); border-radius:16px; padding:13px 18px; margin-bottom:14px; display:flex; align-items:center; gap:12px; animation:fadeUp .4s ease .03s both;">
-    <span style="font-size:1.25rem; flex-shrink:0;">🎯</span>
+    <span style="font-size:1.25rem; flex-shrink:0;"><i class="bi bi-bullseye"></i></span>
     <div style="flex:1; min-width:0;">
       <div style="font-size:.65rem; font-weight:700; letter-spacing:.08em; color:var(--accent-1); margin-bottom:2px;">{{ today.year }} GOAL</div>
       <div style="font-size:.88rem; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ current_user.year_goal }}</div>
@@ -179,22 +179,22 @@
   <!-- Stat chips -->
   <div class="stat-row">
     <a class="stat-chip" href="{{ url_for('views.daily') }}">
-      <div class="stat-icon">✅</div>
+      <div class="stat-icon"><i class="bi bi-check-square-fill"></i></div>
       <div class="stat-value">{{ tasks_done }}<span style="font-size:1rem;opacity:.5">/{{ tasks_today|length }}</span></div>
       <div class="stat-label">Tasks done</div>
     </a>
     <a class="stat-chip" href="{{ url_for('views.habits_monthly', year=today.year, month=today.month) }}">
-      <div class="stat-icon">🔥</div>
+      <div class="stat-icon"><i class="bi bi-fire"></i></div>
       <div class="stat-value">{{ habits_done }}<span style="font-size:1rem;opacity:.5">/{{ habits_all|length }}</span></div>
       <div class="stat-label">Habits done</div>
     </a>
     <a class="stat-chip" href="{{ url_for('views.pomodoro') }}">
-      <div class="stat-icon">⏱</div>
+      <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
       <div class="stat-value">{{ focus_mins }}<span style="font-size:.9rem;opacity:.5">m</span></div>
       <div class="stat-label">Focus today</div>
     </a>
     <a class="stat-chip" href="{{ url_for('views.study_timetable') }}">
-      <div class="stat-icon">📅</div>
+      <div class="stat-icon"><i class="bi bi-calendar-fill"></i></div>
       <div class="stat-value">{{ class_count }}</div>
       <div class="stat-label">Classes today</div>
     </a>
@@ -215,7 +215,7 @@
           <div class="sched-label">{{ item.label }}</div>
           <div class="sched-meta">
             {{ item.start }}{% if item.end %} – {{ item.end }}{% endif %}
-            {% if item.room %} · 📍 {{ item.room }}{% endif %}
+            {% if item.room %} · <i class="bi bi-geo-alt-fill"></i> {{ item.room }}{% endif %}
           </div>
         </div>
         {% if item.type == 'class' %}
@@ -292,7 +292,7 @@
         {% endfor %}
       </div>
       {% else %}
-      <div class="dc-empty">No upcoming deadlines — enjoy the calm! 🎉</div>
+      <div class="dc-empty">No upcoming deadlines — enjoy the calm! <i class="bi bi-stars"></i></div>
       {% endif %}
     </div>
 
@@ -324,7 +324,7 @@
       {% endfor %}
     </div>
     {% elif tasks_today %}
-    <div class="dc-empty" style="color:rgba(22,163,74,.8); font-weight:600">All tasks done for today! 🎉</div>
+    <div class="dc-empty" style="color:rgba(22,163,74,.8); font-weight:600">All tasks done for today! <i class="bi bi-stars"></i></div>
     {% else %}
     <div class="dc-empty">No tasks today — <a href="{{ url_for('views.daily') }}" style="color:var(--accent-1)">add some</a>.</div>
     {% endif %}

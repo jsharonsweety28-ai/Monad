@@ -613,7 +613,7 @@
 
     <div class="cx-list" id="chatList">
       {% if my_communities %}
-        <div class="cx-section-label">💬 Group chats</div>
+        <div class="cx-section-label"><i class="bi bi-chat-dots-fill"></i> Group chats</div>
         {% for c in my_communities %}
           {% set colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'] %}
           {% set col = colors[loop.index0 % colors|length] %}
@@ -623,14 +623,14 @@
             <div class="cx-avatar group" style="background:{{ col }};">{{ c.name[0]|upper }}</div>
             <div class="cx-item-info">
               <div class="cx-item-name">{{ c.name }}</div>
-              <div class="cx-item-sub">👥 {{ c.members|length }} member{{ 's' if c.members|length != 1 }}</div>
+              <div class="cx-item-sub"><i class="bi bi-people-fill"></i> {{ c.members|length }} member{{ 's' if c.members|length != 1 }}</div>
             </div>
           </div>
         {% endfor %}
       {% endif %}
 
       {% if dm_contacts %}
-        <div class="cx-section-label" style="margin-top:10px;">✉️ Direct messages</div>
+        <div class="cx-section-label" style="margin-top:10px;"><i class="bi bi-envelope-fill"></i> Direct messages</div>
         {% for u in dm_contacts %}
           {% set dm_colors = ['#f97316','#a855f7','#06b6d4','#84cc16','#f43f5e','#0ea5e9'] %}
           {% set dc = dm_colors[loop.index0 % dm_colors|length] %}
@@ -648,7 +648,7 @@
 
       {% if not my_communities and not dm_contacts %}
         <div class="cx-no-communities">
-          <div class="icon">🌱</div>
+          <div class="icon"><i class="bi bi-flower1"></i></div>
           <p style="font-size:.82rem; line-height:1.5;">Join a community to start chatting with members.</p>
           <a href="{{ url_for('views.communities') }}"
              style="color:var(--accent-1); font-weight:700; font-size:.82rem; text-decoration:none;">
@@ -662,9 +662,9 @@
   <!-- ── Chat panel ── -->
   <div class="cx-chat" id="chatPanel">
     <div class="cx-empty" id="emptyState">
-      <div class="cx-empty-icon">💬</div>
+      <div class="cx-empty-icon"><i class="bi bi-chat-dots-fill"></i></div>
       <h3>Start a conversation</h3>
-      <p>Pick a group chat or a person from the sidebar to get chatting ✨</p>
+      <p>Pick a group chat or a person from the sidebar to get chatting</p>
     </div>
   </div>
 
@@ -676,7 +676,7 @@
 
     <!-- Permission request -->
     <div id="callStatePerm" class="call-state">
-      <div class="call-perm-icon" id="callPermIcon">🎙️</div>
+      <div class="call-perm-icon" id="callPermIcon"><i class="bi bi-mic-fill"></i></div>
       <h3 id="callPermTitle">Allow microphone access</h3>
       <p class="call-sub" id="callPermText">monad needs your microphone to make calls. Your browser will ask for permission.</p>
       <div class="call-btn-row">
@@ -709,7 +709,7 @@
         <div class="call-ring-pulse" style="animation-delay:.6s"></div>
       </div>
       <h3 id="inName">Incoming call</h3>
-      <p class="call-sub" id="inSub">📞 Voice call</p>
+      <p class="call-sub" id="inSub"><i class="bi bi-telephone-fill"></i> Voice call</p>
       <div class="call-btn-row">
         <button class="call-ctrl-btn call-decline" onclick="declineCall()">
           <i class="bi bi-telephone-x-fill"></i> Decline
@@ -749,7 +749,7 @@
 
     <!-- Ended -->
     <div id="callStateEnded" class="call-state" style="display:none">
-      <div class="call-perm-icon">📵</div>
+      <div class="call-perm-icon"><i class="bi bi-telephone-x-fill"></i></div>
       <h3 id="endedMsg">Call ended</h3>
       <p class="call-sub" id="endedDuration"></p>
     </div>
@@ -785,7 +785,7 @@
 
 <!-- ── INCOMING GROUP CALL NOTIFICATION ── -->
 <div id="gcallIncoming" class="gcall-incoming" style="display:none">
-  <div style="font-size:1.6rem">📞</div>
+  <div style="font-size:1.6rem"><i class="bi bi-telephone-fill"></i></div>
   <div class="gcall-incoming-info">
     <div class="gcall-incoming-title" id="gcallInTitle">Group call</div>
     <div class="gcall-incoming-sub"   id="gcallInSub">Tap to join</div>
@@ -878,7 +878,7 @@
             <i class="bi bi-paperclip"></i>
           </button>
           <input type="file" id="fileInput" style="display:none" onchange="onFileSelected(this)">
-          <textarea class="cx-input" id="msgInput" placeholder="Type something nice… ✨" rows="1"
+          <textarea class="cx-input" id="msgInput" placeholder="Type something nice…" rows="1"
             onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
           <button class="cx-send" onclick="sendMsg()"><i class="bi bi-send-fill"></i></button>
         </div>
@@ -913,9 +913,9 @@
 
   const IMAGE_EXTS = new Set(['.jpg','.jpeg','.png','.gif','.webp']);
   const FILE_ICONS = {
-    '.pdf':'📄','.doc':'📝','.docx':'📝','.xls':'📊','.xlsx':'📊',
-    '.ppt':'📊','.pptx':'📊','.zip':'🗜️','.rar':'🗜️',
-    '.mp4':'🎬','.mp3':'🎵','.mov':'🎬','.txt':'📃','.csv':'📊'
+    '.pdf':'<i class="bi bi-file-earmark-fill"></i>','.doc':'<i class="bi bi-pencil-square"></i>','.docx':'<i class="bi bi-pencil-square"></i>','.xls':'<i class="bi bi-bar-chart-fill"></i>','.xlsx':'<i class="bi bi-bar-chart-fill"></i>',
+    '.ppt':'<i class="bi bi-bar-chart-fill"></i>','.pptx':'<i class="bi bi-bar-chart-fill"></i>','.zip':'<i class="bi bi-file-zip-fill"></i>','.rar':'<i class="bi bi-file-zip-fill"></i>',
+    '.mp4':'<i class="bi bi-film"></i>','.mp3':'<i class="bi bi-music-note-beamed"></i>','.mov':'<i class="bi bi-film"></i>','.txt':'<i class="bi bi-file-text-fill"></i>','.csv':'<i class="bi bi-bar-chart-fill"></i>'
   };
 
   let pendingFile = null;
@@ -954,12 +954,12 @@
         bodyHtml = `<div class="cx-img-bubble"><img src="${m.file_url}" loading="lazy" onclick="window.open(this.src)"></div>`;
       } else {
         const ext = m.original_name ? m.original_name.slice(m.original_name.lastIndexOf('.')).toLowerCase() : '';
-        const icon = FILE_ICONS[ext] || '📎';
+        const icon = FILE_ICONS[ext] || '<i class="bi bi-paperclip"></i>';
         bodyHtml = `<a class="cx-file-bubble" href="${m.file_url}" download="${escHtml(m.original_name || 'file')}">
           <span class="cx-file-icon">${icon}</span>
           <div>
             <div class="cx-file-name">${escHtml(m.original_name || 'file')}</div>
-            <div class="cx-file-dl">⬇ tap to download</div>
+            <div class="cx-file-dl"><i class="bi bi-download"></i> tap to download</div>
           </div>
         </a>`;
       }
@@ -1076,8 +1076,8 @@
     callPeerId   = activeId;
     callPeerName = document.querySelector('.cx-chat-title')?.textContent.trim() || 'User';
 
-    document.getElementById('callPermIcon').textContent =
-      type === 'video' ? '📹' : '🎙️';
+    document.getElementById('callPermIcon').innerHTML =
+      type === 'video' ? '<i class="bi bi-camera-video-fill"></i>' : '<i class="bi bi-mic-fill"></i>';
     document.getElementById('callPermTitle').textContent =
       type === 'video' ? 'Allow camera & microphone' : 'Allow microphone access';
     document.getElementById('callPermText').textContent =
@@ -1109,7 +1109,7 @@
     callRole = 'caller';
     document.getElementById('outAvatar').textContent = (callPeerName[0] || '?').toUpperCase();
     document.getElementById('outName').textContent   = callPeerName;
-    document.getElementById('outSub').textContent    = callType === 'video' ? '📹 Video call…' : '📞 Voice call…';
+    document.getElementById('outSub').textContent    = callType === 'video' ? 'Video call…' : 'Voice call…';
     showCallState('callStateOut');
 
     peerConn = new RTCPeerConnection(STUN_CFG);
@@ -1200,11 +1200,11 @@
     callPeerId   = data.caller_id;
     callPeerName = data.caller_name;
     callRole     = 'callee';
-    notifyIncomingCall(data.caller_name + ' is calling', data.call_type === 'video' ? '📹 Video call' : '📞 Voice call');
+    notifyIncomingCall(data.caller_name + ' is calling', data.call_type === 'video' ? 'Video call' : 'Voice call');
 
     document.getElementById('inAvatar').textContent = (data.caller_name[0] || '?').toUpperCase();
     document.getElementById('inName').textContent   = data.caller_name + ' is calling';
-    document.getElementById('inSub').textContent    = data.call_type === 'video' ? '📹 Video call' : '📞 Voice call';
+    document.getElementById('inSub').innerHTML    = data.call_type === 'video' ? '<i class="bi bi-camera-video-fill"></i> Video call' : '<i class="bi bi-telephone-fill"></i> Voice call';
     showCallState('callStateIn');
 
     // Auto-decline if not answered within 30s
@@ -1488,7 +1488,7 @@
     document.getElementById('gcallIncoming').style.display = 'flex';
     notifyIncomingCall(
       data.initiator_name + ' started a call in ' + data.community_name,
-      data.call_type === 'video' ? '📹 Video call' : '📞 Voice call'
+      data.call_type === 'video' ? 'Video call' : 'Voice call'
     );
     // Auto-dismiss after 30s
     setTimeout(dismissGroupIncoming, 30000);
@@ -1502,7 +1502,7 @@
   function showGcallUI(name, type, waiting) {
     document.getElementById('gcallTitle').textContent = name;
     document.getElementById('gcallSub').textContent   =
-      waiting ? 'Waiting for others to join…' : (type === 'video' ? '📹 Video call' : '📞 Voice call');
+      waiting ? 'Waiting for others to join…' : (type === 'video' ? 'Video call' : 'Voice call');
     document.getElementById('gcallGrid').innerHTML    = '';
     document.getElementById('gcallOverlay').style.display = 'flex';
     if (type === 'audio') {
@@ -1641,7 +1641,7 @@
         if (gcWaitTimeout) {
           startGcallTimer();
           document.getElementById('gcallSub').textContent =
-            gcCallType === 'video' ? '📹 Video call' : '📞 Voice call';
+            gcCallType === 'video' ? 'Video call' : 'Voice call';
         }
         // New joiner will send US an offer; we wait. But if we joined first, we send them one.
         // Rule: lower ID sends the offer to avoid double-offer.

@@ -108,7 +108,7 @@
 
   <!-- Hero -->
   <div class="su-hero">
-    <div class="su-icon">🎓</div>
+    <div class="su-icon"><i class="bi bi-mortarboard-fill"></i></div>
     <div class="su-title">Set up your study profile</div>
     <div class="su-sub">Tell Monad about your academic life<br>so it can personalise your study hub.</div>
   </div>
@@ -131,7 +131,7 @@
              onclick="document.getElementById('photoInput').click()">
           <img id="photoPreview" src="" alt=""
                style="width:100%;height:100%;object-fit:cover;display:none">
-          <span id="photoPlaceholder" style="font-size:1.8rem">📷</span>
+          <span id="photoPlaceholder" style="font-size:1.8rem"><i class="bi bi-camera-fill"></i></span>
         </div>
         <input type="file" id="photoInput" name="photo" accept="image/*"
                style="display:none" onchange="previewPhoto(this)">
@@ -145,10 +145,10 @@
       <!-- Institution type -->
       <div class="su-type-row">
         <button type="button" class="su-type-btn active" id="btnSchool" onclick="switchType('school')">
-          🏫 School
+          <i class="bi bi-building-fill"></i> School
         </button>
         <button type="button" class="su-type-btn" id="btnCollege" onclick="switchType('college')">
-          🎓 College / University
+          <i class="bi bi-mortarboard-fill"></i> College / University
         </button>
       </div>
       <input type="hidden" name="institution_type" id="fType" value="school">

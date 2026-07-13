@@ -217,11 +217,11 @@
   {% else %}
     <div class="banner done">
       <span class="emoji">
-        {% if journal.mood == 'great' %}🌟
-        {% elif journal.mood == 'good' %}😊
-        {% elif journal.mood == 'okay' %}😐
-        {% elif journal.mood == 'bad' %}😔
-        {% else %}😞
+        {% if journal.mood == 'great' %}<i class="bi bi-star-fill"></i>
+        {% elif journal.mood == 'good' %}<i class="bi bi-emoji-smile"></i>
+        {% elif journal.mood == 'okay' %}<i class="bi bi-emoji-neutral"></i>
+        {% elif journal.mood == 'bad' %}<i class="bi bi-emoji-frown"></i>
+        {% else %}<i class="bi bi-emoji-frown"></i>
         {% endif %}
       </span>
       <strong>You've already reflected on this day!</strong>
@@ -296,12 +296,12 @@
       <label style="font-weight:600; color:var(--text-primary); margin-bottom:10px; display:block;">How was your day?</label>
       
       <div class="mood-selector">
-        {% set moods = [('great','🌟','Great'),('good','😊','Good'),('okay','😐','Okay'),('bad','😔','Bad'),('terrible','😞','Terrible')] %}
+        {% set moods = [('great','<i class="bi bi-star-fill"></i>','Great'),('good','<i class="bi bi-emoji-smile"></i>','Good'),('okay','<i class="bi bi-emoji-neutral"></i>','Okay'),('bad','<i class="bi bi-emoji-frown"></i>','Bad'),('terrible','<i class="bi bi-emoji-frown"></i>','Terrible')] %}
         
         {% for val, emoji, label in moods %}
           <label class="mood-opt">
             <input type="radio" name="mood" value="{{ val }}" {% if journal and journal.mood == val %}checked{% endif %}>
-            <span class="mood-emoji">{{ emoji }}</span>
+            <span class="mood-emoji">{{ emoji | safe }}</span>
             <div class="mood-label">{{ label }}</div>
           </label>
         {% endfor %}

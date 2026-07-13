@@ -495,10 +495,10 @@
 
   <!-- Stats strip -->
   <div class="stats-strip">
-    <div class="stat-chip"><span class="stat-chip-icon">📦</span><strong id="statBlocks">{{ blocks|length }}</strong> blocks</div>
-    <div class="stat-chip"><span class="stat-chip-icon">⏱</span><strong id="statHours">0h</strong> planned</div>
-    <div class="stat-chip"><span class="stat-chip-icon">✅</span><strong id="statPct">0%</strong> complete</div>
-    <div class="stat-chip"><span class="stat-chip-icon">🔗</span><strong id="statLinked">{{ blocks|selectattr('task_id')|list|length }}</strong> linked</div>
+    <div class="stat-chip"><span class="stat-chip-icon"><i class="bi bi-grid-fill"></i></span><strong id="statBlocks">{{ blocks|length }}</strong> blocks</div>
+    <div class="stat-chip"><span class="stat-chip-icon"><i class="bi bi-hourglass-split"></i></span><strong id="statHours">0h</strong> planned</div>
+    <div class="stat-chip"><span class="stat-chip-icon"><i class="bi bi-check-square-fill"></i></span><strong id="statPct">0%</strong> complete</div>
+    <div class="stat-chip"><span class="stat-chip-icon"><i class="bi bi-link-45deg"></i></span><strong id="statLinked">{{ blocks|selectattr('task_id')|list|length }}</strong> linked</div>
   </div>
 
   <!-- Progress bar -->
@@ -508,7 +508,7 @@
 
   <!-- Current Focus card -->
   <div class="current-focus-card" id="currentFocusCard">
-    <div class="cf-icon-wrap" id="cfIcon">⏱</div>
+    <div class="cf-icon-wrap" id="cfIcon"><i class="bi bi-hourglass-split"></i></div>
     <div>
       <div class="cf-label">Now focusing on</div>
       <div class="cf-title" id="cfTitle">—</div>
@@ -533,7 +533,7 @@
       </div>
     </div>
     <div class="plan-card-btns">
-      <button class="btn-generate" onclick="openGenerateModal()">✨ Generate Schedule</button>
+      <button class="btn-generate" onclick="openGenerateModal()"><i class="bi bi-stars"></i> Generate Schedule</button>
       <button class="btn-add-block" onclick="openAddModal()">+ Add Block</button>
     </div>
   </div>
@@ -574,7 +574,7 @@
 
       <!-- Empty state (shown by JS when no blocks) -->
       <div class="empty-timeline" id="emptyState" {% if blocks %}style="display:none"{% endif %}>
-        <div style="font-size:52px; margin-bottom:14px;">🗓️</div>
+        <div style="font-size:52px; margin-bottom:14px;"><i class="bi bi-calendar2-fill"></i></div>
         <h4>Your day is a blank canvas</h4>
         <p>Add time blocks to plan your day.</p>
       </div>
@@ -733,12 +733,12 @@
       </optgroup>
       <optgroup label="Quick Types">
       {% endif %}
-        <option value="study"    data-type="study"    data-color="#3b82f6" data-catname="">📘 Study</option>
-        <option value="work"     data-type="work"     data-color="#8b5cf6" data-catname="">💼 Work</option>
-        <option value="personal" data-type="personal" data-color="#10b981" data-catname="">🌿 Personal</option>
-        <option value="health"   data-type="health"   data-color="#f97316" data-catname="">🏃 Health</option>
-        <option value="break"    data-type="break"    data-color="#94a3b8" data-catname="">☕ Break</option>
-        <option value="custom"   data-type="custom"   data-color=""        data-catname="">✏️ Custom</option>
+        <option value="study"    data-type="study"    data-color="#3b82f6" data-catname="">Study</option>
+        <option value="work"     data-type="work"     data-color="#8b5cf6" data-catname="">Work</option>
+        <option value="personal" data-type="personal" data-color="#10b981" data-catname="">Personal</option>
+        <option value="health"   data-type="health"   data-color="#f97316" data-catname="">Health</option>
+        <option value="break"    data-type="break"    data-color="#94a3b8" data-catname="">Break</option>
+        <option value="custom"   data-type="custom"   data-color=""        data-catname="">Custom</option>
       {% if categories %}
       </optgroup>
       {% endif %}
@@ -769,7 +769,7 @@
 
     <!-- Phase 1: inputs -->
     <div id="genPhase1">
-      <div class="modal-title">✨ Generate My Day</div>
+      <div class="modal-title"><i class="bi bi-stars"></i> Generate My Day</div>
       <p style="font-size:.85rem;color:var(--text-secondary);margin:-6px 0 16px">
         Monad will build a schedule around your tasks, habits, and profile.
       </p>
@@ -831,7 +831,7 @@ const BLOCK_COLORS = {
   break:    '#94a3b8',
   custom:   getComputedStyle(document.documentElement).getPropertyValue('--accent-1').trim() || '#E07B39',
 };
-const BLOCK_ICONS = { study:'📘', work:'💼', personal:'🌿', health:'🏃', break:'☕', custom:'✏️' };
+const BLOCK_ICONS = { study:'<i class="bi bi-book-fill"></i>', work:'<i class="bi bi-briefcase-fill"></i>', personal:'<i class="bi bi-tree"></i>', health:'<i class="bi bi-speedometer2"></i>', break:'<i class="bi bi-cup-hot"></i>', custom:'<i class="bi bi-pencil"></i>' };
 const TIMELINE_START = 0;         // 12:00 AM midnight
 const PX_PER_MIN    = 80 / 60;   // 80px per hour
 const TODAY_STR     = "{{ today.strftime('%Y-%m-%d') }}";
@@ -927,7 +927,7 @@ function detectCurrentFocus() {
     document.getElementById('cfTitle').textContent = active.title;
     document.getElementById('cfTime').textContent  =
       fmtDisplay(active.start_minute) + ' – ' + fmtDisplay(active.end_minute);
-    document.getElementById('cfIcon').textContent  = BLOCK_ICONS[active.block_type] || '⏱';
+    document.getElementById('cfIcon').innerHTML  = BLOCK_ICONS[active.block_type] || '<i class="bi bi-hourglass-split"></i>';
     card.style.borderColor = active.color || BLOCK_COLORS[active.block_type] || BLOCK_COLORS.custom;
     card.style.display = 'flex';
     // Link focus action to task if available
@@ -1072,9 +1072,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Greeting
   const h     = new Date().getHours();
   const name  = "{{ current_user.name.split()[0] if current_user.name else 'there' }}";
-  const emoji = h < 12 ? '☀️' : h < 17 ? '🌤️' : '🌙';
+  const greetIcon = h < 12 ? '<i class="bi bi-sun"></i>' : h < 17 ? '<i class="bi bi-cloud-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
   const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('greetingText').textContent = greet + ', ' + name + ' ' + emoji;
+  document.getElementById('greetingText').innerHTML = greet + ', ' + name + ' ' + greetIcon;
 
   renderAllBlocks();
 

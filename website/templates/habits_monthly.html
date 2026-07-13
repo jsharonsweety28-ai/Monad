@@ -474,7 +474,7 @@
   <!-- Hero -->
   <div class="habits-hero">
     <div>
-      <div class="habits-title">📈 Habit Tracker</div>
+      <div class="habits-title"><i class="bi bi-graph-up"></i> Habit Tracker</div>
       <div class="habits-sub">{{ month }}/{{ year }} · build streaks that last</div>
     </div>
     <div class="habits-nav-pills">
@@ -483,7 +483,7 @@
       {% else %}
         <a id="monthPrevPill" href="{{ url_for('views.habits_monthly', year=year, month=month-1) }}" class="hpill">← Prev</a>
       {% endif %}
-      <a href="{{ url_for('views.habit_streaks', year=year, month=month) }}" class="hpill streak-pill">🔥 Streaks</a>
+      <a href="{{ url_for('views.habit_streaks', year=year, month=month) }}" class="hpill streak-pill"><i class="bi bi-fire"></i> Streaks</a>
       {% if month == 12 %}
         <a id="monthNextPill" href="{{ url_for('views.habits_monthly', year=year+1, month=1) }}" class="hpill">Jan {{ year+1 }} →</a>
       {% else %}
@@ -500,7 +500,7 @@
       border-radius: 16px; padding: 13px 16px;
       display: flex; align-items: center; gap: 12px;
     ">
-      <span style="font-size: 1.3rem; flex-shrink:0;" id="habitTipEmoji">🔥</span>
+      <i class="bi bi-fire" style="font-size: 1.3rem; flex-shrink:0;" id="habitTipEmoji"></i>
       <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin:0; flex:1;" id="habitTipText"></p>
       <button onclick="document.getElementById('habitTip').style.display='none'; sessionStorage.setItem('habitTipDismissed_'+new Date().toDateString(),'1')"
         style="background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size:1rem; padding:2px 6px; flex-shrink:0; opacity:0.6;">×</button>
@@ -552,7 +552,7 @@
     {% if isCurrentMonthPage %}
       {% set todayDate = datetime(todayYear, todayMonth, todayDay).date() %}
       <div class="daily-checklist-mobile" id="dailyChecklistMobile">
-        <div class="dc-title">✅ Today's Habits</div>
+        <div class="dc-title"><i class="bi bi-check-square-fill"></i> Today's Habits</div>
         {% for habit in habits %}
           {% set hprog = habit_progress[habit.id] %}
           {% set tlog = habit.logs|selectattr('date','equalto',todayDate)|first %}
@@ -660,7 +660,7 @@
                   {% endif %}
                 {% endfor %}
                 {% if streak.count > 0 %}
-                  <span class="streak-badge">🔥 {{ streak.count }}</span>
+                  <span class="streak-badge"><i class="bi bi-fire"></i> {{ streak.count }}</span>
                 {% else %}
                   <span style="color:var(--text-secondary); font-size:0.65rem;">—</span>
                 {% endif %}
@@ -682,14 +682,14 @@
 
   {% else %}
     <div class="empty-state">
-      <div style="font-size:3rem; margin-bottom:12px;">📋</div>
+      <div style="font-size:3rem; margin-bottom:12px;"><i class="bi bi-clipboard-fill"></i></div>
       <h4>No habits yet</h4>
       <p>Add your first habit above to start building streaks!</p>
     </div>
 
     {% if suggested_habits %}
     <div class="suggested-card">
-      <div class="suggested-title">✨ Suggested for you</div>
+      <div class="suggested-title"><i class="bi bi-stars"></i> Suggested for you</div>
       <div class="suggested-chips">
         {% for habit in suggested_habits %}
           <form method="POST" style="display:inline;">
@@ -710,20 +710,20 @@
 <div id="habitReflectOverlay" onclick="closeReflectModal()"></div>
 <div id="habitReflectModal">
   <div class="reflect-header">
-    <h3>🌟 How did it go?</h3>
+    <h3><i class="bi bi-star-fill"></i> How did it go?</h3>
     <p>Reflect on your progress today</p>
     <span class="reflect-habit-name" id="reflectHabitName"></span>
   </div>
   <div class="reflect-body">
     <div class="reflect-section">
-      <div class="reflect-label">✏️ Your reflection</div>
+      <div class="reflect-label"><i class="bi bi-pencil"></i> Your reflection</div>
       <textarea class="reflect-textarea" id="reflectText"
         placeholder="What went well? How did this habit make you feel? Any challenges?"></textarea>
     </div>
     <div class="reflect-section">
-      <div class="reflect-label">📸 Capture your progress <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-secondary);font-size:0.75rem;">(optional)</span></div>
+      <div class="reflect-label"><i class="bi bi-camera-fill"></i> Capture your progress <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-secondary);font-size:0.75rem;">(optional)</span></div>
       <label class="reflect-photo-label" for="reflectPhotoInput">
-        <span class="ph-icon">📷</span>
+        <span class="ph-icon"><i class="bi bi-camera-fill"></i></span>
         <span id="reflectPhotoLabelText">Tap to take a photo or upload one</span>
       </label>
       <input type="file" id="reflectPhotoInput" accept="image/*" onchange="onReflectPhoto(this)">
@@ -732,7 +732,7 @@
   </div>
   <div class="reflect-footer">
     <button class="btn-reflect-skip" onclick="closeReflectModal()">Skip</button>
-    <button class="btn-reflect-save" onclick="submitReflection()">Save reflection ✨</button>
+    <button class="btn-reflect-save" onclick="submitReflection()">Save reflection <i class="bi bi-stars"></i></button>
   </div>
 </div>
 
@@ -820,10 +820,10 @@ function showHabitToast(completed, saved) {
   var toast = document.getElementById('habitToast');
   toast.className = completed ? 'success' : 'undo';
   toast.style.display = 'flex';
-  var title = completed ? (saved ? 'Reflection saved! 🌟' : 'Habit done! 🔥') : 'Unmarked';
+  var title = completed ? (saved ? 'Reflection saved! ★' : 'Habit done!') : 'Unmarked';
   var sub   = completed ? (saved ? 'Great job tracking your progress.' : 'Keep the streak going!') : 'No worries, try again tomorrow.';
   toast.innerHTML =
-    '<div class="toast-icon">' + (completed ? (saved ? '🌟' : '✅') : '↩️') + '</div>' +
+    '<div class="toast-icon">' + (completed ? (saved ? '★' : '✓') : '↩') + '</div>' +
     '<div class="toast-body">' +
       '<div class="toast-title">' + title + '</div>' +
       '<div class="toast-sub">' + sub + '</div>' +
@@ -916,20 +916,19 @@ document.querySelectorAll('.dc-row[data-href]').forEach(function(row) {
   const key = 'habitTipDismissed_' + new Date().toDateString();
   if (!sessionStorage.getItem(key)) {
     const tips = [
-      { e: '🔥', t: 'Streaks are built one day at a time. Even doing 5 minutes counts — just show up.' },
-      { e: '🧠', t: 'Habit stacking works: attach your new habit right after an existing one you already do.' },
-      { e: '📅', t: 'Missing once is an accident. Missing twice is the start of a new habit — bounce back today.' },
-      { e: '💧', t: 'The key to habits? Make them so easy you can\'t say no. Start tiny, build from there.' },
-      { e: '🌱', t: 'You don\'t rise to your goals — you fall to your systems. Your habits ARE your system.' },
-      { e: '⏰', t: 'Same time, same place every day. Context cues are the secret sauce of lasting habits.' },
-      { e: '🎯', t: 'Track it, don\'t just do it. Seeing your streak grow is motivation fuel in itself.' },
-      { e: '💪', t: '"We are what we repeatedly do. Excellence is not an act, but a habit." — Aristotle' },
-      { e: '🌟', t: 'Celebrate small wins out loud — your brain links the reward to the behavior and wants more.' },
-      { e: '🔄', t: 'A habit has 3 parts: cue, routine, reward. Knowing this lets you redesign any habit.' },
+      'Streaks are built one day at a time. Even doing 5 minutes counts — just show up.',
+      'Habit stacking works: attach your new habit right after an existing one you already do.',
+      'Missing once is an accident. Missing twice is the start of a new habit — bounce back today.',
+      'The key to habits? Make them so easy you can\'t say no. Start tiny, build from there.',
+      'You don\'t rise to your goals — you fall to your systems. Your habits ARE your system.',
+      'Same time, same place every day. Context cues are the secret sauce of lasting habits.',
+      'Track it, don\'t just do it. Seeing your streak grow is motivation fuel in itself.',
+      '"We are what we repeatedly do. Excellence is not an act, but a habit." — Aristotle',
+      'Celebrate small wins out loud — your brain links the reward to the behavior and wants more.',
+      'A habit has 3 parts: cue, routine, reward. Knowing this lets you redesign any habit.',
     ];
     const pick = tips[Math.floor(Math.random() * tips.length)];
-    document.getElementById('habitTipEmoji').textContent = pick.e;
-    document.getElementById('habitTipText').textContent = pick.t;
+    document.getElementById('habitTipText').textContent = pick;
     document.getElementById('habitTip').style.display = 'block';
   }
 })();

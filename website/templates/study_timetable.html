@@ -152,7 +152,7 @@
                    title="{{ sl.subject_name }}{% if sl.room %} · {{ sl.room }}{% endif %}">
                 <div class="tt-slot-name">{{ sl.subject_name }}</div>
                 {% if ht_px > 28 %}<div class="tt-slot-time">{{ sl.start }} – {{ sl.end }}</div>{% endif %}
-                {% if ht_px > 44 and sl.room %}<div class="tt-slot-room">📍 {{ sl.room }}</div>{% endif %}
+                {% if ht_px > 44 and sl.room %}<div class="tt-slot-room"><i class="bi bi-geo-alt-fill"></i> {{ sl.room }}</div>{% endif %}
               </div>
             {% endfor %}
           </div>
