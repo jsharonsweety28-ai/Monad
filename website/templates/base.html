@@ -307,9 +307,10 @@
       font-size: 0.7rem; font-weight: 800; color: #fff;
       box-shadow: 2px 2px 0 var(--text-primary);
     }
-    .sb-user-info { overflow: hidden; transition: opacity 0.2s; }
-    .sidebar.collapsed .sb-user-info { opacity: 0; pointer-events: none; width: 0; overflow: hidden; }
-    .sidebar.collapsed .sb-user { justify-content: center; padding: 6px 0; gap: 0; }
+    .sb-user-info { overflow: hidden; transition: opacity 0.2s; min-width: 0; }
+    .sidebar.collapsed .sb-user-info { opacity: 0; pointer-events: none; flex: 0 0 0; max-width: 0; }
+    .sidebar.collapsed .sb-user { justify-content: center; padding: 6px 4px; gap: 0; }
+    .sidebar.collapsed .sb-avatar { box-shadow: none; }
     .sb-user-name { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); line-height: 1.2; font-family: 'Space Grotesk', sans-serif; }
     .sb-user-plan { font-size: 0.68rem; color: var(--text-secondary); font-weight: 500; }
 
