@@ -143,22 +143,46 @@
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
   .overlay.show { display: block; }
 
-  @media (max-width: 600px) {
+  /* Portrait mobile — show rotate hint, small cells */
+  @media (max-width: 600px) and (orientation: portrait) {
     .mem-month-title { font-size: 1rem; }
     .mem-nav-btn { padding: 5px 10px; font-size: 0.7rem; box-shadow: 2px 2px 0 var(--text-primary); }
     .square-grid { gap: 3px; }
     .mem-day-labels { gap: 3px; font-size: 0.6rem; }
-    .day-square {
-      aspect-ratio: 1;
-      border-width: 1.5px; box-shadow: 1px 1px 0 var(--text-primary); border-radius: 4px;
-    }
+    .day-square { border-width: 1.5px; box-shadow: 1px 1px 0 var(--text-primary); border-radius: 4px; }
     .day-square.today { box-shadow: 1px 1px 0 var(--accent-1); }
     .day-num { font-size: 0.6rem; top: 3px; left: 3px; }
     .day-add-btn { width: 22px; height: 22px; font-size: 0.85rem; border-width: 1px; border-radius: 4px; }
+    .rotate-hint { display: flex; }
+  }
+
+  /* Landscape mobile — big beautiful cells */
+  @media (max-height: 600px) and (orientation: landscape) {
+    .square-grid { gap: 4px; }
+    .mem-day-labels { gap: 4px; font-size: 0.65rem; }
+    .day-square { border-radius: 5px; }
+    .day-num { font-size: 0.7rem; }
+    .rotate-hint { display: none; }
+    .page-content { padding: 10px 12px !important; }
+  }
+
+  /* Rotate hint banner */
+  .rotate-hint {
+    display: none;
+    align-items: center; justify-content: center; gap: 8px;
+    background: var(--accent-3); border: 2px solid var(--accent-1);
+    border-radius: 6px; padding: 8px 12px; margin-bottom: 12px;
+    font-size: 0.75rem; font-weight: 700; color: var(--accent-1);
+    font-family: 'Space Grotesk', sans-serif;
   }
 </style>
 
 <div class="memories-page">
+
+  <!-- Rotate hint (portrait mobile only) -->
+  <div class="rotate-hint">
+    <i class="bi bi-phone-landscape"></i> Rotate your phone for a better view
+  </div>
 
   <!-- Compact header -->
   <div class="mem-header-row">
