@@ -143,7 +143,31 @@
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
   .overlay.show { display: block; }
 
-  /* Landscape mobile optimised */
+  /* ── Force landscape on portrait mobile via CSS rotation ── */
+  @media (max-width: 600px) and (orientation: portrait) {
+    /* Hide normal page chrome behind the rotated overlay */
+    .topbar, .sidebar { display: none !important; }
+    body, .app-wrap, .page-content { overflow: hidden !important; height: 100vh !important; }
+
+    /* Rotate memories-page to fill the screen as if landscape */
+    .memories-page {
+      position: fixed;
+      width: 100vh;
+      height: 100vw;
+      top: calc(50vh - 50vw);
+      left: calc(50vw - 50vh);
+      transform: rotate(90deg);
+      z-index: 1000;
+      background: var(--body-bg);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 14px 16px;
+      box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Landscape mobile — tighten spacing */
   @media (max-height: 600px) and (orientation: landscape) {
     .square-grid { gap: 4px; }
     .mem-day-labels { gap: 4px; }
