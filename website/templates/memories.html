@@ -143,34 +143,25 @@
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
   .overlay.show { display: block; }
 
-  /* ── Force landscape on portrait mobile via CSS rotation ── */
-  @media (max-width: 600px) and (orientation: portrait) {
-    /* Hide normal page chrome behind the rotated overlay */
-    .topbar, .sidebar { display: none !important; }
-    body, .app-wrap, .page-content { overflow: hidden !important; height: 100vh !important; }
+  /* ── Compact portrait layout on mobile ── */
+  @media (max-width: 600px) {
+    .page-content:has(.memories-page) { padding: 8px 6px !important; }
 
-    /* Rotate memories-page to fill the screen as if landscape */
-    .memories-page {
-      position: fixed;
-      width: 100vh;
-      height: 100vw;
-      top: calc(50vh - 50vw);
-      left: calc(50vw - 50vh);
-      transform: rotate(90deg);
-      z-index: 1000;
-      background: var(--body-bg);
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 10px 12px;
-      box-sizing: border-box;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Tighten header so more grid is visible */
     .memories-page .mem-header-row { margin-bottom: 6px; }
     .memories-page .mem-month-title { font-size: 1rem; }
-    .memories-page .mem-nav-btn { padding: 4px 10px; font-size: 0.7rem; }
-    .memories-page .mem-day-labels { font-size: 0.6rem; margin-bottom: 3px; }
+    .memories-page .mem-nav-btn { padding: 4px 8px; font-size: 0.68rem; box-shadow: 2px 2px 0 var(--text-primary); }
+    .memories-page .mem-day-labels { font-size: 0.58rem; gap: 3px; margin-bottom: 3px; }
+    .memories-page .square-grid { gap: 3px; }
+
+    /* Fixed height so 6 weeks all fit on one screen */
+    .memories-page .day-square {
+      aspect-ratio: unset;
+      height: 52px;
+    }
+
+    .memories-page .day-num { font-size: 0.6rem; }
+    .memories-page .day-add-btn { width: 20px; height: 20px; font-size: 0.85rem; }
+    .memories-page .photo-count { font-size: 0.48rem; padding: 1px 3px; }
   }
 
   /* Landscape mobile — tighten spacing */
