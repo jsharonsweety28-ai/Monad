@@ -945,7 +945,12 @@ if ('serviceWorker' in navigator) {
 
   async function pollReminders() {
     try {
-      const res  = await fetch('/api/due-reminders');
+      const now = new Date();
+      const lm  = now.getHours() * 60 + now.getMinutes();
+      const ld  = now.getFullYear() + '-'
+                + String(now.getMonth() + 1).padStart(2, '0') + '-'
+                + String(now.getDate()).padStart(2, '0');
+      const res  = await fetch('/api/due-reminders?lm=' + lm + '&ld=' + ld);
       if (!res.ok) return;
       const data = await res.json();
       (data.reminders || []).forEach(task => {
@@ -953,9 +958,10 @@ if ('serviceWorker' in navigator) {
         markNotified(task.id);
         const label = task.offset === 0
           ? `Due now: ${task.content}`
-          : `Due in 5 min: ${task.content}`;
+          : `Due in ${Math.abs(task.offset)} min: ${task.content}`;
         const n = new Notification('monad', {
           body: label,
+          icon: '/static/icons/icon-192.png',
           tag:  'task-' + task.id,
           requireInteraction: true,
         });
@@ -980,13 +986,17 @@ if ('serviceWorker' in navigator) {
   async function subscribePush() {
     try {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      const vapidKey = '{{ vapid_public_key }}';
+      if (!vapidKey) return;
       const reg = await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) return;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array('{{ vapid_public_key }}')
-      });
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey)
+        });
+      }
+      // Always (re-)send to server so the DB stays current after reinstalls
       await fetch('/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
@@ -1006,7 +1016,7 @@ if ('serviceWorker' in navigator) {
 
   // Init on load
   if (Notification.permission === 'granted') {
-    setGrantedUI(); startPolling();
+    setGrantedUI(); startPolling(); subscribePush();
   } else if (Notification.permission !== 'denied') {
     setPendingUI();
   }

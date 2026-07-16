@@ -2277,9 +2277,20 @@ def share_stats():
 @views.route('/api/due-reminders')
 @login_required
 def due_reminders():
-    today = datetime.now(timezone.utc).replace(tzinfo=None).date()
-    now   = datetime.now(timezone.utc).replace(tzinfo=None)
-    current_minute = now.hour * 60 + now.minute
+    # Use client-provided local minute so timezone mismatches don't silence reminders
+    local_minute = request.args.get('lm', type=int)
+    local_date_str = request.args.get('ld', '')   # YYYY-MM-DD in client local time
+    if local_minute is not None and local_date_str:
+        try:
+            today = datetime.strptime(local_date_str, '%Y-%m-%d').date()
+            current_minute = local_minute
+        except ValueError:
+            today = datetime.now(timezone.utc).replace(tzinfo=None).date()
+            current_minute = datetime.now(timezone.utc).replace(tzinfo=None).hour * 60 + datetime.now(timezone.utc).replace(tzinfo=None).minute
+    else:
+        today = datetime.now(timezone.utc).replace(tzinfo=None).date()
+        now   = datetime.now(timezone.utc).replace(tzinfo=None)
+        current_minute = now.hour * 60 + now.minute
     tasks = Task.query.filter(
         Task.user_id == current_user.id,
         Task.due_time.isnot(None),
@@ -2292,7 +2303,8 @@ def due_reminders():
         try:
             h, m = map(int, task.due_time.split(':'))
             remind_at = h * 60 + m + task.reminder_offset
-            if remind_at == current_minute:
+            # 2-minute window so a 30s polling interval never misses it
+            if remind_at <= current_minute <= remind_at + 1:
                 due.append({'id': task.id, 'content': task.content,
                             'due_time': task.due_time, 'offset': task.reminder_offset})
         except (ValueError, AttributeError):
