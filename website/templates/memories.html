@@ -148,10 +148,14 @@
     .mem-nav-btn { padding: 5px 10px; font-size: 0.7rem; box-shadow: 2px 2px 0 var(--text-primary); }
     .square-grid { gap: 3px; }
     .mem-day-labels { gap: 3px; font-size: 0.6rem; }
-    .day-square { border-width: 1.5px; box-shadow: 1px 1px 0 var(--text-primary); border-radius: 4px; }
+    .day-square {
+      aspect-ratio: unset;
+      height: 72px;
+      border-width: 1.5px; box-shadow: 1px 1px 0 var(--text-primary); border-radius: 4px;
+    }
     .day-square.today { box-shadow: 1px 1px 0 var(--accent-1); }
     .day-num { font-size: 0.6rem; top: 3px; left: 3px; }
-    .day-add-btn { width: 20px; height: 20px; font-size: 0.8rem; border-width: 1px; border-radius: 4px; }
+    .day-add-btn { width: 22px; height: 22px; font-size: 0.85rem; border-width: 1px; border-radius: 4px; }
   }
 </style>
 
