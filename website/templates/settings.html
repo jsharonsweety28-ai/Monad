@@ -354,11 +354,46 @@
 </div>
 
 <script>
-// ── Notification toggle ──
+document.querySelectorAll('#themeGrid .theme-tile').forEach(function(tile) {
+  tile.addEventListener('click', function() {
+    document.querySelectorAll('#themeGrid .theme-tile').forEach(function(t) { t.classList.remove('selected'); });
+    tile.classList.add('selected');
+    document.getElementById('themeVal').value = tile.dataset.val;
+
+    var r = document.documentElement.style;
+    r.setProperty('--nav-bg',       tile.dataset.nav);
+    r.setProperty('--footer-bg',    tile.dataset.nav);
+    r.setProperty('--body-bg',      tile.dataset.body);
+    r.setProperty('--card-bg',      tile.dataset.card);
+    r.setProperty('--accent-1',     tile.dataset.accent);
+    r.setProperty('--text-primary', tile.dataset.tp);
+    r.setProperty('--text-secondary', tile.dataset.ts);
+    r.setProperty('--border-color', tile.dataset.border);
+    r.setProperty('--input-bg',     tile.dataset.body);
+    r.setProperty('--hover',        tile.dataset.body);
+    r.setProperty('--header-gradient', 'linear-gradient(135deg, ' + tile.dataset.accent + ', ' + tile.dataset.accent + 'aa)');
+
+    // Update sidebar + topbar inline too
+    var navEls = document.querySelectorAll('.sidebar, .topbar');
+    navEls.forEach(function(el) {
+      el.style.setProperty('--nav-bg', tile.dataset.nav);
+      el.style.backgroundColor = tile.dataset.nav;
+    });
+    document.querySelector('.sidebar').style.backgroundColor = tile.dataset.nav;
+    document.querySelector('.topbar').style.backgroundColor  = tile.dataset.nav;
+  });
+});
+</script>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
 (function () {
   const toggle   = document.getElementById('notifToggle');
   const blocked  = document.getElementById('notif-blocked');
   const statusTx = document.getElementById('notif-status-text');
+  if (!toggle) return;
 
   function setStatus(perm, hasSub) {
     if (perm === 'denied') {
@@ -394,7 +429,7 @@
   toggle.addEventListener('change', async function () {
     if (toggle.checked) {
       if (typeof enableNotifications === 'function') enableNotifications();
-      setTimeout(checkSub, 1000);
+      setTimeout(checkSub, 1500);
     } else {
       try {
         if ('serviceWorker' in navigator) {
@@ -416,36 +451,5 @@
 
   checkSub();
 })();
-
-document.querySelectorAll('#themeGrid .theme-tile').forEach(function(tile) {
-  tile.addEventListener('click', function() {
-    document.querySelectorAll('#themeGrid .theme-tile').forEach(function(t) { t.classList.remove('selected'); });
-    tile.classList.add('selected');
-    document.getElementById('themeVal').value = tile.dataset.val;
-
-    var r = document.documentElement.style;
-    r.setProperty('--nav-bg',       tile.dataset.nav);
-    r.setProperty('--footer-bg',    tile.dataset.nav);
-    r.setProperty('--body-bg',      tile.dataset.body);
-    r.setProperty('--card-bg',      tile.dataset.card);
-    r.setProperty('--accent-1',     tile.dataset.accent);
-    r.setProperty('--text-primary', tile.dataset.tp);
-    r.setProperty('--text-secondary', tile.dataset.ts);
-    r.setProperty('--border-color', tile.dataset.border);
-    r.setProperty('--input-bg',     tile.dataset.body);
-    r.setProperty('--hover',        tile.dataset.body);
-    r.setProperty('--header-gradient', 'linear-gradient(135deg, ' + tile.dataset.accent + ', ' + tile.dataset.accent + 'aa)');
-
-    // Update sidebar + topbar inline too
-    var navEls = document.querySelectorAll('.sidebar, .topbar');
-    navEls.forEach(function(el) {
-      el.style.setProperty('--nav-bg', tile.dataset.nav);
-      el.style.backgroundColor = tile.dataset.nav;
-    });
-    document.querySelector('.sidebar').style.backgroundColor = tile.dataset.nav;
-    document.querySelector('.topbar').style.backgroundColor  = tile.dataset.nav;
-  });
-});
 </script>
-
 {% endblock %}
