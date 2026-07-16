@@ -387,19 +387,26 @@ function showReflectPopup(logId, habitName) {
   document.getElementById('reflectLogId').value = logId;
   document.getElementById('reflectHabitName').textContent = habitName;
   document.getElementById('reflectText').value = '';
+  document.getElementById('reflectPhoto').value = '';
+  document.getElementById('reflectPhotoLabel').textContent = 'Add a photo (optional)';
   document.getElementById('reflectOverlay').style.display = 'flex';
 }
 function hideReflectPopup() {
   document.getElementById('reflectOverlay').style.display = 'none';
 }
+function updatePhotoLabel(input) {
+  const label = document.getElementById('reflectPhotoLabel');
+  label.textContent = input.files[0] ? input.files[0].name : 'Add a photo (optional)';
+}
 async function submitReflect() {
   const logId = document.getElementById('reflectLogId').value;
   const text  = document.getElementById('reflectText').value.trim();
-  if (!text) { hideReflectPopup(); return; }
+  const photo = document.getElementById('reflectPhoto').files[0];
   const fd = new FormData();
   fd.append('log_id', logId);
   fd.append('reflection', text);
   fd.append('csrf_token', '{{ csrf_token() }}');
+  if (photo) fd.append('photo', photo);
   await fetch('/habit/reflect', { method: 'POST', body: fd });
   hideReflectPopup();
 }
@@ -411,9 +418,15 @@ async function submitReflect() {
     <div style="font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:1rem; color:var(--text-primary); margin-bottom:4px;">Nice work! 🎉</div>
     <div id="reflectHabitName" style="font-size:.85rem; color:var(--accent-1); font-weight:700; margin-bottom:14px;"></div>
     <textarea id="reflectText" placeholder="Add a quick reflection (optional)…"
-      style="width:100%; height:90px; padding:10px; border:2px solid var(--border-color); border-radius:8px; background:var(--input-bg); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:.9rem; resize:none; box-sizing:border-box;"></textarea>
+      style="width:100%; height:80px; padding:10px; border:2px solid var(--border-color); border-radius:8px; background:var(--input-bg); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:.9rem; resize:none; box-sizing:border-box; margin-bottom:10px;"></textarea>
+    <!-- Photo preview -->
+    <label style="display:flex; align-items:center; gap:8px; padding:8px 12px; border:2px dashed var(--border-color); border-radius:8px; cursor:pointer; margin-bottom:10px; font-size:.82rem; color:var(--text-secondary); font-weight:600;">
+      <i class="bi bi-camera-fill" style="font-size:1rem;"></i>
+      <span id="reflectPhotoLabel">Add a photo (optional)</span>
+      <input type="file" id="reflectPhoto" accept="image/*" style="display:none;" onchange="updatePhotoLabel(this)">
+    </label>
     <input type="hidden" id="reflectLogId">
-    <div style="display:flex; gap:8px; margin-top:12px;">
+    <div style="display:flex; gap:8px;">
       <button onclick="submitReflect()" style="flex:1; padding:10px; background:var(--accent-1); color:white; border:2px solid var(--text-primary); border-radius:6px; font-weight:700; font-family:'Space Grotesk',sans-serif; cursor:pointer;">Save</button>
       <button onclick="hideReflectPopup()" style="padding:10px 16px; background:transparent; border:2px solid var(--border-color); border-radius:6px; color:var(--text-secondary); font-weight:600; cursor:pointer;">Skip</button>
     </div>
