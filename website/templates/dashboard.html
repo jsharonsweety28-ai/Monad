@@ -355,7 +355,17 @@ async function toggleHabit(habitId, dateStr) {
   name.classList.toggle('done', !done);
   row.classList.toggle('done', !done);
 
-  await fetch(`/habit/toggle/${habitId}/${dateStr}`, { method: 'POST' });
+  const res  = await fetch(`/habit/toggle/${habitId}/${dateStr}`, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  });
+  const data = await res.json().catch(() => ({}));
+
+  // Show reflection popup when marking as done
+  if (!done && data.log_id) {
+    const habitName = name.textContent.trim();
+    showReflectPopup(data.log_id, habitName);
+  }
 }
 
 async function dashToggle(taskId, dateStr) {
@@ -372,5 +382,42 @@ async function dashToggle(taskId, dateStr) {
   // simple full reload on task toggle to keep counts accurate
   setTimeout(() => location.reload(), 350);
 }
+
+function showReflectPopup(logId, habitName) {
+  document.getElementById('reflectLogId').value = logId;
+  document.getElementById('reflectHabitName').textContent = habitName;
+  document.getElementById('reflectText').value = '';
+  document.getElementById('reflectOverlay').style.display = 'flex';
+}
+function hideReflectPopup() {
+  document.getElementById('reflectOverlay').style.display = 'none';
+}
+async function submitReflect() {
+  const logId = document.getElementById('reflectLogId').value;
+  const text  = document.getElementById('reflectText').value.trim();
+  if (!text) { hideReflectPopup(); return; }
+  const fd = new FormData();
+  fd.append('log_id', logId);
+  fd.append('reflection', text);
+  fd.append('csrf_token', '{{ csrf_token() }}');
+  await fetch('/habit/reflect', { method: 'POST', body: fd });
+  hideReflectPopup();
+}
 </script>
+
+<!-- Reflection popup -->
+<div id="reflectOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:var(--card-bg); border:3px solid var(--text-primary); border-radius:10px; padding:24px; width:90%; max-width:380px; box-shadow:6px 6px 0 var(--text-primary);">
+    <div style="font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:1rem; color:var(--text-primary); margin-bottom:4px;">Nice work! 🎉</div>
+    <div id="reflectHabitName" style="font-size:.85rem; color:var(--accent-1); font-weight:700; margin-bottom:14px;"></div>
+    <textarea id="reflectText" placeholder="Add a quick reflection (optional)…"
+      style="width:100%; height:90px; padding:10px; border:2px solid var(--border-color); border-radius:8px; background:var(--input-bg); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:.9rem; resize:none; box-sizing:border-box;"></textarea>
+    <input type="hidden" id="reflectLogId">
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button onclick="submitReflect()" style="flex:1; padding:10px; background:var(--accent-1); color:white; border:2px solid var(--text-primary); border-radius:6px; font-weight:700; font-family:'Space Grotesk',sans-serif; cursor:pointer;">Save</button>
+      <button onclick="hideReflectPopup()" style="padding:10px 16px; background:transparent; border:2px solid var(--border-color); border-radius:6px; color:var(--text-secondary); font-weight:600; cursor:pointer;">Skip</button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

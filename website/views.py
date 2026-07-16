@@ -985,7 +985,7 @@ def delete_habit(id):
     flash('Habit deleted!', category='success')
     return redirect(request.referrer)
 
-@views.route('/habit/toggle/<int:id>/<date_str>')
+@views.route('/habit/toggle/<int:id>/<date_str>', methods=['GET', 'POST'])
 @login_required
 def toggle_habit(id, date_str):
     habit = Habit.query.get_or_404(id)
