@@ -154,46 +154,41 @@
     .memories-page .mem-month-title { font-size: 1rem; }
     .memories-page .mem-nav-btn { padding: 4px 8px; font-size: 0.68rem; }
 
-    /* Scroll wrapper — horizontal carousel */
+    /* Outer wrapper: day labels + scrollable grid side by side */
     .mem-grid-scroll {
       display: flex;
-      gap: 3px;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      padding-bottom: 4px;
+      gap: 4px;
+      align-items: flex-start;
     }
-    .mem-grid-scroll::-webkit-scrollbar { display: none; }
 
-    /* Day-name column: sticky on the left */
+    /* Day-name column: static, always visible — no sticky needed */
     .memories-page .mem-day-labels {
       display: flex;
       flex-direction: column;
-      gap: 3px;
-      position: sticky;
-      left: 0;
-      z-index: 10;
-      background: var(--body-bg);
+      gap: 4px;
       flex-shrink: 0;
-      padding-right: 3px;
       margin-bottom: 0;
     }
     .memories-page .mem-day-labels span {
-      width: 30px;
-      height: calc((100svh - 120px - 6px * 6) / 7);
+      width: 28px;
+      height: calc((100svh - 120px - 4px * 6) / 7);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.52rem;
     }
 
-    /* Grid becomes a horizontal flex of week columns */
+    /* Grid is the scroll container — only the weeks scroll */
     .memories-page .square-grid {
       display: flex;
       gap: 4px;
-      flex-shrink: 0;
+      flex: 1;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
+    .memories-page .square-grid::-webkit-scrollbar { display: none; }
 
     /* Each week is a snap point */
     .week-col {
@@ -309,9 +304,9 @@
       var todaySquare = document.querySelector('.day-square.today');
       if (todaySquare) {
         var weekCol = todaySquare.closest('.week-col');
-        var scroll = document.querySelector('.mem-grid-scroll');
+        var scroll = document.querySelector('.memories-page .square-grid');
         if (weekCol && scroll) {
-          scroll.scrollLeft = weekCol.offsetLeft - 32;
+          scroll.scrollLeft = weekCol.offsetLeft;
         }
       }
     }
