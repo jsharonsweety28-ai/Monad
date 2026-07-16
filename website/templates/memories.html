@@ -42,10 +42,19 @@
   .square-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
 
   @media (max-width: 600px) {
-    .square-grid { gap: 6px; }
-    .memories-header { padding: 16px; border-radius: 8px; }
-    .mem-nav a { padding: 6px 12px; font-size: 0.78rem; }
-    .day-num { font-size: 0.78rem; padding: 5px 6px; }
+    .square-grid { gap: 3px; }
+    .memories-header { padding: 14px 12px; border-radius: 8px; }
+    .memories-header h2 { font-size: 1.1rem; }
+    .mem-nav { gap: 6px; margin-top: 10px; }
+    .mem-nav a { padding: 5px 10px; font-size: 0.72rem; box-shadow: 2px 2px 0 #2D2A26; }
+    .day-square { border-width: 2px; box-shadow: 2px 2px 0 var(--text-primary); border-radius: 5px; }
+    .day-square.today { box-shadow: 2px 2px 0 var(--accent-1); }
+    .day-square.empty { box-shadow: none; }
+    .day-num { font-size: 0.62rem; padding: 2px 3px; border-bottom-width: 1px; }
+    .day-upload span { width: 18px; height: 18px; min-height: 18px; font-size: 0.7rem; border-width: 1px; border-radius: 4px; }
+    .day-indicator { width: 5px; height: 5px; }
+    .day-indicators { gap: 2px; top: 2px; right: 2px; }
+    .photo-count { font-size: 0.5rem; padding: 1px 3px; }
   }
 
   .day-square {

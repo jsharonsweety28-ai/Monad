@@ -1040,90 +1040,87 @@ if ('serviceWorker' in navigator) {
 {% if current_user.is_authenticated %}
 <!-- ── Share Progress Modal ── -->
 <div id="shareOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:24px; padding:28px; max-width:420px; width:90%; position:relative; max-height:90vh; overflow-y:auto;">
-    <button onclick="closeShareCard()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text-secondary);">×</button>
-    <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1rem; margin-bottom:16px; color:var(--text-primary);">Share your progress <i class="bi bi-stars"></i></h3>
+  <div style="background:var(--card-bg); border:3px solid var(--text-primary); border-radius:8px; padding:24px; max-width:400px; width:90%; position:relative; max-height:90vh; overflow-y:auto; box-shadow:6px 6px 0 var(--text-primary);">
+    <button onclick="closeShareCard()" style="position:absolute; top:12px; right:14px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text-secondary); font-weight:800;">×</button>
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:0.95rem; margin-bottom:16px; color:var(--text-primary); text-transform:uppercase; letter-spacing:.05em;">Share your progress <i class="bi bi-stars"></i></h3>
 
     <!-- The card that gets captured -->
     <div id="shareCard" style="
-      background: linear-gradient(135deg, #E07B39 0%, #c45e1e 50%, #a04010 100%);
-      border-radius: 20px; padding: 28px; color: white; font-family: 'Space Grotesk', sans-serif;
-      position: relative; overflow: hidden; margin-bottom: 16px;
+      background: #FFFDF9; border: 3px solid #2D2A26;
+      border-radius: 8px; overflow: hidden; margin-bottom: 16px;
+      font-family: 'Space Grotesk', sans-serif; box-shadow: 4px 4px 0 #2D2A26;
     ">
-      <!-- Background circles for decoration -->
-      <div style="position:absolute; top:-30px; right:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.08);"></div>
-      <div style="position:absolute; bottom:-20px; left:-20px; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.06);"></div>
-
-      <!-- Header -->
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+      <!-- Orange header strip -->
+      <div style="background:#E07B39; padding:16px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #2D2A26;" id="sc-header-strip">
         <div>
-          <div style="font-size:.7rem; opacity:.7; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px;">monad</div>
-          <div style="font-size:1.15rem; font-weight:700;" id="sc-name">{{ current_user.name }}</div>
-          <div style="font-size:.72rem; opacity:.7;" id="sc-date"></div>
+          <div style="font-size:.65rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.75); margin-bottom:2px;">MONAD</div>
+          <div style="font-size:1.1rem; font-weight:800; color:white; text-transform:uppercase;" id="sc-name">{{ current_user.name }}</div>
+          <div style="font-size:.68rem; color:rgba(255,255,255,.8); font-weight:600;" id="sc-date"></div>
         </div>
-        <div style="font-size:1.4rem; opacity:.8;">✦</div>
+        <i class="bi bi-stars" style="font-size:1.6rem; color:white; opacity:.9;"></i>
       </div>
 
       <!-- Stats grid -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;">
-        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
-          <div style="font-size:1.6rem; font-weight:700;" id="sc-tasks">–</div>
-          <div style="font-size:.7rem; opacity:.8;">tasks done today</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; border-bottom:3px solid #2D2A26;">
+        <div style="padding:14px 16px; border-right:2px solid #2D2A26;">
+          <div style="font-size:1.8rem; font-weight:800; color:#2D2A26;" id="sc-tasks">–</div>
+          <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8B7E74;">Tasks today</div>
         </div>
-        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
-          <div style="font-size:1.6rem; font-weight:700;" id="sc-habits">–</div>
-          <div style="font-size:.7rem; opacity:.8;">habits done today</div>
+        <div style="padding:14px 16px;">
+          <div style="font-size:1.8rem; font-weight:800; color:#2D2A26;" id="sc-habits">–</div>
+          <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8B7E74;">Habits today</div>
         </div>
-        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
-          <div style="font-size:1.6rem; font-weight:700;" id="sc-stars">–</div>
-          <div style="font-size:.7rem; opacity:.8;"><i class="bi bi-star-fill"></i> stars this month</div>
+        <div style="padding:14px 16px; border-right:2px solid #2D2A26; border-top:2px solid #2D2A26;">
+          <div style="font-size:1.8rem; font-weight:800; color:#E07B39;" id="sc-stars">–</div>
+          <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8B7E74;"><i class="bi bi-star-fill" style="color:#E07B39;"></i> Stars / month</div>
         </div>
-        <div style="background:rgba(255,255,255,.15); border-radius:12px; padding:12px;">
-          <div style="font-size:1.6rem; font-weight:700;" id="sc-streak">–</div>
-          <div style="font-size:.7rem; opacity:.8;"><i class="bi bi-fire"></i> day streak</div>
+        <div style="padding:14px 16px; border-top:2px solid #2D2A26;">
+          <div style="font-size:1.8rem; font-weight:800; color:#E07B39;" id="sc-streak">–</div>
+          <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8B7E74;"><i class="bi bi-fire" style="color:#E07B39;"></i> Day streak</div>
         </div>
       </div>
 
       <!-- Focus bar -->
-      <div style="background:rgba(255,255,255,.12); border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:.8rem; opacity:.85;"><i class="bi bi-stopwatch-fill"></i> Focus today</span>
-        <span style="font-weight:700;" id="sc-focus">– mins</span>
+      <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#2D2A26;"><i class="bi bi-stopwatch-fill" style="color:#E07B39;"></i> Focus today</span>
+        <span style="font-weight:800; font-size:.9rem; color:#E07B39;" id="sc-focus">– mins</span>
       </div>
 
       <!-- Footer tag -->
-      <div style="text-align:center; margin-top:16px; font-size:.65rem; opacity:.55; letter-spacing:.05em;">built with monad · your calm productivity space</div>
+      <div style="background:#2D2A26; padding:8px 16px; text-align:center; font-size:.6rem; color:rgba(255,255,255,.6); font-weight:700; letter-spacing:.08em; text-transform:uppercase;">built with monad</div>
     </div>
 
     <!-- Action buttons -->
-    <div style="display:flex; gap:10px;">
-      <button onclick="downloadCard()" style="flex:1; padding:11px; border-radius:12px; border:2px solid var(--border-color); background:var(--hover); color:var(--text-primary); font-weight:600; font-size:.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
-        <i class="bi bi-download"></i> Save image
+    <div style="display:flex; gap:8px;">
+      <button onclick="downloadCard()" style="flex:1; padding:11px; border-radius:6px; border:2px solid var(--text-primary); background:var(--hover); color:var(--text-primary); font-weight:800; font-size:.82rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:3px 3px 0 var(--text-primary); font-family:'Space Grotesk',sans-serif; text-transform:uppercase; transition:all .15s;" onmouseover="this.style.transform='translate(2px,2px)';this.style.boxShadow='1px 1px 0 var(--text-primary)'" onmouseout="this.style.transform='';this.style.boxShadow='3px 3px 0 var(--text-primary)'">
+        <i class="bi bi-download"></i> Save
       </button>
-      <button onclick="shareCard()" id="shareNativeBtn" style="flex:1; padding:11px; border-radius:12px; border:none; background:var(--accent-1); color:white; font-weight:600; font-size:.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+      <button onclick="shareCard()" id="shareNativeBtn" style="flex:1; padding:11px; border-radius:6px; border:2px solid var(--text-primary); background:var(--accent-1); color:white; font-weight:800; font-size:.82rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:3px 3px 0 var(--text-primary); font-family:'Space Grotesk',sans-serif; text-transform:uppercase; transition:all .15s;" onmouseover="this.style.transform='translate(2px,2px)';this.style.boxShadow='1px 1px 0 var(--text-primary)'" onmouseout="this.style.transform='';this.style.boxShadow='3px 3px 0 var(--text-primary)'">
         <i class="bi bi-share-fill"></i> Share
       </button>
     </div>
-    <p style="font-size:.7rem; color:var(--text-secondary); text-align:center; margin-top:10px; margin-bottom:0;">Share to Instagram, WhatsApp, or any app on your device</p>
+    <p style="font-size:.68rem; color:var(--text-secondary); text-align:center; margin-top:10px; margin-bottom:0;">Share to Instagram, WhatsApp, or any app on your device</p>
   </div>
 </div>
 
 <script>
-const THEME_GRADIENTS = {
-  default:  ['#E07B39', '#c45e1e', '#8c3e0d'],
-  ocean:    ['#0077b6', '#005f92', '#003f6b'],
-  forest:   ['#2e7d32', '#1b5e20', '#0d3d10'],
-  sunset:   ['#e2725b', '#c04e38', '#9a2e1a'],
-  dark:     ['#7c3aed', '#5b21b6', '#3b0f8c'],
-  haikyuu:  ['#f48120', '#d46010', '#b04000'],
+const THEME_COLORS = {
+  default:  '#E07B39',
+  ocean:    '#0077b6',
+  forest:   '#2e7d32',
+  sunset:   '#e2725b',
+  dark:     '#7c3aed',
+  haikyuu:  '#f48120',
 };
 const userTheme = '{{ user_theme }}';
 
 function openShareCard() {
   document.getElementById('shareOverlay').style.display = 'flex';
   document.getElementById('sc-date').textContent = new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
-  // Apply theme gradient
-  const g = THEME_GRADIENTS[userTheme] || THEME_GRADIENTS['default'];
-  document.getElementById('shareCard').style.background = `linear-gradient(135deg, ${g[0]} 0%, ${g[1]} 50%, ${g[2]} 100%)`;
+  // Apply theme accent to header strip and accent values
+  const c = THEME_COLORS[userTheme] || THEME_COLORS['default'];
+  document.getElementById('sc-header-strip').style.background = c;
+  document.querySelectorAll('#shareCard [data-accent]').forEach(el => el.style.color = c);
   fetch('/api/share-stats').then(r => r.json()).then(d => {
     document.getElementById('sc-tasks').textContent  = d.tasks_done + '/' + d.tasks_total;
     document.getElementById('sc-habits').textContent = d.habits_done + '/' + d.habits_total;
