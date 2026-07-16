@@ -812,6 +812,12 @@ function toggleSidebar() {
   const sidebar  = document.getElementById('sidebar');
   const mainWrap = document.getElementById('mainWrap');
   if (!sidebar) return;
+  if (window.innerWidth <= 900) {
+    sidebar.classList.remove('mobile-open');
+    const ov = document.getElementById('sbOverlay');
+    if (ov) ov.classList.remove('active');
+    return;
+  }
   const collapsed = sidebar.classList.toggle('collapsed');
   if (mainWrap) mainWrap.classList.toggle('sidebar-collapsed', collapsed);
   localStorage.setItem('sidebarCollapsed', collapsed);
