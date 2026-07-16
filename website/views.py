@@ -2897,10 +2897,22 @@ def _send_push(subscription, title, body, url='/'):
             vapid_private_key=pem,
             vapid_claims={'sub': 'mailto:' + os.environ.get('BREVO_SENDER_EMAIL', 'letsgomonad@gmail.com')}
         )
-        return True
+        return True, None
     except Exception as e:
         print(f'Push error: {e}')
-        return False
+        return False, str(e)
+
+@views.route('/api/push/test', methods=['GET'])
+@login_required
+def push_test():
+    subs = PushSubscription.query.filter_by(user_id=current_user.id).all()
+    if not subs:
+        return jsonify({'error': 'no subscriptions for your account'})
+    results = []
+    for sub in subs:
+        ok, err = _send_push(sub, title='monad test', body='Push notifications are working!', url='/')
+        results.append({'endpoint': sub.endpoint[-30:], 'ok': ok, 'error': err})
+    return jsonify({'results': results})
 
 @views.route('/push/subscribe', methods=['POST'])
 @login_required
@@ -2960,7 +2972,7 @@ def send_habit_reminder():
             for h in habits
         )
         if not all_done:
-            ok = _send_push(
+            ok, _ = _send_push(
                 sub,
                 title='monad · habits',
                 body=f"Hey {user.name or 'there'}! Don't forget your habits today.",
@@ -3013,7 +3025,7 @@ def send_morning_reminder():
         if not parts:
             continue
         body = f"Good morning, {name}! " + ", ".join(parts) + "."
-        ok = _send_push(sub, title='monad · good morning', body=body, url='/daily')
+        ok, _ = _send_push(sub, title='monad · good morning', body=body, url='/daily')
         if ok:
             sent += 1
     return jsonify({'sent': sent})
