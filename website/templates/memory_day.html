@@ -44,17 +44,87 @@
     letter-spacing: 0.04em;
   }
 
-  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .photo-item {
+  /* ── Photo carousel ── */
+  .carousel-wrap {
     position: relative;
+    border: 3px solid var(--text-primary);
     border-radius: 8px;
     overflow: hidden;
+    box-shadow: 4px 4px 0 var(--text-primary);
     background: var(--body-bg);
-    border: 3px solid var(--text-primary);
+    margin-bottom: 12px;
   }
-  .photo-item img { width: 100%; height: 130px; object-fit: cover; display: block; }
-  .photo-item .caption { font-size: 0.7rem; color: var(--text-secondary); padding: 6px 8px; font-weight: 600; }
-  .photo-item .time { font-size: 0.6rem; color: var(--text-secondary); padding: 0 8px 6px; font-weight: 600; }
+  .carousel-track {
+    display: flex;
+    transition: transform 0.3s ease;
+  }
+  .carousel-slide {
+    min-width: 100%;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .carousel-slide img {
+    width: 100%; height: 320px; object-fit: cover; display: block;
+  }
+  .carousel-meta {
+    padding: 8px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 2px solid var(--text-primary);
+    background: var(--card-bg);
+  }
+  .carousel-meta .caption { font-size: 0.78rem; color: var(--text-primary); font-weight: 700; }
+  .carousel-meta .time { font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; }
+  .carousel-final-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--accent-1); color: white;
+    border: 2px solid var(--text-primary);
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 0.65rem; font-weight: 800;
+    font-family: 'Space Grotesk', sans-serif;
+    text-transform: uppercase;
+  }
+
+  /* Arrow buttons */
+  .carousel-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: var(--card-bg); border: 2px solid var(--text-primary);
+    border-radius: 6px; width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem; font-weight: 800;
+    box-shadow: 2px 2px 0 var(--text-primary);
+    z-index: 5; transition: all .15s;
+    color: var(--text-primary);
+  }
+  .carousel-btn:hover { transform: translateY(-50%) translate(1px,1px); box-shadow: 1px 1px 0 var(--text-primary); }
+  .carousel-btn.prev { left: 8px; }
+  .carousel-btn.next { right: 8px; }
+
+  /* Dots */
+  .carousel-dots {
+    display: flex; justify-content: center; gap: 6px; padding: 8px 0 4px;
+  }
+  .carousel-dot {
+    width: 8px; height: 8px; border-radius: 2px;
+    border: 2px solid var(--text-primary);
+    background: var(--body-bg); cursor: pointer; transition: all .15s;
+  }
+  .carousel-dot.active { background: var(--accent-1); border-color: var(--accent-1); }
+
+  /* Set final button inside carousel */
+  .set-final-btn-c {
+    display: inline-block; margin-top: 6px;
+    padding: 5px 12px; font-size: 0.72rem; font-weight: 800;
+    border: 2px solid var(--text-primary); border-radius: 5px;
+    background: var(--hover); color: var(--text-primary);
+    cursor: pointer; text-decoration: none;
+    font-family: 'Space Grotesk', sans-serif; text-transform: uppercase;
+    box-shadow: 2px 2px 0 var(--text-primary); transition: all .15s;
+  }
+  .set-final-btn-c:hover { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--text-primary); }
+
+  @media (max-width: 600px) {
+    .carousel-slide img { height: 220px; }
+  }
 
   .final-badge {
     position: absolute; top: 5px; right: 5px;
@@ -174,21 +244,45 @@
     </h4>
     
     {% if all_photos %}
-      <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:10px;"><i class="bi bi-star-fill"></i> = shown in calendar view. Click "Set as final" to choose which photo appears.</p>
-      <div class="photo-grid">
-        {% for photo in all_photos %}
-          <div class="photo-item">
-            <img src="{{ get_public_url(photo.filename) }}" alt="Memory" onerror="this.style.display='none';this.parentElement.querySelector('.error-msg').style.display='block';">
-            <div class="error-msg" style="display:none; padding:20px; text-align:center; color:var(--text-secondary);"><i class="bi bi-camera-fill"></i> Image not found</div>
-            {% if photo.caption %}<div class="caption">{{ photo.caption }}</div>{% endif %}
-            <div class="time">{{ photo.created_at.strftime('%I:%M %p') if photo.created_at else '' }}</div>
-            {% if photo.is_final %}<div class="final-badge"><i class="bi bi-star-fill"></i> Final</div>{% endif %}
-            <a href="{{ url_for('views.set_final_photo', photo_id=photo.id) }}" class="set-final-btn">
-              {% if photo.is_final %}Change final{% else %}Set as final{% endif %}
-            </a>
+      <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:10px;"><i class="bi bi-star-fill"></i> = shown in calendar. Swipe or tap arrows to browse.</p>
+
+      <div class="carousel-wrap" id="photoCarousel">
+        <!-- Track -->
+        <div class="carousel-track" id="carouselTrack">
+          {% for photo in all_photos %}
+          <div class="carousel-slide">
+            <img src="{{ get_public_url(photo.filename) }}" alt="Memory photo {{ loop.index }}" onerror="this.style.display='none'">
+            {% if photo.is_final %}<div class="carousel-final-badge"><i class="bi bi-star-fill"></i> Final</div>{% endif %}
+            <div class="carousel-meta">
+              <div>
+                {% if photo.caption %}<div class="caption">{{ photo.caption }}</div>{% endif %}
+                <div class="time">{{ photo.created_at.strftime('%I:%M %p') if photo.created_at else '' }}</div>
+                <a href="{{ url_for('views.set_final_photo', photo_id=photo.id) }}" class="set-final-btn-c">
+                  {% if photo.is_final %}<i class="bi bi-star-fill"></i> Change final{% else %}<i class="bi bi-star"></i> Set as final{% endif %}
+                </a>
+              </div>
+              <span style="font-size:0.7rem; color:var(--text-secondary); font-weight:700;">{{ loop.index }}/{{ all_photos|length }}</span>
+            </div>
           </div>
+          {% endfor %}
+        </div>
+
+        <!-- Arrows (only show if more than 1 photo) -->
+        {% if all_photos|length > 1 %}
+        <button class="carousel-btn prev" onclick="carouselMove(-1)"><i class="bi bi-chevron-left"></i></button>
+        <button class="carousel-btn next" onclick="carouselMove(1)"><i class="bi bi-chevron-right"></i></button>
+        {% endif %}
+      </div>
+
+      <!-- Dots -->
+      {% if all_photos|length > 1 %}
+      <div class="carousel-dots" id="carouselDots">
+        {% for photo in all_photos %}
+        <div class="carousel-dot {% if loop.first %}active{% endif %}" onclick="carouselGo({{ loop.index0 }})"></div>
         {% endfor %}
       </div>
+      {% endif %}
+
     {% else %}
       <div class="empty-state">
         <p>No photos for this day yet.</p>
@@ -274,5 +368,25 @@
     </div>
   {% endif %}
 </div>
+
+<script>
+(function () {
+  var idx = 0;
+  var track = document.getElementById('carouselTrack');
+  var dots = document.querySelectorAll('.carousel-dot');
+  var total = dots.length || 1;
+
+  function carouselGo(n) {
+    idx = Math.max(0, Math.min(n, total - 1));
+    if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+    dots.forEach(function (d, i) {
+      d.classList.toggle('active', i === idx);
+    });
+  }
+
+  window.carouselGo = carouselGo;
+  window.carouselMove = function (dir) { carouselGo(idx + dir); };
+})();
+</script>
 
 {% endblock %}
