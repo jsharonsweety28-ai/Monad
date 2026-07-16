@@ -401,11 +401,9 @@
     .achieve-mock-row { grid-template-columns: 1fr; }
     .journey-track::before { left: 36px; }
     .j-stage { grid-template-columns: 68px 1fr; gap: 14px; }
-    .j-stage:nth-child(odd)  .j-text { text-align: left; }
-    .j-stage:nth-child(even) .j-text { order: 2; text-align: left; }
-    .j-stage:nth-child(even) .j-card { display: none; }
-    .j-stage:nth-child(odd)  .j-card { display: none; }
-    .j-stage:nth-child(even) .j-node { order: 1; }
+    .j-node  { order: 1; }
+    .j-text  { order: 2; text-align: left; }
+    .j-card  { display: none; }
   }
   @media (max-width: 600px) {
     .hero h1 { font-size: 2rem; letter-spacing: -.8px; }
