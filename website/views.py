@@ -2923,6 +2923,18 @@ def push_subscribe():
     db.session.commit()
     return jsonify({'status': 'ok'})
 
+@views.route('/push/unsubscribe', methods=['POST'])
+@login_required
+def push_unsubscribe():
+    data = request.get_json()
+    endpoint = data.get('endpoint') if data else None
+    if endpoint:
+        PushSubscription.query.filter_by(endpoint=endpoint, user_id=current_user.id).delete()
+    else:
+        PushSubscription.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()
+    return jsonify({'status': 'ok'})
+
 @views.route('/api/push/habit-reminder', methods=['POST', 'GET'])
 def send_habit_reminder():
     secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')

@@ -326,6 +326,25 @@
     <button type="submit" class="btn-save">Save Preferences</button>
   </form>
 
+  <!-- Notifications card (outside form — handled via JS) -->
+  <div class="settings-card">
+    <h4><i class="bi bi-bell-fill"></i> Notifications</h4>
+    <div id="notif-blocked" style="display:none; font-size:.85rem; color:#dc2626; background:#fef2f2; border:1.5px solid #fca5a5; border-radius:8px; padding:10px 14px; margin-bottom:12px;">
+      <i class="bi bi-exclamation-triangle-fill"></i> Notifications are blocked in your browser. Go to browser settings → Site settings → Notifications → allow monad.
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color);">
+      <div>
+        <div style="font-size:.9rem; font-weight:600; color:var(--text-primary);"><i class="bi bi-phone-fill"></i> Push Notifications</div>
+        <div style="font-size:.77rem; color:var(--text-secondary); margin-top:2px;" id="notif-desc">Habit reminders &amp; task due alerts</div>
+      </div>
+      <label class="feat-toggle" id="notif-toggle-wrap">
+        <input type="checkbox" id="notifToggle">
+        <span class="feat-slider"></span>
+      </label>
+    </div>
+    <div style="font-size:.75rem; color:var(--text-secondary); margin-top:12px;" id="notif-status-text"></div>
+  </div>
+
   <div class="settings-card">
     <h4><i class="bi bi-door-open-fill"></i> Account</h4>
     <a href="{{ url_for('auth.logout') }}" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; background:var(--danger-bg); border:1px solid var(--danger-border); border-radius:10px; color:#dc2626; font-weight:600; font-size:0.9rem; text-decoration:none;">
@@ -335,6 +354,69 @@
 </div>
 
 <script>
+// ── Notification toggle ──
+(function () {
+  const toggle   = document.getElementById('notifToggle');
+  const blocked  = document.getElementById('notif-blocked');
+  const statusTx = document.getElementById('notif-status-text');
+
+  function setStatus(perm, hasSub) {
+    if (perm === 'denied') {
+      blocked.style.display = 'block';
+      toggle.checked = false;
+      toggle.disabled = true;
+      statusTx.textContent = '';
+    } else if (perm === 'granted' && hasSub) {
+      toggle.checked = true;
+      blocked.style.display = 'none';
+      statusTx.textContent = 'You will receive habit reminders and task alerts.';
+    } else {
+      toggle.checked = false;
+      blocked.style.display = 'none';
+      statusTx.textContent = 'Turn on to receive reminders even when the app is closed.';
+    }
+  }
+
+  async function checkSub() {
+    if (!('Notification' in window)) { toggle.disabled = true; return; }
+    const perm = Notification.permission;
+    let hasSub = false;
+    if ('serviceWorker' in navigator && perm === 'granted') {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        hasSub = !!sub;
+      } catch {}
+    }
+    setStatus(perm, hasSub);
+  }
+
+  toggle.addEventListener('change', async function () {
+    if (toggle.checked) {
+      if (typeof enableNotifications === 'function') enableNotifications();
+      setTimeout(checkSub, 1000);
+    } else {
+      try {
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            await fetch('/push/unsubscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+              body: JSON.stringify({ endpoint: sub.endpoint })
+            });
+            await sub.unsubscribe();
+          }
+        }
+      } catch (e) { console.log('Unsubscribe failed', e); }
+      statusTx.textContent = 'Notifications turned off.';
+    }
+  });
+
+  checkSub();
+})();
+
 document.querySelectorAll('#themeGrid .theme-tile').forEach(function(tile) {
   tile.addEventListener('click', function() {
     document.querySelectorAll('#themeGrid .theme-tile').forEach(function(t) { t.classList.remove('selected'); });
