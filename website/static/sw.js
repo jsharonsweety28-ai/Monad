@@ -1,4 +1,4 @@
-const CACHE_NAME = 'monad-shell-v1';
+const CACHE_NAME = 'monad-shell-v3';
 const SHELL_ASSETS = [
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
