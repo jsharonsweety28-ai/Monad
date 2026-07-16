@@ -180,18 +180,18 @@
       margin-bottom: 0;
     }
     .memories-page .mem-day-labels span {
-      width: 26px;
-      height: 52px;
+      width: 30px;
+      height: calc((100svh - 120px - 6px * 6) / 7);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.5rem;
+      font-size: 0.52rem;
     }
 
     /* Grid becomes a horizontal flex of week columns */
     .memories-page .square-grid {
       display: flex;
-      gap: 3px;
+      gap: 4px;
       flex-shrink: 0;
     }
 
@@ -199,21 +199,21 @@
     .week-col {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       flex-shrink: 0;
       scroll-snap-align: start;
     }
 
-    /* Square tiles */
+    /* Square tiles — fill available height ÷ 7 rows */
     .memories-page .day-square {
-      width: 52px;
-      height: 52px;
+      width: calc((100svh - 120px - 4px * 6) / 7);
+      height: calc((100svh - 120px - 4px * 6) / 7);
       aspect-ratio: unset;
     }
 
-    .memories-page .day-num { font-size: 0.6rem; }
-    .memories-page .day-add-btn { width: 20px; height: 20px; font-size: 0.85rem; }
-    .memories-page .photo-count { font-size: 0.48rem; padding: 1px 3px; }
+    .memories-page .day-num { font-size: 0.72rem; }
+    .memories-page .day-add-btn { width: 28px; height: 28px; font-size: 1rem; }
+    .memories-page .photo-count { font-size: 0.55rem; padding: 1px 4px; }
   }
 
   /* Landscape mobile — tighten spacing */
