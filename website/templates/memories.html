@@ -159,12 +159,23 @@
       transform: rotate(90deg);
       z-index: 1000;
       background: var(--body-bg);
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 14px 16px;
+      overflow: hidden;
+      padding: 10px 12px;
       box-sizing: border-box;
-      -webkit-overflow-scrolling: touch;
     }
+
+    /* Fix cell size so all 6 weeks fit in the physical screen width */
+    .memories-page .day-square {
+      aspect-ratio: unset;
+      height: 46px;
+    }
+
+    /* Tighten gaps and labels */
+    .memories-page .square-grid { gap: 3px; }
+    .memories-page .mem-day-labels { gap: 3px; margin-bottom: 3px; font-size: 0.58rem; }
+    .memories-page .mem-header-row { margin-bottom: 8px; }
+    .memories-page .mem-month-title { font-size: 1rem; }
+    .memories-page .mem-nav-btn { padding: 4px 10px; font-size: 0.7rem; }
   }
 
   /* Landscape mobile — tighten spacing */
