@@ -6,6 +6,13 @@
 <style>
   .memories-page { max-width: 1000px; margin: 0 auto; }
 
+  @media (max-width: 600px) {
+    /* Pull the memories page edge-to-edge on mobile */
+    .page-content:has(.memories-page) {
+      padding: 12px 8px !important;
+    }
+  }
+
   /* ── Compact header ── */
   .mem-header-row {
     display: flex; align-items: center; justify-content: space-between;
