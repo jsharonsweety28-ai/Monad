@@ -54,6 +54,9 @@
   /* ── Grid ── */
   .square-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 
+  /* week-col is transparent on desktop — day squares become direct grid children */
+  .week-col { display: contents; }
+
   /* ── Day cell — photo fills entire cell ── */
   .day-square {
     aspect-ratio: 1;
@@ -143,20 +146,69 @@
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
   .overlay.show { display: block; }
 
-  /* ── Compact portrait layout on mobile ── */
+  /* ── Mobile: horizontal carousel (days = rows, weeks = columns, swipe left/right) ── */
   @media (max-width: 600px) {
     .page-content:has(.memories-page) { padding: 8px 6px !important; }
 
     .memories-page .mem-header-row { margin-bottom: 6px; }
     .memories-page .mem-month-title { font-size: 1rem; }
-    .memories-page .mem-nav-btn { padding: 4px 8px; font-size: 0.68rem; box-shadow: 2px 2px 0 var(--text-primary); }
-    .memories-page .mem-day-labels { font-size: 0.58rem; gap: 3px; margin-bottom: 3px; }
-    .memories-page .square-grid { gap: 3px; }
+    .memories-page .mem-nav-btn { padding: 4px 8px; font-size: 0.68rem; }
 
-    /* Fixed height so 6 weeks all fit on one screen */
-    .memories-page .day-square {
-      aspect-ratio: unset;
+    /* Scroll wrapper — horizontal carousel */
+    .mem-grid-scroll {
+      display: flex;
+      gap: 3px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .mem-grid-scroll::-webkit-scrollbar { display: none; }
+
+    /* Day-name column: sticky on the left */
+    .memories-page .mem-day-labels {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      background: var(--body-bg);
+      flex-shrink: 0;
+      padding-right: 3px;
+      margin-bottom: 0;
+    }
+    .memories-page .mem-day-labels span {
+      width: 26px;
       height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+    }
+
+    /* Grid becomes a horizontal flex of week columns */
+    .memories-page .square-grid {
+      display: flex;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Each week is a snap point */
+    .week-col {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+    }
+
+    /* Square tiles */
+    .memories-page .day-square {
+      width: 52px;
+      height: 52px;
+      aspect-ratio: unset;
     }
 
     .memories-page .day-num { font-size: 0.6rem; }
@@ -184,47 +236,52 @@
     </div>
   </div>
 
-  <!-- Day labels -->
-  <div class="mem-day-labels">
-    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-  </div>
+  <!-- Horizontal carousel: sticky day-label column + week columns -->
+  <div class="mem-grid-scroll">
 
-  <!-- Photo grid -->
-  <div class="square-grid">
-    {% set todayDate = datetime.utcnow().date() %}
-    {% for week in calendar_matrix %}
-      {% for day in week %}
-        {% if day == 0 %}
-          <div class="day-square empty"></div>
-        {% else %}
-          {% set dateStr = '%d-%02d-%02d'|format(year, month, day) %}
-          {% set dayDate = datetime(year, month, day).date() %}
-          {% set isToday = (todayDate == dayDate) %}
-          {% set isFuture = (dayDate > todayDate) %}
-          {% set photoCount = photo_count_by_day.get(day, 0) %}
-          {% set hasJournal = journal_by_day.get(day) %}
-          {% set finalPhoto = final_photo_by_day.get(day) %}
+    <div class="mem-day-labels">
+      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
 
-          <div class="day-square {% if isToday %}today{% endif %} {% if isFuture %}future{% endif %} {% if finalPhoto %}has-photo{% endif %}"
-               {% if not isFuture %}onclick="window.location.href='{{ url_for('views.memory_day', date_str=dateStr) }}'"{% endif %}>
+    <div class="square-grid">
+      {% set todayDate = datetime.utcnow().date() %}
+      {% for week in calendar_matrix %}
+      <div class="week-col">
+        {% for day in week %}
+          {% if day == 0 %}
+            <div class="day-square empty"></div>
+          {% else %}
+            {% set dateStr = '%d-%02d-%02d'|format(year, month, day) %}
+            {% set dayDate = datetime(year, month, day).date() %}
+            {% set isToday = (todayDate == dayDate) %}
+            {% set isFuture = (dayDate > todayDate) %}
+            {% set photoCount = photo_count_by_day.get(day, 0) %}
+            {% set hasJournal = journal_by_day.get(day) %}
+            {% set finalPhoto = final_photo_by_day.get(day) %}
 
-            <div class="day-num">{{ day }}</div>
+            <div class="day-square {% if isToday %}today{% endif %} {% if isFuture %}future{% endif %} {% if finalPhoto %}has-photo{% endif %}"
+                 {% if not isFuture %}onclick="window.location.href='{{ url_for('views.memory_day', date_str=dateStr) }}'"{% endif %}>
 
-            {% if finalPhoto %}
-              <img src="{{ get_public_url(finalPhoto) }}" class="day-photo" alt="Memory" onerror="this.style.display='none'">
-              {% if photoCount > 1 %}<div class="photo-count">{{ photoCount }}</div>{% endif %}
-            {% elif not isFuture %}
-              <div class="day-add">
-                <div class="day-add-btn" onclick="event.stopPropagation(); showUpload('{{ dateStr }}')">+</div>
-              </div>
-            {% endif %}
+              <div class="day-num">{{ day }}</div>
 
-            {% if hasJournal %}<div class="dot-journal"></div>{% endif %}
-          </div>
-        {% endif %}
+              {% if finalPhoto %}
+                <img src="{{ get_public_url(finalPhoto) }}" class="day-photo" alt="Memory" onerror="this.style.display='none'">
+                {% if photoCount > 1 %}<div class="photo-count">{{ photoCount }}</div>{% endif %}
+              {% elif not isFuture %}
+                <div class="day-add">
+                  <div class="day-add-btn" onclick="event.stopPropagation(); showUpload('{{ dateStr }}')">+</div>
+                </div>
+              {% endif %}
+
+              {% if hasJournal %}<div class="dot-journal"></div>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
       {% endfor %}
-    {% endfor %}
-  </div>
+    </div>
+
+  </div><!-- /mem-grid-scroll -->
 </div>
 
 <!-- Upload Overlay -->
@@ -246,6 +303,20 @@
 </div>
 
 <script>
+  // Auto-scroll carousel to current week on mobile
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.innerWidth <= 600) {
+      var todaySquare = document.querySelector('.day-square.today');
+      if (todaySquare) {
+        var weekCol = todaySquare.closest('.week-col');
+        var scroll = document.querySelector('.mem-grid-scroll');
+        if (weekCol && scroll) {
+          scroll.scrollLeft = weekCol.offsetLeft - 32;
+        }
+      }
+    }
+  });
+
   function showUpload(date) {
     document.getElementById('uploadDate').value = date;
     document.getElementById('uploadPopup').classList.add('show');
