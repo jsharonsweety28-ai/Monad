@@ -306,7 +306,9 @@
         var weekCol = todaySquare.closest('.week-col');
         var scroll = document.querySelector('.memories-page .square-grid');
         if (weekCol && scroll) {
-          scroll.scrollLeft = weekCol.offsetLeft;
+          var gridLeft = scroll.getBoundingClientRect().left;
+          var colLeft  = weekCol.getBoundingClientRect().left;
+          scroll.scrollLeft = colLeft - gridLeft;
         }
       }
     }
