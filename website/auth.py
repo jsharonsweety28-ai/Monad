@@ -50,6 +50,7 @@ def _send_otp(email, otp):
         },
         timeout=10,
     )
+    print(f"Brevo status: {resp.status_code} — {resp.text}")
     resp.raise_for_status()
     print("MAIL SENT via Brevo")
 
