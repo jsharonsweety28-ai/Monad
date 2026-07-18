@@ -2920,8 +2920,23 @@ def _send_push(subscription, title, body, url='/'):
 @views.route('/api/push/test', methods=['GET'])
 @login_required
 def push_test():
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, NoEncryption
     raw_key = os.environ.get('VAPID_PRIVATE_KEY', '')
     key_info = {'len': len(raw_key), 'starts': raw_key[:10], 'is_pem_b64': raw_key.startswith('LS0t')}
+    # Try generating PEM and catch any error
+    try:
+        padded = raw_key + '=' * (-len(raw_key) % 4)
+        d_bytes = base64.urlsafe_b64decode(padded)
+        d_int = int.from_bytes(d_bytes, 'big')
+        priv_key = ec.derive_private_key(d_int, ec.SECP256R1())
+        pem = priv_key.private_bytes(Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption()).decode()
+        key_info['pem_ok'] = True
+        key_info['pem_start'] = pem[:40]
+        key_info['d_bytes_len'] = len(d_bytes)
+    except Exception as e:
+        key_info['pem_ok'] = False
+        key_info['pem_err'] = str(e)
     subs = PushSubscription.query.filter_by(user_id=current_user.id).all()
     if not subs:
         return jsonify({'error': 'no subscriptions for your account', 'key_info': key_info})
