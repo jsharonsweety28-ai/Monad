@@ -1020,6 +1020,13 @@ if ('serviceWorker' in navigator) {
   } else if (Notification.permission !== 'denied') {
     setPendingUI();
   }
+
+  // Save timezone offset so server-side cron can use local time
+  fetch('/api/user/tz', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+    body: JSON.stringify({ offset: -new Date().getTimezoneOffset() })
+  }).catch(() => {});
 })();
 
 // ── Timetable class reminders ─────────────────────────────────

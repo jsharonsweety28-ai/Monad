@@ -27,6 +27,7 @@ class User(db.Model, UserMixin):
     ai_report_json = db.Column(db.Text, nullable=True)
     ai_report_date = db.Column(db.Date, nullable=True)
     study_enabled  = db.Column(db.Boolean, default=True)
+    tz_offset      = db.Column(db.Integer, nullable=True)  # minutes offset from UTC (e.g. IST = 330)
     tasks = db.relationship('Task', backref='user', lazy=True)
 
 class Task(db.Model):

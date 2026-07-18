@@ -2959,6 +2959,16 @@ def push_subscribe():
     db.session.commit()
     return jsonify({'status': 'ok'})
 
+@views.route('/api/user/tz', methods=['POST'])
+@login_required
+def save_tz():
+    data = request.get_json()
+    offset = data.get('offset') if data else None
+    if offset is not None:
+        current_user.tz_offset = int(offset)
+        db.session.commit()
+    return jsonify({'ok': True})
+
 @views.route('/push/unsubscribe', methods=['POST'])
 @login_required
 def push_unsubscribe():
@@ -3134,6 +3144,42 @@ def send_class_reminder():
                         url='/study/timetable'
                     )
                     sent += 1
+    return jsonify({'sent': sent})
+
+@views.route('/api/push/task-reminder', methods=['POST', 'GET'])
+def send_task_reminder():
+    """Task due-time push. Run every 15 min."""
+    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
+    if secret != os.environ.get('CRON_SECRET', ''):
+        return jsonify({'error': 'unauthorized'}), 401
+    now_utc = datetime.utcnow()
+    now_min_utc = now_utc.hour * 60 + now_utc.minute
+    subs  = PushSubscription.query.all()
+    sent  = 0
+    for sub in subs:
+        user = User.query.get(sub.user_id)
+        if not user or user.tz_offset is None:
+            continue
+        local_min  = (now_min_utc + user.tz_offset) % 1440
+        local_date = (now_utc + timedelta(minutes=user.tz_offset)).date()
+        tasks = Task.query.filter(
+            Task.user_id == sub.user_id,
+            Task.due_time.isnot(None),
+            Task.reminder_offset.isnot(None),
+            Task.completed == False,
+            db.func.date(Task.date) == local_date,
+        ).all()
+        for task in tasks:
+            try:
+                h, m = map(int, task.due_time.split(':'))
+                remind_at = h * 60 + m + task.reminder_offset
+                if remind_at <= local_min < remind_at + 15:
+                    label = 'Due now' if task.reminder_offset == 0 else f'Due in {abs(task.reminder_offset)} min'
+                    ok, _ = _send_push(sub, title='monad · task', body=f'{label}: {task.content}', url='/daily')
+                    if ok:
+                        sent += 1
+            except Exception:
+                continue
     return jsonify({'sent': sent})
 
 @views.route('/study/exams')
