@@ -2884,10 +2884,25 @@ def timetable_reminders_today():
 
 # ── Push Notifications ────────────────────────────────────────────────────────
 
+def _get_vapid_pem():
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, NoEncryption
+    raw = os.environ.get('VAPID_PRIVATE_KEY', '')
+    if not raw:
+        return None
+    # Add padding and decode raw 32-byte EC scalar stored as base64url
+    padded = raw + '=' * (-len(raw) % 4)
+    d_bytes = base64.urlsafe_b64decode(padded)
+    d_int   = int.from_bytes(d_bytes, 'big')
+    priv_key = ec.derive_private_key(d_int, ec.SECP256R1())
+    return priv_key.private_bytes(Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption()).decode()
+
 def _send_push(subscription, title, body, url='/'):
     try:
         from pywebpush import webpush, WebPushException
-        pem = base64.b64decode(os.environ.get('VAPID_PRIVATE_KEY', '')).decode()
+        pem = _get_vapid_pem()
+        if not pem:
+            return False, 'VAPID_PRIVATE_KEY not set'
         webpush(
             subscription_info={
                 'endpoint': subscription.endpoint,
