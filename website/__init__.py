@@ -60,8 +60,10 @@ def create_app():
     print(app.config["MAIL_USERNAME"])
     oauth.init_app(app)
     from .storage import get_public_url
+    from datetime import datetime
     app.jinja_env.globals["get_public_url"] = get_public_url
     app.jinja_env.globals["vapid_public_key"] = os.environ.get("VAPID_PUBLIC_KEY", "")
+    app.jinja_env.globals["datetime"] = datetime
 
     oauth.register(
         name='google',
