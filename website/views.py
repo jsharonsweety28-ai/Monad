@@ -3077,46 +3077,6 @@ def send_morning_reminder():
     return jsonify({'sent': sent})
 
 
-@views.route('/api/push/class-reminder', methods=['POST', 'GET'])
-def send_class_reminder():
-    """Class slot reminder push. Run every 15 min — fires at each slot's reminder_time."""
-    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
-    if secret != os.environ.get('CRON_SECRET', ''):
-        return jsonify({'error': 'unauthorized'}), 401
-    now       = datetime.utcnow()
-    today_dow = now.weekday()
-    if today_dow > 5:   # no classes on Sunday
-        return jsonify({'sent': 0})
-    now_min = now.hour * 60 + now.minute
-    win_end = now_min + 15
-    subs    = PushSubscription.query.all()
-    sent    = 0
-    for sub in subs:
-        user = User.query.get(sub.user_id)
-        if not user:
-            continue
-        subjects = Subject.query.filter_by(user_id=sub.user_id).all()
-        for subject in subjects:
-            for slot in subject.slots:
-                if slot.day_of_week != today_dow:
-                    continue
-                if not slot.reminder_time:
-                    continue
-                try:
-                    rh, rm    = map(int, slot.reminder_time.split(':'))
-                    remind_min = rh * 60 + rm
-                except Exception:
-                    continue
-                if now_min <= remind_min < win_end and slot.reminder_note:
-                    _send_push(
-                        sub,
-                        title=f'monad · {subject.name}',
-                        body=slot.reminder_note,
-                        url='/study/timetable'
-                    )
-                    sent += 1
-    return jsonify({'sent': sent})
-
 @views.route('/api/push/exam-reminder', methods=['POST', 'GET'])
 def send_exam_reminder():
     """Exam countdown push. Run once daily (morning)."""
