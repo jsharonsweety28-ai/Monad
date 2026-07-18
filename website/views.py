@@ -2895,24 +2895,36 @@ def _get_vapid_key():
     return ec.derive_private_key(d_int, ec.SECP256R1())
 
 def _send_push(subscription, title, body, url='/'):
+    import tempfile
+    tmp = None
     try:
         from pywebpush import webpush, WebPushException
+        from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, NoEncryption
         priv_key = _get_vapid_key()
         if not priv_key:
             return False, 'VAPID_PRIVATE_KEY not set'
+        pem = priv_key.private_bytes(Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption())
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pem')
+        tmp.write(pem)
+        tmp.flush()
+        tmp.close()
         webpush(
             subscription_info={
                 'endpoint': subscription.endpoint,
                 'keys': {'p256dh': subscription.p256dh, 'auth': subscription.auth}
             },
             data=json.dumps({'title': title, 'body': body, 'url': url}),
-            vapid_private_key=priv_key,
+            vapid_private_key=tmp.name,
             vapid_claims={'sub': 'mailto:' + os.environ.get('BREVO_SENDER_EMAIL', 'letsgomonad@gmail.com')}
         )
         return True, None
     except Exception as e:
         print(f'Push error: {e}')
         return False, str(e)
+    finally:
+        if tmp:
+            try: os.unlink(tmp.name)
+            except: pass
 
 @views.route('/api/push/test', methods=['GET'])
 @login_required
