@@ -3159,39 +3159,6 @@ def send_exam_reminder():
                 sent += 1
     return jsonify({'sent': sent})
 
-@views.route('/api/push/focus-reminder', methods=['POST', 'GET'])
-def send_focus_reminder():
-    """Focus session nudge. Run midday — fires if user has no focus session today."""
-    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
-    if secret != os.environ.get('CRON_SECRET', ''):
-        return jsonify({'error': 'unauthorized'}), 401
-    today = date.today()
-    subs  = PushSubscription.query.all()
-    sent  = 0
-    for sub in subs:
-        user = User.query.get(sub.user_id)
-        if not user:
-            continue
-        has_session = FocusSession.query.filter(
-            FocusSession.user_id == sub.user_id,
-            db.func.date(FocusSession.date) == today
-        ).first()
-        if has_session:
-            continue
-        pending_tasks = Task.query.filter(
-            Task.user_id            == sub.user_id,
-            Task.completed          == False,
-            db.func.date(Task.date) == today
-        ).count()
-        name = user.name.split()[0] if user.name else 'there'
-        body = f"Hey {name}, no focus session yet today!"
-        if pending_tasks:
-            body += f" You have {pending_tasks} task{'s' if pending_tasks != 1 else ''} waiting."
-        ok, _ = _send_push(sub, title='monad · focus time', body=body, url='/daily')
-        if ok:
-            sent += 1
-    return jsonify({'sent': sent})
-
 @views.route('/api/push/task-reminder', methods=['POST', 'GET'])
 def send_task_reminder():
     """Task due-time and overdue push. Run every 15 min."""
