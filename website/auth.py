@@ -4,13 +4,14 @@ from . import db, limiter, oauth
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 from authlib.integrations.base_client.errors import MismatchingStateError
-import re, random, secrets, time, os, requests
+import re, random, secrets, time, os
 
 auth = Blueprint('auth', __name__)
 
 
 def _send_otp(email, otp):
-    print("=== OTP: Sending via Brevo ===", flush=True)
+    from flask_mail import Message as MailMessage
+    from . import mail
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -34,35 +35,14 @@ def _send_otp(email, otp):
 </body>
 </html>"""
 
-    api_key = os.environ.get('BREVO_API_KEY')
-    sender_email = os.environ.get('BREVO_SENDER_EMAIL') or os.environ.get('MAIL_USERNAME')
-
-    if not api_key:
-        raise RuntimeError("BREVO_API_KEY is missing")
-
-    try:
-        resp = requests.post(
-            'https://api.brevo.com/v3/smtp/email',
-            headers={
-                'api-key': api_key,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            json={
-                'sender': {'name': 'monad', 'email': sender_email},
-                'to': [{'email': email}],
-                'subject': 'monad: your verification code',
-                'htmlContent': html,
-                'textContent': f"Your monad verification code is: {otp}\n\nThis code expires in 10 minutes. If you didn't request this, you can safely ignore this email.",
-            },
-            timeout=10,
-        )
-        resp.raise_for_status()
-        print("MAIL SENT SUCCESSFULLY via Brevo")
-
-    except Exception as e:
-        print("MAIL ERROR:", repr(e))
-        raise
+    msg = MailMessage(
+        subject='monad: your verification code',
+        recipients=[email],
+        html=html,
+        body=f"Your monad verification code is: {otp}\n\nThis code expires in 10 minutes. If you didn't request this, you can safely ignore this email.",
+    )
+    mail.send(msg)
+    print("MAIL SENT SUCCESSFULLY via Gmail SMTP")
 
 
 @auth.route('/login', methods=['GET', 'POST'])
