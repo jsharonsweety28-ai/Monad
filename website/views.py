@@ -2983,6 +2983,7 @@ def push_unsubscribe():
 
 @views.route('/api/push/habit-reminder', methods=['POST', 'GET'])
 def send_habit_reminder():
+    """Habit + journal evening reminder. Run once at 8 PM via cron."""
     secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
     if secret != os.environ.get('CRON_SECRET', ''):
         return jsonify({'error': 'unauthorized'}), 401
@@ -2993,27 +2994,38 @@ def send_habit_reminder():
         user = User.query.get(sub.user_id)
         if not user:
             continue
+        name = user.name.split()[0] if user.name else 'there'
+
+        # habits check
         habit_month = HabitMonth.query.filter_by(
             user_id=sub.user_id, year=today.year, month=today.month
         ).first()
-        if not habit_month:
+        habits = Habit.query.filter_by(habit_month_id=habit_month.id).all() if habit_month else []
+        pending_habits = [
+            h for h in habits
+            if not HabitLog.query.filter_by(habit_id=h.id, date=today, completed=True).first()
+        ]
+
+        # journal check
+        has_journal = DailyJournal.query.filter_by(user_id=sub.user_id, date=today).first()
+
+        parts = []
+        if pending_habits:
+            parts.append(f"{len(pending_habits)} habit{'s' if len(pending_habits) != 1 else ''} pending")
+        if not has_journal:
+            parts.append("journal not filled")
+
+        if not parts:
             continue
-        habits = Habit.query.filter_by(habit_month_id=habit_month.id).all()
-        if not habits:
-            continue
-        all_done = all(
-            HabitLog.query.filter_by(habit_id=h.id, date=today, completed=True).first()
-            for h in habits
+
+        ok, _ = _send_push(
+            sub,
+            title='monad · evening check-in',
+            body=f"Hey {name}! {' · '.join(parts)}.",
+            url='/daily'
         )
-        if not all_done:
-            ok, _ = _send_push(
-                sub,
-                title='monad · habits',
-                body=f"Hey {user.name or 'there'}! Don't forget your habits today.",
-                url=f'/habits/{today.year}/{today.month}'
-            )
-            if ok:
-                sent += 1
+        if ok:
+            sent += 1
     return jsonify({'sent': sent})
 
 @views.route('/api/push/morning-reminder', methods=['POST', 'GET'])
@@ -3064,47 +3076,6 @@ def send_morning_reminder():
             sent += 1
     return jsonify({'sent': sent})
 
-@views.route('/api/push/task-reminder', methods=['POST', 'GET'])
-def send_task_reminder():
-    """Task reminder push. Run every 15 min — fires when a task's reminder time hits."""
-    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
-    if secret != os.environ.get('CRON_SECRET', ''):
-        return jsonify({'error': 'unauthorized'}), 401
-    now      = datetime.utcnow()
-    today    = now.date()
-    now_min  = now.hour * 60 + now.minute
-    win_end  = now_min + 15
-    subs     = PushSubscription.query.all()
-    sent     = 0
-    for sub in subs:
-        user = User.query.get(sub.user_id)
-        if not user:
-            continue
-        tasks = Task.query.filter(
-            Task.user_id         == sub.user_id,
-            Task.completed       == False,
-            db.func.date(Task.date) == today,
-            Task.due_time        != None,
-            Task.reminder_offset != None
-        ).all()
-        for task in tasks:
-            try:
-                h, m      = map(int, task.due_time.split(':'))
-                due_min   = h * 60 + m
-                offset    = int(task.reminder_offset)   # 0 = at time, -5 = 5 min before
-                notify_at = due_min + offset
-                if now_min <= notify_at < win_end:
-                    label = 'now' if offset == 0 else f"in {abs(offset)} min"
-                    _send_push(
-                        sub,
-                        title='monad · task reminder',
-                        body=f"{task.content} — due {label}",
-                        url='/daily'
-                    )
-                    sent += 1
-            except Exception:
-                continue
-    return jsonify({'sent': sent})
 
 @views.route('/api/push/class-reminder', methods=['POST', 'GET'])
 def send_class_reminder():
@@ -3146,16 +3117,91 @@ def send_class_reminder():
                     sent += 1
     return jsonify({'sent': sent})
 
-@views.route('/api/push/task-reminder', methods=['POST', 'GET'])
-def send_task_reminder():
-    """Task due-time push. Run every 15 min."""
+@views.route('/api/push/exam-reminder', methods=['POST', 'GET'])
+def send_exam_reminder():
+    """Exam countdown push. Run once daily (morning)."""
     secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
     if secret != os.environ.get('CRON_SECRET', ''):
         return jsonify({'error': 'unauthorized'}), 401
-    now_utc = datetime.utcnow()
-    now_min_utc = now_utc.hour * 60 + now_utc.minute
+    today    = date.today()
+    subs     = PushSubscription.query.all()
+    sent     = 0
+    for sub in subs:
+        user = User.query.get(sub.user_id)
+        if not user:
+            continue
+        subjects = Subject.query.filter_by(user_id=sub.user_id).all()
+        subject_ids = [s.id for s in subjects]
+        if not subject_ids:
+            continue
+        upcoming = Exam.query.filter(
+            Exam.subject_id.in_(subject_ids),
+            Exam.date >= today,
+            Exam.date <= today + timedelta(days=7)
+        ).order_by(Exam.date).all()
+        for exam in upcoming:
+            delta = (exam.date - today).days
+            if delta == 0:
+                label = 'today'
+            elif delta == 1:
+                label = 'tomorrow'
+            else:
+                label = f'in {delta} days'
+            subj = Subject.query.get(exam.subject_id)
+            time_str = f' at {exam.time}' if exam.time else ''
+            ok, _ = _send_push(
+                sub,
+                title='monad · exam countdown',
+                body=f'{subj.name} — {exam.title} {label}{time_str}',
+                url='/study/exams'
+            )
+            if ok:
+                sent += 1
+    return jsonify({'sent': sent})
+
+@views.route('/api/push/focus-reminder', methods=['POST', 'GET'])
+def send_focus_reminder():
+    """Focus session nudge. Run midday — fires if user has no focus session today."""
+    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
+    if secret != os.environ.get('CRON_SECRET', ''):
+        return jsonify({'error': 'unauthorized'}), 401
+    today = date.today()
     subs  = PushSubscription.query.all()
     sent  = 0
+    for sub in subs:
+        user = User.query.get(sub.user_id)
+        if not user:
+            continue
+        has_session = FocusSession.query.filter(
+            FocusSession.user_id == sub.user_id,
+            db.func.date(FocusSession.date) == today
+        ).first()
+        if has_session:
+            continue
+        pending_tasks = Task.query.filter(
+            Task.user_id            == sub.user_id,
+            Task.completed          == False,
+            db.func.date(Task.date) == today
+        ).count()
+        name = user.name.split()[0] if user.name else 'there'
+        body = f"Hey {name}, no focus session yet today!"
+        if pending_tasks:
+            body += f" You have {pending_tasks} task{'s' if pending_tasks != 1 else ''} waiting."
+        ok, _ = _send_push(sub, title='monad · focus time', body=body, url='/daily')
+        if ok:
+            sent += 1
+    return jsonify({'sent': sent})
+
+@views.route('/api/push/task-reminder', methods=['POST', 'GET'])
+def send_task_reminder():
+    """Task due-time and overdue push. Run every 15 min."""
+    secret = request.headers.get('X-Cron-Secret') or request.args.get('secret', '')
+    if secret != os.environ.get('CRON_SECRET', ''):
+        return jsonify({'error': 'unauthorized'}), 401
+    now_utc     = datetime.utcnow()
+    now_min_utc = now_utc.hour * 60 + now_utc.minute
+    subs        = PushSubscription.query.all()
+    sent        = 0
     for sub in subs:
         user = User.query.get(sub.user_id)
         if not user or user.tz_offset is None:
@@ -3163,19 +3209,30 @@ def send_task_reminder():
         local_min  = (now_min_utc + user.tz_offset) % 1440
         local_date = (now_utc + timedelta(minutes=user.tz_offset)).date()
         tasks = Task.query.filter(
-            Task.user_id == sub.user_id,
+            Task.user_id            == sub.user_id,
             Task.due_time.isnot(None),
-            Task.reminder_offset.isnot(None),
-            Task.completed == False,
+            Task.completed          == False,
             db.func.date(Task.date) == local_date,
         ).all()
         for task in tasks:
             try:
-                h, m = map(int, task.due_time.split(':'))
-                remind_at = h * 60 + m + task.reminder_offset
-                if remind_at <= local_min < remind_at + 15:
-                    label = 'Due now' if task.reminder_offset == 0 else f'Due in {abs(task.reminder_offset)} min'
-                    ok, _ = _send_push(sub, title='monad · task', body=f'{label}: {task.content}', url='/daily')
+                h, m    = map(int, task.due_time.split(':'))
+                due_min = h * 60 + m
+
+                # pre-due reminder (requires reminder_offset set)
+                if task.reminder_offset is not None:
+                    remind_at = due_min + task.reminder_offset
+                    if remind_at <= local_min < remind_at + 15:
+                        label = 'Due now' if task.reminder_offset == 0 else f'Due in {abs(task.reminder_offset)} min'
+                        ok, _ = _send_push(sub, title='monad · task', body=f'{label}: {task.content}', url='/daily')
+                        if ok:
+                            sent += 1
+                        continue   # don't double-fire overdue on same cycle
+
+                # overdue check: fires in the 15-min window 15 min after due time
+                overdue_at = due_min + 15
+                if overdue_at <= local_min < overdue_at + 15:
+                    ok, _ = _send_push(sub, title='monad · overdue', body=f'Still pending: {task.content}', url='/daily')
                     if ok:
                         sent += 1
             except Exception:
