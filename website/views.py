@@ -2920,14 +2920,16 @@ def _send_push(subscription, title, body, url='/'):
 @views.route('/api/push/test', methods=['GET'])
 @login_required
 def push_test():
+    raw_key = os.environ.get('VAPID_PRIVATE_KEY', '')
+    key_info = {'len': len(raw_key), 'starts': raw_key[:10], 'is_pem_b64': raw_key.startswith('LS0t')}
     subs = PushSubscription.query.filter_by(user_id=current_user.id).all()
     if not subs:
-        return jsonify({'error': 'no subscriptions for your account'})
+        return jsonify({'error': 'no subscriptions for your account', 'key_info': key_info})
     results = []
     for sub in subs:
         ok, err = _send_push(sub, title='monad test', body='Push notifications are working!', url='/')
         results.append({'endpoint': sub.endpoint[-30:], 'ok': ok, 'error': err})
-    return jsonify({'results': results})
+    return jsonify({'results': results, 'key_info': key_info})
 
 @views.route('/push/subscribe', methods=['POST'])
 @login_required
