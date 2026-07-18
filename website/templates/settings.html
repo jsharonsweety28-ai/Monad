@@ -428,8 +428,8 @@ document.querySelectorAll('#themeGrid .theme-tile').forEach(function(tile) {
 
   toggle.addEventListener('change', async function () {
     if (toggle.checked) {
-      if (typeof enableNotifications === 'function') enableNotifications();
-      setTimeout(checkSub, 1500);
+      if (typeof enableNotifications === 'function') await enableNotifications();
+      await checkSub();
     } else {
       try {
         if ('serviceWorker' in navigator) {

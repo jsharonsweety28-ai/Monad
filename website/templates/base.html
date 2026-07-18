@@ -1005,13 +1005,12 @@ if ('serviceWorker' in navigator) {
     } catch(e) { console.log('Push subscribe failed', e); }
   }
 
-  window.enableNotifications = function() {
+  window.enableNotifications = async function() {
     if (Notification.permission === 'granted') {
-      setGrantedUI(); startPolling(); subscribePush(); return;
+      setGrantedUI(); startPolling(); await subscribePush(); return;
     }
-    Notification.requestPermission().then(p => {
-      if (p === 'granted') { setGrantedUI(); startPolling(); subscribePush(); }
-    });
+    const p = await Notification.requestPermission();
+    if (p === 'granted') { setGrantedUI(); startPolling(); await subscribePush(); }
   };
 
   // Init on load
