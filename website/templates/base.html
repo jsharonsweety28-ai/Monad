@@ -1232,5 +1232,27 @@ document.getElementById('shareOverlay').addEventListener('click', function(e) {
     };
   })();
 </script>
+
+<!-- ── Focus session pill: visible on every page while a session runs ── -->
+<style>
+  #focusPill {
+    position: fixed; bottom: 22px; right: 22px; z-index: 9998;
+    display: none; align-items: center; gap: 2px;
+    background: var(--input-bg); color: var(--text-primary);
+    border: 2px solid var(--text-primary); border-radius: 999px;
+    box-shadow: 3px 3px 0 var(--text-primary);
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+  }
+  #focusPill.paused { opacity: 0.6; }
+  #focusPill button {
+    background: none; border: none; color: inherit; font: inherit;
+    cursor: pointer; padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+  }
+  #focusPill .focus-pill-toggle { padding-left: 6px; padding-right: 14px; }
+  @media (max-width: 600px) { #focusPill { bottom: 76px; right: 14px; } }
+</style>
+<script src="{{ url_for('static', filename='focus_timer_core.js') }}"></script>
+<script src="{{ url_for('static', filename='focus_timer_store.js') }}"></script>
+<script src="{{ url_for('static', filename='focus_timer.js') }}"></script>
 </body>
 </html>
