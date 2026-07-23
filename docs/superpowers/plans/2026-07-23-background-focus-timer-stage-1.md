@@ -378,7 +378,7 @@ Create `website/static/focus_timer_store.js`:
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `node --test tests/`
+Run: `node --test "tests/*.test.js"`
 
 Expected: PASS, 18 tests across both files.
 
@@ -794,7 +794,7 @@ The pomodoro page calls `FocusTimer.claimCompletion()` during its own setup so a
 - [ ] **Step 3: Run the full test suite and commit**
 
 ```bash
-node --test tests/
+node --test "tests/*.test.js"
 git add website/static/focus_timer.js website/templates/pomodoro.html
 git commit -m "Complete and save a focus session from any page"
 ```
