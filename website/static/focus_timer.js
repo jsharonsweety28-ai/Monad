@@ -115,5 +115,28 @@
     setPillHidden, formatClock,
   };
 
+  // Every page needs to be able to finish a session, not just /pomodoro —
+  // the whole point is that the user wandered off to write notes.
+  let pageOwnsCompletion = false;
+  window.FocusTimer.claimCompletion = () => { pageOwnsCompletion = true; };
+
+  window.FocusTimer.onComplete((session) => {
+    if (pageOwnsCompletion) return; // /pomodoro draws its own completion UI
+    if (session.isBreak) { stop(); return; } // a finished break is not focus time
+
+    const mins = Math.floor(core.elapsedSecs(session) / 60);
+    if (mins > 0) {
+      fetch('/pomodoro/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_id: session.taskId, label: session.label,
+          duration: mins, mode: session.mode, partial: false,
+        }),
+      }).catch((e) => console.error('[focus] background save failed', e));
+    }
+    stop();
+  });
+
   document.addEventListener('DOMContentLoaded', () => { if (get()) startTicking(); else renderPill(null); });
 })();

@@ -593,6 +593,13 @@
     border-color: rgba(239,68,68,0.9);
     transform: rotate(90deg);
   }
+  /* Sits left of the close button. Same shape, deliberately not the same
+     hover colour — one keeps the session, the other ends it. */
+  .fs-min { right: 68px; font-size: 1.4rem; line-height: 1; }
+  .fs-min:hover {
+    background: rgba(59,130,246,0.75);
+    border-color: rgba(59,130,246,0.9);
+  }
 
   .fs-kbd-hint {
     position: fixed;
@@ -759,7 +766,8 @@
     </div>
 
     <div class="fs-break-label" id="fsBreakLabel"><i class="bi bi-cup-hot"></i> Break Time</div>
-    <a href="#" class="fs-close" onclick="endSession(); return false;" title="Exit (Esc)">✕</a>
+    <a href="#" class="fs-close fs-min" onclick="minimizeFocus(); return false;" title="Minimise — keeps running">–</a>
+    <a href="#" class="fs-close" onclick="endSession(); return false;" title="End session (Esc)">✕</a>
 
     <p class="fs-task-label" id="fsTaskLabel"></p>
     <div class="fs-session-dots" id="fsSessionDots" style="display:none;">
@@ -793,7 +801,7 @@
 
 <script>
   let mode = 'pomodoro', pomodoroTime = 25, timeLeft = 25 * 60, totalTime = 25 * 60;
-  let isRunning = false, timer = null, sessionsDone = 0;
+  let isRunning = false, sessionsDone = 0;
   let audioElement = null, currentSound = 'none', selectedTask = null, selectedTaskName = '', customSoundURL = null;
   let sessionLabel = '';
   let focusRunId = 0;
@@ -937,6 +945,16 @@
     sessionStarted = false;
     sessionElapsedSecs = 0;
     focusRunId++;
+
+    // The session now lives in the shared store, not in this page — that is
+    // what lets it survive navigating away.
+    FocusTimer.start(FocusTimerCore.createSession({
+      mode: mode,
+      durationSecs: timeLeft,
+      taskId: selectedTask || null,
+      label: sessionLabel || null,
+    }));
+    FocusTimer.setPillHidden(true); // the fullscreen view is showing it instead
 
     renderLofiRoom();
     document.getElementById('fsTaskLabel').textContent = sessionLabel || selectedTaskName || 'Focus session';
@@ -1085,11 +1103,23 @@
   // ── TIMER CONTROLS ──
   function endSession() {
     if (isRunning) pauseTimer();
-    if (sessionStarted && sessionElapsedSecs >= 60 && !isBreak) {
-      const mins = Math.floor(sessionElapsedSecs / 60);
-      saveSession(mins, true).then(ok => showToast(ok ? 'Partial session saved' : saveFailedMsg()));
+    const s = FocusTimer.get();
+    const elapsed = s ? FocusTimerCore.elapsedSecs(s) : sessionElapsedSecs;
+    if (elapsed >= 60 && !(s && s.isBreak) && !isBreak) {
+      saveSession(Math.floor(elapsed / 60), true, s)
+        .then(ok => showToast(ok ? 'Partial session saved' : saveFailedMsg()));
     }
+    FocusTimer.stop();
     closeFocusMode();
+  }
+
+  // Hide the fullscreen view without touching the session — it keeps running
+  // and reappears as the pill.
+  function minimizeFocus() {
+    document.getElementById('fullscreenTimer').classList.remove('show');
+    document.getElementById('configPage').style.display = 'flex';
+    timerOpen = false;
+    FocusTimer.setPillHidden(false);
   }
 
   // Delayed close, so the confetti and toast land first. Tied to the run that
@@ -1102,6 +1132,7 @@
   // Teardown only — no saving. endSession() handles the partial save before
   // calling this; completeSession() has already saved by the time it does.
   function closeFocusMode() {
+    FocusTimer.setPillHidden(false); // pill takes over if a session is still live
     if (isRunning) pauseTimer();
     stopSound();
     clearTimeout(idleTimer);
@@ -1123,30 +1154,34 @@
     document.getElementById('fsTimerRing').classList.add('running');
     if (!isBreak) updatePet('working');
     document.getElementById('fsSaveBtn').style.display = 'none';
-    timer = setInterval(() => {
-      if (mode === 'stopwatch') timeLeft++;
-      else timeLeft--;
-      if (!isBreak) { sessionStarted = true; sessionElapsedSecs++; }
-      updateDisplay();
-      if (mode !== 'stopwatch' && timeLeft <= 0) completeSession();
-    }, 1000);
+    FocusTimer.resume();
   }
 
   function pauseTimer() {
     isRunning = false;
-    clearInterval(timer);
+    FocusTimer.pause();
     document.getElementById('fsPlayBtn').innerHTML = '▶';
     document.getElementById('fsTimerRing').classList.remove('running');
     updatePet('idle');
     if (mode === 'stopwatch' && timeLeft > 0) document.getElementById('fsSaveBtn').style.display = 'flex';
   }
 
+  // Put the current session back to its full duration, paused. Replaces the
+  // stored session rather than a local counter, so the pill agrees.
   function resetTimer() {
     isRunning = false;
-    clearInterval(timer);
-    if (mode === 'pomodoro') { timeLeft = isBreak ? 5 * 60 : pomodoroTime * 60; totalTime = timeLeft; }
-    else if (mode === 'timer') { /* keep current total */ }
-    else { timeLeft = 0; totalTime = 0; }
+    const s = FocusTimer.get();
+    if (s) {
+      const fresh = FocusTimerCore.createSession({
+        mode: s.mode,
+        durationSecs: sessionTotalSecs(s),
+        taskId: s.taskId,
+        label: s.label,
+      });
+      fresh.isBreak = s.isBreak;
+      fresh.sessionsDone = s.sessionsDone;
+      FocusTimer.start(FocusTimerCore.pause(fresh, Date.now()));
+    }
     document.getElementById('fsPlayBtn').innerHTML = '▶';
     document.getElementById('fsSaveBtn').style.display = 'none';
     document.getElementById('fsTimerRing').classList.remove('running');
@@ -1156,58 +1191,67 @@
   }
 
   function saveStopwatch() {
-    const m = Math.floor(timeLeft / 60);
+    const s = FocusTimer.get();
+    const m = Math.floor((s ? FocusTimerCore.elapsedSecs(s) : timeLeft) / 60);
     if (m > 0) {
-      saveSession(m).then(ok => {
+      saveSession(m, false, s).then(ok => {
         if (!ok) { showToast(saveFailedMsg()); return; }
         sessionsDone++;
         celebrateCompletion();
         showToast(`Session saved — ${m} min <i class="bi bi-lightning-charge-fill"></i>`);
+        FocusTimer.stop();
         closeFocusModeAfter(1800);
       });
+    } else {
+      resetTimer();
     }
-    resetTimer();
   }
 
-  function completeSession() {
-    clearInterval(timer);
+  function completeSession(session) {
     isRunning = false;
     document.getElementById('fsPlayBtn').innerHTML = '▶';
     document.getElementById('fsTimerRing').classList.remove('running');
 
-    if (isBreak) {
+    // A finished break is not focus time — swap back to work and wait.
+    if (session.isBreak) {
       playBell();
       updateBreakMode(false);
-      timeLeft = pomodoroTime * 60;
-      totalTime = timeLeft;
-      sessionElapsedSecs = 0;
-      updateDisplay();
+      const work = FocusTimerCore.createSession({
+        mode: 'pomodoro', durationSecs: pomodoroTime * 60,
+        taskId: session.taskId, label: session.label,
+      });
+      work.sessionsDone = session.sessionsDone;
+      FocusTimer.start(FocusTimerCore.pause(work, Date.now()));
       updatePet('idle');
       return;
     }
 
-    const d = mode === 'stopwatch' ? Math.floor(timeLeft / 60) : Math.floor(totalTime / 60);
-    saveSession(d).then(ok => showToast(ok
+    const d = Math.floor(FocusTimerCore.elapsedSecs(session) / 60);
+    saveSession(d, false, session).then(ok => showToast(ok
       ? `Session complete — ${d} min saved! <i class="bi bi-stars"></i>`
       : `Session complete — ${d} min, but ${saveFailedMsg().toLowerCase()}`));
     playBell();
     celebrateCompletion();
-    sessionsDone++;
+    sessionsDone = (session.sessionsDone || 0) + 1;
     updateDots();
     updatePet('complete');
 
-    if (mode === 'pomodoro') {
+    if (session.mode === 'pomodoro') {
       const breakLen = (sessionsDone % 4 === 0) ? 15 * 60 : 5 * 60;
-      timeLeft = breakLen;
-      totalTime = breakLen;
+      const brk = FocusTimerCore.createSession({
+        mode: 'pomodoro', durationSecs: breakLen,
+        taskId: session.taskId, label: session.label,
+      });
+      brk.isBreak = true;
+      brk.sessionsDone = sessionsDone;
       updateBreakMode(true);
-      updateDisplay();
+      FocusTimer.start(FocusTimerCore.pause(brk, Date.now()));
       setTimeout(() => { if (timerOpen && isBreak) startTimer(); }, 3000);
     } else {
-      resetTimer();
+      FocusTimer.stop();
       // Session's done and saved — don't strand the user on the fullscreen
       // timer. The delay lets the confetti and toast land first.
-      if (selectedTask) setTimeout(() => { window.location.href = '/quick-note/' + selectedTask; }, 1800);
+      if (session.taskId) setTimeout(() => { window.location.href = '/quick-note/' + session.taskId; }, 1800);
       else closeFocusModeAfter(1800);
     }
   }
@@ -1304,14 +1348,23 @@
   // Resolves true only if the server actually stored the session.
   let lastSaveReason = '';
 
-  async function saveSession(d, partial = false) {
+  // Prefers the session object, so a completion firing after the page state
+  // has moved on still reports the right task, name and mode.
+  async function saveSession(d, partial = false, session = null) {
+    const s = session || FocusTimer.get();
     let saved = false;
     lastSaveReason = '';
     try {
       const res = await fetch('/pomodoro/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task_id: selectedTask || null, label: sessionLabel || null, duration: d, mode: mode, partial })
+        body: JSON.stringify({
+          task_id: s ? s.taskId : (selectedTask || null),
+          label: s ? s.label : (sessionLabel || null),
+          duration: d,
+          mode: s ? s.mode : mode,
+          partial,
+        })
       });
       const body = await res.json().catch(() => ({}));
       saved = res.ok && body.status === 'ok';
@@ -1347,6 +1400,66 @@
   }
   document.getElementById('cfgTask').addEventListener('change', syncSessionNameVisibility);
   syncSessionNameVisibility();
+
+  // ── SHARED SESSION WIRING ──
+  // The countdown lives in FocusTimer now. This page mirrors it into the
+  // fullscreen view and keeps the legacy locals in step for the code that
+  // still reads them.
+
+  function sessionTotalSecs(s) {
+    return s && s.endsAt ? Math.round((s.endsAt - s.startedAt) / 1000) : 0;
+  }
+
+  function renderFullscreen(s) {
+    const secs = s.mode === 'stopwatch'
+      ? FocusTimerCore.elapsedSecs(s)
+      : FocusTimerCore.remainingSecs(s);
+    document.getElementById('fsTimerDisplay').textContent =
+      `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}`;
+    const c = document.getElementById('fsFgCircle');
+    const total = sessionTotalSecs(s);
+    if (s.mode !== 'stopwatch' && total > 0) c.style.strokeDashoffset = 565 - (secs / total) * 565;
+    else c.style.strokeDashoffset = s.mode === 'stopwatch' ? 565 : 0;
+  }
+
+  FocusTimer.onTick((s) => {
+    timeLeft = s.mode === 'stopwatch' ? FocusTimerCore.elapsedSecs(s) : FocusTimerCore.remainingSecs(s);
+    totalTime = sessionTotalSecs(s);
+    sessionElapsedSecs = FocusTimerCore.elapsedSecs(s);
+    sessionStarted = sessionElapsedSecs > 0;
+    isBreak = !!s.isBreak;
+    isRunning = s.pausedAt === null;
+    if (timerOpen) renderFullscreen(s);
+  });
+
+  FocusTimer.onComplete((s) => { completeSession(s); });
+
+  // This page draws its own completion UI, so the generic any-page handler
+  // in focus_timer.js must not also save it.
+  FocusTimer.claimCompletion && FocusTimer.claimCompletion();
+
+  // Arriving here with a session already running — from the pill, or a
+  // reload — should reopen the fullscreen view rather than the setup screen.
+  (function restoreRunningSession() {
+    const s = FocusTimer.get();
+    if (!s) return;
+    mode = s.mode;
+    selectedTask = s.taskId || null;
+    sessionLabel = s.label || '';
+    isBreak = !!s.isBreak;
+    sessionsDone = s.sessionsDone || 0;
+    document.getElementById('fsTaskLabel').textContent = s.label || 'Focus session';
+    document.getElementById('fsSessionDots').style.display = s.mode === 'pomodoro' ? 'flex' : 'none';
+    updateDots();
+    updateBreakMode(!!s.isBreak);
+    renderFullscreen(s);
+    document.getElementById('configPage').style.display = 'none';
+    document.getElementById('fullscreenTimer').classList.add('show');
+    document.getElementById('fsPlayBtn').innerHTML = s.pausedAt === null ? '⏸' : '▶';
+    if (s.pausedAt === null) document.getElementById('fsTimerRing').classList.add('running');
+    timerOpen = true;
+    FocusTimer.setPillHidden(true);
+  })();
 
   loadSessionHistory();
 </script>
