@@ -1087,19 +1087,27 @@ def save_pomodoro():
     duration_minutes = data.get('duration', 0)
     mode = data.get('mode', 'pomodoro')
     partial = bool(data.get('partial', False))
-    if task_id and duration_minutes > 0:
-        task = Task.query.get(task_id)
-        if task and task.user_id == current_user.id:
-            duration_seconds = duration_minutes * 60
-            if not partial:
-                task.focus_time = (task.focus_time or 0) + duration_seconds
-                task.session_count = (task.session_count or 0) + 1
-            session = FocusSession(
-                task_id=task.id, user_id=current_user.id,
-                duration=duration_seconds, mode=mode, completed=not partial
-            )
-            db.session.add(session)
-            db.session.commit()
+    label = (data.get('label') or '').strip()[:80]
+    if not duration_minutes or duration_minutes <= 0:
+        return jsonify({'status': 'skipped'})
+
+    duration_seconds = duration_minutes * 60
+
+    # A task is optional — sessions started without one are still saved.
+    task = Task.query.get(task_id) if task_id else None
+    if task and task.user_id != current_user.id:
+        task = None
+    if task and not partial:
+        task.focus_time = (task.focus_time or 0) + duration_seconds
+        task.session_count = (task.session_count or 0) + 1
+
+    session = FocusSession(
+        task_id=task.id if task else None, user_id=current_user.id,
+        duration=duration_seconds, mode=mode, completed=not partial,
+        label=None if task else (label or None)
+    )
+    db.session.add(session)
+    db.session.commit()
     return jsonify({'status': 'ok'})
 
 @views.route('/pomodoro/sessions', methods=['GET'])
@@ -1111,11 +1119,11 @@ def get_focus_sessions():
                 .limit(20).all())
     result = []
     for s in sessions:
-        task_name = s.task.content if s.task else 'Focus session'
+        task_name = s.label or (s.task.content if s.task else 'Focus session')
         result.append({
             'task_name': task_name,
             'session_mins': max(1, round(s.duration / 60)),
-            'date': s.date.strftime('%-d %b') if s.date else '',
+            'date': f"{s.date.day} {s.date.strftime('%b')}" if s.date else '',
             'wilted': not s.completed,
         })
     return jsonify(result)

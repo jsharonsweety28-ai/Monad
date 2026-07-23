@@ -50,9 +50,10 @@ class Task(db.Model):
 
 class FocusSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     duration = db.Column(db.Integer, nullable=False)
+    label = db.Column(db.String(80))  # user-typed name, only for sessions with no task
     mode = db.Column(db.String(20))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     completed = db.Column(db.Boolean, default=True)

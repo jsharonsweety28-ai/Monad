@@ -93,6 +93,20 @@ def create_app():
         except Exception as e:
             print(f'db.create_all warning: {e}')
 
+        # focus_session.task_id used to be NOT NULL, which silently blocked
+        # saving sessions that were run without picking a task. The label
+        # column names those task-less sessions. Both are no-ops once applied.
+        for stmt in (
+            'ALTER TABLE focus_session ALTER COLUMN task_id DROP NOT NULL',
+            'ALTER TABLE focus_session ADD COLUMN IF NOT EXISTS label VARCHAR(80)',
+        ):
+            try:
+                db.session.execute(db.text(stmt))
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(f'focus_session migration warning ({stmt[:48]}…): {e}')
+
     # ✅ Login manager setup
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'

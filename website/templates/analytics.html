@@ -517,7 +517,8 @@
     {% for s in recent_sessions %}
     <div class="session-row">
       <div class="session-dot" style="background:{% if s.mode == 'pomodoro' %}#ef4444{% elif s.mode == 'timer' %}#3b82f6{% else %}#10b981{% endif %}"></div>
-      <div class="session-task">{{ s.task.content[:30] if s.task else 'Deleted task' }}{% if s.task and s.task.content|length > 30 %}…{% endif %}</div>
+      {% set s_name = s.label or (s.task.content if s.task else ('Deleted task' if s.task_id else 'Focus session')) %}
+      <div class="session-task">{{ s_name[:30] }}{% if s_name|length > 30 %}…{% endif %}</div>
       <div class="session-meta">
         <span class="session-chip">{{ s.duration // 60 }}m</span>
         <span class="session-chip mode-{% if s.mode == 'pomodoro' %}pomo{% elif s.mode == 'timer' %}timer{% else %}stop{% endif %}">{{ s.mode }}</span>

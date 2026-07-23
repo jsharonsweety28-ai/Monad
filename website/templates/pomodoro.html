@@ -58,7 +58,8 @@
     margin-bottom: 8px;
     letter-spacing: 0.04em;
   }
-  .config-group select {
+  .config-group select,
+  #cfgSessionName {
     width: 100%;
     padding: 11px 14px;
     border: 2px solid var(--text-primary);
@@ -69,11 +70,13 @@
     font-size: 0.9rem;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .config-group select:focus {
+  .config-group select:focus,
+  #cfgSessionName:focus {
     outline: none;
     border-color: var(--accent-1);
     box-shadow: 3px 3px 0 var(--accent-1);
   }
+  #cfgSessionName::placeholder { color: var(--text-primary); opacity: 0.45; }
 
   .mode-chips { display: flex; gap: 8px; }
   .mode-chip {
@@ -712,6 +715,11 @@
       </select>
     </div>
 
+    <div class="config-group" id="sessionNameGroup" style="display:none">
+      <label>What are you focusing on?</label>
+      <input type="text" id="cfgSessionName" maxlength="80" placeholder="Optional — e.g. Revision for chemistry">
+    </div>
+
     <div class="config-group">
       <label>Ambient Sound (click to preview)</label>
       <div class="sound-chips" id="cfgSounds">
@@ -787,6 +795,7 @@
   let mode = 'pomodoro', pomodoroTime = 25, timeLeft = 25 * 60, totalTime = 25 * 60;
   let isRunning = false, timer = null, sessionsDone = 0;
   let audioElement = null, currentSound = 'none', selectedTask = null, selectedTaskName = '', customSoundURL = null;
+  let sessionLabel = '';
   let timerOpen = false, isBreak = false, idleTimer = null;
 
   let sessionStarted = false;
@@ -907,6 +916,8 @@
     const taskSel = document.getElementById('cfgTask');
     selectedTask = taskSel.value;
     selectedTaskName = taskSel.value ? taskSel.options[taskSel.selectedIndex].text : '';
+    const nameInput = document.getElementById('cfgSessionName');
+    sessionLabel = selectedTask ? '' : (nameInput ? nameInput.value.trim().slice(0, 80) : '');
 
     if (mode === 'timer') {
       const h = parseInt(document.getElementById('cfgHours').value) || 0;
@@ -926,7 +937,7 @@
     sessionElapsedSecs = 0;
 
     renderLofiRoom();
-    document.getElementById('fsTaskLabel').textContent = selectedTaskName || 'Focus session';
+    document.getElementById('fsTaskLabel').textContent = sessionLabel || selectedTaskName || 'Focus session';
     document.getElementById('fsSessionDots').style.display = mode === 'pomodoro' ? 'flex' : 'none';
     updateDots();
     updateDisplay();
@@ -1023,6 +1034,13 @@
     setTimeout(() => t.classList.remove('show'), 3800);
   }
 
+  // Session names are user-typed and go into innerHTML below.
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML.replace(/"/g, '&quot;');
+  }
+
   async function loadSessionHistory() {
     try {
       const res = await fetch('/pomodoro/sessions');
@@ -1042,7 +1060,7 @@
       if (empty) empty.style.display = 'none';
       if (count) count.textContent = `(${sessions.length})`;
       grid.innerHTML = sessions.map((s, i) => {
-        const label = s.task_name || 'Focus session';
+        const label = esc(s.task_name || 'Focus session');
         const cls = s.wilted ? ' partial' : '';
         return `
         <div class="session-card${cls}" style="animation-delay:${i * 0.04}s"
@@ -1063,8 +1081,7 @@
     if (isRunning) pauseTimer();
     if (sessionStarted && sessionElapsedSecs >= 60 && !isBreak) {
       const mins = Math.floor(sessionElapsedSecs / 60);
-      saveSession(mins, true);
-      showToast('Partial session saved');
+      saveSession(mins, true).then(ok => showToast(ok ? 'Partial session saved' : SAVE_FAILED_MSG));
     }
     stopSound();
     clearTimeout(idleTimer);
@@ -1119,10 +1136,12 @@
   function saveStopwatch() {
     const m = Math.floor(timeLeft / 60);
     if (m > 0) {
-      sessionsDone++;
-      saveSession(m);
-      celebrateCompletion();
-      showToast(`Session saved — ${m} min <i class="bi bi-lightning-charge-fill"></i>`);
+      saveSession(m).then(ok => {
+        if (!ok) { showToast(SAVE_FAILED_MSG); return; }
+        sessionsDone++;
+        celebrateCompletion();
+        showToast(`Session saved — ${m} min <i class="bi bi-lightning-charge-fill"></i>`);
+      });
     }
     resetTimer();
   }
@@ -1145,14 +1164,14 @@
     }
 
     const d = mode === 'stopwatch' ? Math.floor(timeLeft / 60) : Math.floor(totalTime / 60);
-    saveSession(d);
+    saveSession(d).then(ok => showToast(ok
+      ? `Session complete — ${d} min saved! <i class="bi bi-stars"></i>`
+      : `Session complete — ${d} min, but ${SAVE_FAILED_MSG.toLowerCase()}`));
     playBell();
     celebrateCompletion();
     sessionsDone++;
     updateDots();
     updatePet('complete');
-
-    showToast(`Session complete — ${d} min saved! <i class="bi bi-stars"></i>`);
 
     if (mode === 'pomodoro') {
       const breakLen = (sessionsDone % 4 === 0) ? 15 * 60 : 5 * 60;
@@ -1256,18 +1275,40 @@
     else if (e.code === 'Escape') { endSession(); }
   });
 
-  function saveSession(d, partial = false) {
-    fetch('/pomodoro/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_id: selectedTask || null, duration: d, mode: mode, partial })
-    }).then(() => loadSessionHistory());
+  // Resolves true only if the server actually stored the session.
+  async function saveSession(d, partial = false) {
+    let saved = false;
+    try {
+      const res = await fetch('/pomodoro/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_id: selectedTask || null, label: sessionLabel || null, duration: d, mode: mode, partial })
+      });
+      if (res.ok) {
+        const body = await res.json();
+        saved = body.status === 'ok';
+      }
+    } catch (e) {}
+    loadSessionHistory();
+    return saved;
   }
+
+  const SAVE_FAILED_MSG = "Couldn't save that session — check your connection";
 
   window.addEventListener('beforeunload', () => {
     stopSound();
     if (customSoundURL) URL.revokeObjectURL(customSoundURL);
   });
+
+  // The name box is only relevant when no task is chosen.
+  function syncSessionNameVisibility() {
+    const sel = document.getElementById('cfgTask');
+    const group = document.getElementById('sessionNameGroup');
+    if (!sel || !group) return;
+    group.style.display = sel.value ? 'none' : 'block';
+  }
+  document.getElementById('cfgTask').addEventListener('change', syncSessionNameVisibility);
+  syncSessionNameVisibility();
 
   loadSessionHistory();
 </script>
