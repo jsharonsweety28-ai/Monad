@@ -957,6 +957,10 @@
       const chip = document.querySelector(`#cfgSounds .sound-chip[data-sound="${currentSound}"]`);
       if (chip) previewSound(currentSound, chip);
     }
+
+    // "Start Session" has to actually start it. Without this the timer sat
+    // paused at its full duration, so nothing ever completed or saved.
+    startTimer();
   }
 
   const ROOM_IMAGES = {
