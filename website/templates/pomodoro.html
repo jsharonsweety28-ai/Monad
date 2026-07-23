@@ -796,6 +796,7 @@
   let isRunning = false, timer = null, sessionsDone = 0;
   let audioElement = null, currentSound = 'none', selectedTask = null, selectedTaskName = '', customSoundURL = null;
   let sessionLabel = '';
+  let focusRunId = 0;
   let timerOpen = false, isBreak = false, idleTimer = null;
 
   let sessionStarted = false;
@@ -935,6 +936,7 @@
     sessionsDone = 0;
     sessionStarted = false;
     sessionElapsedSecs = 0;
+    focusRunId++;
 
     renderLofiRoom();
     document.getElementById('fsTaskLabel').textContent = sessionLabel || selectedTaskName || 'Focus session';
@@ -1081,14 +1083,30 @@
     if (isRunning) pauseTimer();
     if (sessionStarted && sessionElapsedSecs >= 60 && !isBreak) {
       const mins = Math.floor(sessionElapsedSecs / 60);
-      saveSession(mins, true).then(ok => showToast(ok ? 'Partial session saved' : SAVE_FAILED_MSG));
+      saveSession(mins, true).then(ok => showToast(ok ? 'Partial session saved' : saveFailedMsg()));
     }
+    closeFocusMode();
+  }
+
+  // Delayed close, so the confetti and toast land first. Tied to the run that
+  // scheduled it — if a new session starts meanwhile, this becomes a no-op.
+  function closeFocusModeAfter(ms) {
+    const runAtSchedule = focusRunId;
+    setTimeout(() => { if (focusRunId === runAtSchedule) closeFocusMode(); }, ms);
+  }
+
+  // Teardown only — no saving. endSession() handles the partial save before
+  // calling this; completeSession() has already saved by the time it does.
+  function closeFocusMode() {
+    if (isRunning) pauseTimer();
     stopSound();
     clearTimeout(idleTimer);
     timerOpen = false;
     sessionStarted = false;
+    sessionElapsedSecs = 0;
     isBreak = false;
     document.getElementById('fsTimerRing').classList.remove('running');
+    document.getElementById('fsSaveBtn').style.display = 'none';
     document.getElementById('fullscreenTimer').classList.remove('show');
     document.getElementById('configPage').style.display = 'flex';
   }
@@ -1137,10 +1155,11 @@
     const m = Math.floor(timeLeft / 60);
     if (m > 0) {
       saveSession(m).then(ok => {
-        if (!ok) { showToast(SAVE_FAILED_MSG); return; }
+        if (!ok) { showToast(saveFailedMsg()); return; }
         sessionsDone++;
         celebrateCompletion();
         showToast(`Session saved — ${m} min <i class="bi bi-lightning-charge-fill"></i>`);
+        closeFocusModeAfter(1800);
       });
     }
     resetTimer();
@@ -1166,7 +1185,7 @@
     const d = mode === 'stopwatch' ? Math.floor(timeLeft / 60) : Math.floor(totalTime / 60);
     saveSession(d).then(ok => showToast(ok
       ? `Session complete — ${d} min saved! <i class="bi bi-stars"></i>`
-      : `Session complete — ${d} min, but ${SAVE_FAILED_MSG.toLowerCase()}`));
+      : `Session complete — ${d} min, but ${saveFailedMsg().toLowerCase()}`));
     playBell();
     celebrateCompletion();
     sessionsDone++;
@@ -1182,7 +1201,10 @@
       setTimeout(() => { if (timerOpen && isBreak) startTimer(); }, 3000);
     } else {
       resetTimer();
+      // Session's done and saved — don't strand the user on the fullscreen
+      // timer. The delay lets the confetti and toast land first.
       if (selectedTask) setTimeout(() => { window.location.href = '/quick-note/' + selectedTask; }, 1800);
+      else closeFocusModeAfter(1800);
     }
   }
 
@@ -1276,24 +1298,36 @@
   });
 
   // Resolves true only if the server actually stored the session.
+  let lastSaveReason = '';
+
   async function saveSession(d, partial = false) {
     let saved = false;
+    lastSaveReason = '';
     try {
       const res = await fetch('/pomodoro/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task_id: selectedTask || null, label: sessionLabel || null, duration: d, mode: mode, partial })
       });
-      if (res.ok) {
-        const body = await res.json();
-        saved = body.status === 'ok';
+      const body = await res.json().catch(() => ({}));
+      saved = res.ok && body.status === 'ok';
+      if (!saved) {
+        lastSaveReason = body.reason || body.status || `HTTP ${res.status}`;
+        console.error('[focus] save failed:', res.status, body);
       }
-    } catch (e) {}
+    } catch (e) {
+      lastSaveReason = e.message || 'network error';
+      console.error('[focus] save request threw:', e);
+    }
     loadSessionHistory();
     return saved;
   }
 
-  const SAVE_FAILED_MSG = "Couldn't save that session — check your connection";
+  function saveFailedMsg() {
+    return lastSaveReason
+      ? `Couldn't save — ${lastSaveReason}`
+      : "Couldn't save that session — check your connection";
+  }
 
   window.addEventListener('beforeunload', () => {
     stopSound();

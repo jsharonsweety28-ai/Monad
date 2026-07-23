@@ -1106,8 +1106,13 @@ def save_pomodoro():
         duration=duration_seconds, mode=mode, completed=not partial,
         label=None if task else (label or None)
     )
-    db.session.add(session)
-    db.session.commit()
+    try:
+        db.session.add(session)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception('focus session save failed')
+        return jsonify({'status': 'error', 'reason': str(e)[:200]}), 500
     return jsonify({'status': 'ok'})
 
 @views.route('/pomodoro/sessions', methods=['GET'])
