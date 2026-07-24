@@ -15,6 +15,10 @@
   const tickHandlers = [];
   let firedCompletionForRunId = null;
 
+  const PIP_SUPPORTED = 'documentPictureInPicture' in window;
+  let pipWindow = null;
+  let pipTick = null;
+
   function formatClock(secs) {
     const m = Math.floor(Math.abs(secs) / 60);
     const s = Math.abs(secs) % 60;
@@ -91,11 +95,17 @@
     if (pillEl) return pillEl;
     pillEl = document.createElement('div');
     pillEl.id = 'focusPill';
+    // The pop-out button only exists where Document Picture-in-Picture does —
+    // desktop Chrome/Edge. Everywhere else it is simply absent.
+    const popBtn = PIP_SUPPORTED
+      ? '<button type="button" class="focus-pill-pop" id="focusPillPop" title="Float over other apps">⧉</button>'
+      : '';
     pillEl.innerHTML =
       '<button type="button" class="focus-pill-main" id="focusPillMain">' +
         '<i class="bi bi-hourglass-split"></i><span id="focusPillTime">0:00</span>' +
       '</button>' +
-      '<button type="button" class="focus-pill-toggle" id="focusPillToggle" title="Pause/resume">⏸</button>';
+      '<button type="button" class="focus-pill-toggle" id="focusPillToggle" title="Pause/resume">⏸</button>' +
+      popBtn;
     document.body.appendChild(pillEl);
 
     document.getElementById('focusPillMain').addEventListener('click', () => {
@@ -107,6 +117,12 @@
       if (!s) return;
       if (s.pausedAt === null) pause(); else resume();
     });
+    if (PIP_SUPPORTED) {
+      document.getElementById('focusPillPop').addEventListener('click', (e) => {
+        e.stopPropagation();
+        popOut();
+      });
+    }
 
     makeDraggable(pillEl);
     // A resize can shrink the viewport out from under a stored position.
@@ -175,6 +191,97 @@
 
   function setPillHidden(hidden) { pillHidden = hidden; renderPill(get()); }
 
+  // ── Float over other apps (desktop Chrome/Edge only) ──
+  // A Document Picture-in-Picture window is a real always-on-top OS window
+  // holding live HTML, so the pill can float over other applications and stay
+  // interactive. Styles are inlined because the app stylesheet and the icon
+  // font are not loaded in the PiP document.
+  const PIP_STYLE = `
+    :root { color-scheme: light dark; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; background: #fdf6ec; color: #2b2b2b; user-select: none; }
+    @media (prefers-color-scheme: dark) { body { background: #1e1e1e; color: #f0f0f0; } }
+    .wrap { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
+    .t { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+    .lbl { font-size: 12px; opacity: 0.7; max-width: 120px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; }
+    button { background: none; border: none; color: inherit; cursor: pointer;
+      font-size: 20px; padding: 4px 6px; border-radius: 6px; }
+    button:hover { background: rgba(128,128,128,0.2); }
+    .col { display: flex; flex-direction: column; gap: 1px; }
+  `;
+
+  function renderPipWidget(win) {
+    const s = get();
+    if (!s) { closePipWidget(); return; }
+    const secs = s.mode === 'stopwatch' ? core.elapsedSecs(s) : core.remainingSecs(s);
+    const timeEl = win.document.getElementById('pipTime');
+    const toggleEl = win.document.getElementById('pipToggle');
+    if (timeEl) timeEl.textContent = formatClock(secs);
+    if (toggleEl) toggleEl.textContent = s.pausedAt === null ? '⏸' : '▶';
+  }
+
+  function closePipWidget() {
+    if (pipTick && pipWindow) { pipWindow.clearInterval(pipTick); }
+    pipTick = null;
+    if (pipWindow && !pipWindow.closed) pipWindow.close();
+    pipWindow = null;
+    pillHidden = false;
+    renderPill(get());
+  }
+
+  async function popOut() {
+    if (!PIP_SUPPORTED) return;
+    const s = get();
+    if (!s) return;
+    if (pipWindow && !pipWindow.closed) { pipWindow.focus(); return; }
+
+    try {
+      pipWindow = await window.documentPictureInPicture.requestWindow({ width: 260, height: 96 });
+    } catch (e) {
+      console.error('[focus] could not open floating window', e);
+      pipWindow = null;
+      return;
+    }
+
+    const style = pipWindow.document.createElement('style');
+    style.textContent = PIP_STYLE;
+    pipWindow.document.head.appendChild(style);
+
+    const label = (s.label || 'Focus session').replace(/</g, '&lt;');
+    pipWindow.document.body.innerHTML =
+      '<div class="wrap">' +
+        '<div class="col"><span class="t" id="pipTime">0:00</span>' +
+        '<span class="lbl">' + label + '</span></div>' +
+        '<button id="pipToggle" title="Pause/resume">⏸</button>' +
+        '<button id="pipStop" title="End session">✕</button>' +
+      '</div>';
+
+    pipWindow.document.getElementById('pipToggle').addEventListener('click', () => {
+      const cur = get();
+      if (!cur) return;
+      if (cur.pausedAt === null) pause(); else resume();
+      renderPipWidget(pipWindow);
+    });
+    pipWindow.document.getElementById('pipStop').addEventListener('click', () => {
+      stop();
+      closePipWidget();
+    });
+
+    // The interval is scheduled on the PiP window's own event loop, which stays
+    // visible (and unthrottled) even when the main Monad tab is backgrounded.
+    pipTick = pipWindow.setInterval(() => renderPipWidget(pipWindow), 500);
+    renderPipWidget(pipWindow);
+
+    // User closed it, the opener navigated, or the session ended.
+    pipWindow.addEventListener('pagehide', () => { pipTick = null; pipWindow = null; pillHidden = false; renderPill(get()); });
+
+    // While it floats, the in-app pill would be redundant.
+    pillHidden = true;
+    renderPill(get());
+  }
+
   // Coming back to a foregrounded tab should repaint immediately rather than
   // waiting up to a second for the next interval.
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
@@ -184,6 +291,7 @@
     onComplete: (fn) => completeHandlers.push(fn),
     onTick: (fn) => tickHandlers.push(fn),
     setPillHidden, formatClock,
+    popOut, pipSupported: PIP_SUPPORTED,
   };
 
   // Every page needs to be able to finish a session, not just /pomodoro —
