@@ -23,6 +23,70 @@
 
   function get() { return store.load(); }
 
+  // ── Draggable position, remembered across pages ──
+  const POS_KEY = 'monad.focusPill.pos';
+  let posApplied = false;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+
+  function loadPos() {
+    try { const r = localStorage.getItem(POS_KEY); return r ? JSON.parse(r) : null; }
+    catch (e) { return null; }
+  }
+  function savePos(pos) {
+    try { localStorage.setItem(POS_KEY, JSON.stringify(pos)); } catch (e) { /* ignore */ }
+  }
+
+  // Move to a stored {left, top}, re-clamped to the current viewport so a
+  // window resized smaller since last time can't strand the pill off-screen.
+  function applyPos(el) {
+    const p = loadPos();
+    if (!p) return;
+    const left = clamp(p.left, 4, window.innerWidth - el.offsetWidth - 4);
+    const top = clamp(p.top, 4, window.innerHeight - el.offsetHeight - 4);
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+  }
+
+  // Pointer events cover mouse and touch in one path. A press that moves less
+  // than a few px is a tap (button fires); more than that is a drag, and the
+  // trailing click is swallowed so a drag never navigates or pauses.
+  function makeDraggable(el) {
+    let drag = null;
+    const onMove = (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 5) return;
+      drag.moved = true;
+      el.style.left = clamp(drag.left + dx, 4, window.innerWidth - el.offsetWidth - 4) + 'px';
+      el.style.top = clamp(drag.top + dy, 4, window.innerHeight - el.offsetHeight - 4) + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+      e.preventDefault();
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      if (drag && drag.moved) {
+        savePos({ left: el.offsetLeft, top: el.offsetTop });
+        el._justDragged = true;
+        setTimeout(() => { el._justDragged = false; }, 50);
+      }
+      drag = null;
+    };
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button != null && e.button !== 0) return; // ignore right/middle click
+      drag = { x: e.clientX, y: e.clientY, left: el.offsetLeft, top: el.offsetTop, moved: false };
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+    // Capture phase, so a drag's click is killed before the buttons see it.
+    el.addEventListener('click', (e) => {
+      if (el._justDragged) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+  }
+
   function ensurePill() {
     if (pillEl) return pillEl;
     pillEl = document.createElement('div');
@@ -43,6 +107,10 @@
       if (!s) return;
       if (s.pausedAt === null) pause(); else resume();
     });
+
+    makeDraggable(pillEl);
+    // A resize can shrink the viewport out from under a stored position.
+    window.addEventListener('resize', () => { if (pillEl.style.display !== 'none') applyPos(pillEl); });
     return pillEl;
   }
 
@@ -50,6 +118,9 @@
     const el = ensurePill();
     if (!session || pillHidden) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
+    // offsetWidth is only real once shown, so restore the saved spot on the
+    // first visible frame of this page load.
+    if (!posApplied) { applyPos(el); posApplied = true; }
     const secs = session.mode === 'stopwatch'
       ? core.elapsedSecs(session)
       : core.remainingSecs(session);

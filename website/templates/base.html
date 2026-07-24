@@ -609,7 +609,10 @@
       border: 2px solid var(--text-primary); border-radius: 999px;
       box-shadow: 3px 3px 0 var(--text-primary);
       font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      touch-action: none; /* let a touch drag the pill instead of scrolling */
+      cursor: grab; user-select: none;
     }
+    #focusPill:active { cursor: grabbing; }
     #focusPill.paused { opacity: 0.6; }
     #focusPill button {
       background: none; border: none; color: inherit; font: inherit;
