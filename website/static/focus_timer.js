@@ -118,6 +118,7 @@
       ? '<button type="button" class="focus-pill-pop" id="focusPillPop" title="Float over other apps">⧉</button>'
       : '';
     pillEl.innerHTML =
+      '<span class="focus-pill-muted" id="focusPillMuted" title="Tap to resume sound" style="display:none;">🔇</span>' +
       '<button type="button" class="focus-pill-main" id="focusPillMain">' +
         '<i class="bi bi-hourglass-split"></i><span id="focusPillTime">0:00</span>' +
       '</button>' +
@@ -163,6 +164,8 @@
     document.getElementById('focusPillTime').textContent = formatClock(secs);
     document.getElementById('focusPillToggle').textContent = session.pausedAt === null ? '⏸' : '▶';
     el.classList.toggle('paused', session.pausedAt !== null);
+    const muted = document.getElementById('focusPillMuted');
+    if (muted) muted.style.display = soundNeedsGesture ? 'flex' : 'none';
   }
 
   function tick() {
@@ -191,7 +194,77 @@
   }
 
   function start(session) { store.save(session); firedCompletionForRunId = null; startTicking(); }
-  function stop() { store.clear(); renderPill(null); stopTicking(); }
+  function stop() { store.clear(); stopSound(); renderPill(null); stopTicking(); }
+
+  // ── Focus sound, owned here so it survives page navigation ──
+  // The audio element used to live in pomodoro.html and died on every page
+  // load. Here it is recreated and resumed on each page that has a running
+  // session. Built-in sounds resume from their static URL; a custom upload is
+  // a blob URL that cannot outlive its page, so it is marked non-resumable.
+  const SOUND_KEY = 'monad.focusSound';
+  let soundEl = null;
+  let soundNeedsGesture = false;
+
+  function loadSoundState() {
+    try { const r = localStorage.getItem(SOUND_KEY); return r ? JSON.parse(r) : null; }
+    catch (e) { return null; }
+  }
+  function saveSoundState(st) {
+    try { st ? localStorage.setItem(SOUND_KEY, JSON.stringify(st)) : localStorage.removeItem(SOUND_KEY); }
+    catch (e) { /* ignore */ }
+  }
+
+  function playAudio(url) {
+    if (soundEl) { soundEl.pause(); soundEl.src = ''; soundEl = null; }
+    soundEl = new Audio(url);
+    soundEl.loop = true;
+    soundEl.volume = 0.3;
+    const p = soundEl.play();
+    if (p && p.catch) p.catch(() => { soundNeedsGesture = true; renderPill(get()); });
+  }
+
+  function playSound(name, url) {
+    if (!name || name === 'none') { stopSound(); return; }
+    // Re-asserting the sound that is already playing is a no-op, so callers
+    // (chip clicks, session start) don't restart it from the beginning.
+    const cur = loadSoundState();
+    if (cur && cur.name === name && soundEl && !soundEl.paused && !soundNeedsGesture) return;
+    soundNeedsGesture = false;
+    const resumable = !url; // built-ins have no url and can be recreated
+    saveSoundState({ name: name, url: url || null, resumable: resumable, playing: true });
+    playAudio(url || ('/static/sounds/' + name + '.mp3'));
+    renderPill(get());
+  }
+
+  function stopSound() {
+    saveSoundState(null);
+    soundNeedsGesture = false;
+    if (soundEl) { soundEl.pause(); soundEl.src = ''; soundEl = null; }
+  }
+
+  // On page load: resume a built-in sound if a session is still running.
+  function resumeSoundOnLoad() {
+    if (!get()) { saveSoundState(null); return; } // no session — nothing to resume
+    const st = loadSoundState();
+    if (st && st.playing && st.resumable && st.name) {
+      playAudio('/static/sounds/' + st.name + '.mp3');
+    }
+  }
+
+  // A user gesture unblocks audio the autoplay policy rejected on load.
+  function armGestureResume() {
+    const resume = () => {
+      if (!soundNeedsGesture) return;
+      const st = loadSoundState();
+      if (st && st.playing && st.name) {
+        soundNeedsGesture = false;
+        playAudio(st.url || ('/static/sounds/' + st.name + '.mp3'));
+        renderPill(get());
+      }
+    };
+    document.addEventListener('click', resume, true);
+    document.addEventListener('keydown', resume, true);
+  }
 
   function pause() {
     const s = get();
@@ -425,6 +498,7 @@
     setPillHidden, formatClock,
     popOut, pipSupported: PIP_SUPPORTED,
     onReopen: (fn) => { reopenHandler = fn; },
+    playSound, stopSound,
   };
 
   // Every page needs to be able to finish a session, not just /pomodoro —
@@ -478,5 +552,9 @@
   }
   window.FocusTimer.onComplete(notifyComplete);
 
-  document.addEventListener('DOMContentLoaded', () => { if (get()) startTicking(); else renderPill(null); });
+  document.addEventListener('DOMContentLoaded', () => {
+    if (get()) startTicking(); else renderPill(null);
+    resumeSoundOnLoad();
+    armGestureResume();
+  });
 })();

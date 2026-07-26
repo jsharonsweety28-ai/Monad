@@ -802,7 +802,7 @@
 <script>
   let mode = 'pomodoro', pomodoroTime = 25, timeLeft = 25 * 60, totalTime = 25 * 60;
   let isRunning = false, sessionsDone = 0;
-  let audioElement = null, currentSound = 'none', selectedTask = null, selectedTaskName = '', customSoundURL = null;
+  let currentSound = 'none', selectedTask = null, selectedTaskName = '', customSoundURL = null;
   let sessionLabel = '';
   let focusRunId = 0;
   let timerOpen = false, isBreak = false, idleTimer = null;
@@ -886,18 +886,13 @@
     document.querySelectorAll('#cfgSounds .sound-chip').forEach(c => c.classList.remove('active', 'custom-active'));
     if (sound === 'custom') el.classList.add('custom-active');
     else el.classList.add('active');
-    stopSound();
-    if (sound === 'none') { currentSound = 'none'; updateSoundStatus(''); return; }
-    let src = null;
-    if (sound === 'custom' && customSoundURL) src = customSoundURL;
-    else if (sound !== 'custom') src = '/static/sounds/' + sound + '.mp3';
-    else { updateSoundStatus('Upload a file first'); return; }
-    updateSoundStatus('Playing: ' + sound);
-    audioElement = new Audio(src);
-    audioElement.loop = true;
-    audioElement.volume = 0.3;
+    // Playback is owned by FocusTimer now, so it survives page navigation.
+    if (sound === 'none') { currentSound = 'none'; FocusTimer.stopSound(); updateSoundStatus(''); renderLofiRoom(); return; }
+    if (sound === 'custom' && !customSoundURL) { updateSoundStatus('Upload a file first'); return; }
     currentSound = sound;
-    audioElement.play().then(() => updateSoundStatus('✅ ' + sound)).catch(() => updateSoundStatus('Click to play'));
+    updateSoundStatus('Playing: ' + sound);
+    // Built-ins pass no url (resumable across pages); custom passes its blob url.
+    FocusTimer.playSound(sound, sound === 'custom' ? customSoundURL : null);
     renderLofiRoom();
   }
   function loadCustomSound(input) {
@@ -910,7 +905,7 @@
     previewSound('custom', document.getElementById('customSoundChip'));
   }
   function stopSound() {
-    if (audioElement) { audioElement.pause(); audioElement.src = ''; audioElement = null; }
+    FocusTimer.stopSound();
     updateSoundStatus('');
   }
   function updateSoundStatus(m) {
@@ -971,9 +966,9 @@
     timerOpen = true;
     scheduleIdleAnim();
 
-    if (currentSound !== 'none' && !audioElement) {
+    if (currentSound !== 'none') {
       const chip = document.querySelector(`#cfgSounds .sound-chip[data-sound="${currentSound}"]`);
-      if (chip) previewSound(currentSound, chip);
+      if (chip) previewSound(currentSound, chip); // idempotent — won't restart if already playing
     }
 
     // "Start Session" has to actually start it. Without this the timer sat
