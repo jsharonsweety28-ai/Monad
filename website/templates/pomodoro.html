@@ -666,6 +666,26 @@
     .fs-btn-play { width: 52px; height: 52px; font-size: 1.4rem; }
     .fs-speech { max-width: 90vw; font-size: 0.82rem; }
   }
+
+  /* Landscape on phones / small tablets: the focus room is a tall vertical
+     stack, so on a short viewport shrink the ring and tighten spacing to keep
+     the timer and controls on screen without overlap. The background image
+     already fills (object-fit: cover). Larger tablets in landscape have the
+     height for the normal layout, so they are excluded by max-height. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .fs-stage { padding: 12px 24px; }
+    .fs-task-label { font-size: 0.68rem; margin-bottom: 6px; }
+    .fs-session-dots { margin-bottom: 8px; }
+    .fs-timer-ring { width: 128px; height: 128px; }
+    .fs-timer-text { font-size: 1.9rem; }
+    .fs-speech { display: none; }
+    .fs-controls-bar { bottom: 12px; padding: 7px 14px; gap: 10px; }
+    .fs-btn { width: 40px; height: 40px; font-size: 1rem; }
+    .fs-btn-play { width: 46px; height: 46px; font-size: 1.25rem; }
+    .fs-close { top: 12px; width: 34px; height: 34px; }
+    .fs-min { right: 56px; }
+    .fs-kbd-hint { display: none; }
+  }
 </style>
 
 <div id="gardenToast"></div>
