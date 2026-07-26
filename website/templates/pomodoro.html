@@ -1440,9 +1440,10 @@
 
   // Arriving here with a session already running — from the pill, or a
   // reload — should reopen the fullscreen view rather than the setup screen.
-  (function restoreRunningSession() {
-    const s = FocusTimer.get();
-    if (!s) return;
+  // Show the fullscreen view for a running session. Used both on page load
+  // (restore) and when the pill is tapped to reopen — the latter stays in-page
+  // (no reload) so the focus sound keeps playing.
+  function showFullscreenFromSession(s) {
     mode = s.mode;
     selectedTask = s.taskId || null;
     sessionLabel = s.label || '';
@@ -1459,6 +1460,17 @@
     if (s.pausedAt === null) document.getElementById('fsTimerRing').classList.add('running');
     timerOpen = true;
     FocusTimer.setPillHidden(true);
+  }
+
+  // Tapping the pill on this page reopens in place instead of reloading.
+  FocusTimer.onReopen(() => {
+    const s = FocusTimer.get();
+    if (s) showFullscreenFromSession(s);
+  });
+
+  (function restoreRunningSession() {
+    const s = FocusTimer.get();
+    if (s) showFullscreenFromSession(s);
   })();
 
   loadSessionHistory();

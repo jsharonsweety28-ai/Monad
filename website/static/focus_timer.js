@@ -31,6 +31,11 @@
   let pipCanvas = null;
   let pipDraw = null;
 
+  // The pomodoro page registers this so tapping the pill re-opens the
+  // fullscreen in place instead of reloading /pomodoro — a reload would
+  // destroy the page-local <audio> and stop the focus sound.
+  let reopenHandler = null;
+
   function formatClock(secs) {
     const m = Math.floor(Math.abs(secs) / 60);
     const s = Math.abs(secs) % 60;
@@ -121,6 +126,9 @@
     document.body.appendChild(pillEl);
 
     document.getElementById('focusPillMain').addEventListener('click', () => {
+      // In-page reopen when the pomodoro page is what's showing the pill;
+      // otherwise navigate there.
+      if (reopenHandler) { reopenHandler(); return; }
       window.location.href = '/pomodoro';
     });
     document.getElementById('focusPillToggle').addEventListener('click', (e) => {
@@ -416,6 +424,7 @@
     onTick: (fn) => tickHandlers.push(fn),
     setPillHidden, formatClock,
     popOut, pipSupported: PIP_SUPPORTED,
+    onReopen: (fn) => { reopenHandler = fn; },
   };
 
   // Every page needs to be able to finish a session, not just /pomodoro —
