@@ -363,6 +363,39 @@
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.55); z-index: 99990;
   }
+
+  /* Edit habit button + modal */
+  .btn-edit-habit {
+    background: none; border: none; cursor: pointer; padding: 2px 4px;
+    color: var(--text-primary); opacity: 0.55; font-size: 0.78rem; line-height: 1;
+  }
+  .btn-edit-habit:hover { opacity: 1; color: var(--accent-1); }
+  #editHabitOverlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 99990;
+  }
+  #editHabitModal {
+    display: none; position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 92%; max-width: 420px; z-index: 99999;
+    background: var(--input-bg); color: var(--text-primary);
+    border: 3px solid var(--text-primary); border-radius: 10px;
+    box-shadow: 6px 6px 0 var(--text-primary);
+    padding: 18px 20px 20px; box-sizing: border-box;
+    animation: modalIn 0.3s cubic-bezier(0.34,1.4,0.64,1) both;
+  }
+  .edit-habit-header h3 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 800;
+    text-transform: uppercase; margin: 0 0 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .edit-habit-label {
+    display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; opacity: 0.75; margin: 12px 0 5px;
+  }
+  #editHabitModal .habit-input, #editHabitModal .habit-freq-select { width: 100%; box-sizing: border-box; }
+  .edit-scope { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
+  .edit-scope label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .edit-habit-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
   #habitReflectModal {
     display: none; position: fixed;
     top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -607,6 +640,11 @@
                     <div class="habit-icon icon-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div>
                   {% endif %}
                   <span class="habit-name-text">{{ habit.name }}</span>
+                  <button type="button" class="btn-edit-habit"
+                          onclick="openEditHabit({{ habit.id }}, {{ habit.name|tojson }}, '{{ habit.frequency or 'daily' }}')"
+                          title="Edit habit">
+                    <i class="bi bi-pencil-fill"></i>
+                  </button>
                   <a href="{{ url_for('views.delete_habit', id=habit.id) }}" class="btn-del-mobile"
                      onclick="return confirm('Delete this habit?')" title="Delete">
                     <i class="bi bi-trash3-fill"></i>
@@ -738,6 +776,50 @@
 
 <div id="habitToast" style="display:none;"></div>
 
+<!-- ── Edit habit modal ── -->
+<div id="editHabitOverlay" onclick="closeEditHabit()"></div>
+<div id="editHabitModal">
+  <div class="edit-habit-header">
+    <h3><i class="bi bi-pencil-fill"></i> Edit habit</h3>
+  </div>
+  <form id="editHabitForm" method="POST" action="">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="edit-habit-label">Name</label>
+    <input type="text" name="habit" id="editHabitName" class="habit-input" required>
+
+    <label class="edit-habit-label">Frequency</label>
+    <select name="frequency" id="editHabitFreq" class="habit-freq-select" onchange="onEditFreqChange(this)">
+      <option value="daily">Daily</option>
+      <option value="2x">2× / week</option>
+      <option value="3x">3× / week</option>
+      <option value="4x">4× / week</option>
+      <option value="5x">5× / week</option>
+      <option value="custom">Custom days…</option>
+    </select>
+    <div class="add-day-pills" id="editDayPicker" style="margin-top:8px;">
+      <span class="day-pill-h" data-day="0" onclick="toggleEditDay(this)">Mo</span>
+      <span class="day-pill-h" data-day="1" onclick="toggleEditDay(this)">Tu</span>
+      <span class="day-pill-h" data-day="2" onclick="toggleEditDay(this)">We</span>
+      <span class="day-pill-h" data-day="3" onclick="toggleEditDay(this)">Th</span>
+      <span class="day-pill-h" data-day="4" onclick="toggleEditDay(this)">Fr</span>
+      <span class="day-pill-h" data-day="5" onclick="toggleEditDay(this)">Sa</span>
+      <span class="day-pill-h" data-day="6" onclick="toggleEditDay(this)">Su</span>
+    </div>
+    <input type="hidden" name="custom_days" id="editCustomDays">
+
+    <label class="edit-habit-label">Apply to</label>
+    <div class="edit-scope">
+      <label><input type="radio" name="scope" value="onward" checked> This month onward</label>
+      <label><input type="radio" name="scope" value="all"> All months (fix a mistake)</label>
+    </div>
+
+    <div class="edit-habit-footer">
+      <button type="button" class="btn-reflect-skip" onclick="closeEditHabit()">Cancel</button>
+      <button type="submit" class="btn-reflect-save">Save <i class="bi bi-check-lg"></i></button>
+    </div>
+  </form>
+</div>
+
 <script>
 /* ── Frequency picker ── */
 function onHabitFreqChange(sel) {
@@ -752,6 +834,56 @@ function toggleHabitDay(pill) {
     days.push(p.dataset.day);
   });
   document.getElementById('customDaysAdd').value = days.join(',');
+}
+
+/* ── Edit habit modal ── */
+function onEditFreqChange(sel) {
+  var picker = document.getElementById('editDayPicker');
+  picker.style.display = (sel.value === 'custom') ? 'flex' : 'none';
+  if (sel.value !== 'custom') document.getElementById('editCustomDays').value = '';
+}
+function toggleEditDay(pill) {
+  pill.classList.toggle('active');
+  var days = [];
+  document.querySelectorAll('#editDayPicker .day-pill-h.active').forEach(function(p) {
+    days.push(p.dataset.day);
+  });
+  document.getElementById('editCustomDays').value = days.join(',');
+}
+function openEditHabit(id, name, freq) {
+  var form = document.getElementById('editHabitForm');
+  form.action = '/habit/edit/' + id;
+  document.getElementById('editHabitName').value = name;
+
+  var sel = document.getElementById('editHabitFreq');
+  var picker = document.getElementById('editDayPicker');
+  var pills = picker.querySelectorAll('.day-pill-h');
+  pills.forEach(function(p) { p.classList.remove('active'); });
+
+  if (freq && freq.indexOf('days:') === 0) {
+    sel.value = 'custom';
+    var chosen = freq.slice(5).split(',');
+    pills.forEach(function(p) {
+      if (chosen.indexOf(p.dataset.day) !== -1) p.classList.add('active');
+    });
+    document.getElementById('editCustomDays').value = freq.slice(5);
+    picker.style.display = 'flex';
+  } else {
+    sel.value = freq || 'daily';
+    document.getElementById('editCustomDays').value = '';
+    picker.style.display = 'none';
+  }
+
+  // reset scope to the safe default each open
+  var onward = form.querySelector('input[name="scope"][value="onward"]');
+  if (onward) onward.checked = true;
+
+  document.getElementById('editHabitOverlay').style.display = 'block';
+  document.getElementById('editHabitModal').style.display = 'block';
+}
+function closeEditHabit() {
+  document.getElementById('editHabitOverlay').style.display = 'none';
+  document.getElementById('editHabitModal').style.display = 'none';
 }
 
 /* ── Reflection modal ── */

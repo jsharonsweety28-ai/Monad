@@ -973,6 +973,38 @@ def habits_monthly(year, month):
                            suggested_habits=suggested_habits, habit_progress=habit_progress,
                            days_in_month=days_in_month, active_page="habits")
 
+@views.route('/habit/edit/<int:id>', methods=['POST'])
+@login_required
+def edit_habit(id):
+    habit = Habit.query.get_or_404(id)
+    habit_month = db.session.get(HabitMonth, habit.habit_month_id)
+    if not habit_month or habit_month.user_id != current_user.id:
+        abort(403)
+
+    new_name = (request.form.get('habit') or '').strip()
+    frequency = request.form.get('frequency', 'daily')
+    if frequency == 'custom':
+        custom_days = request.form.get('custom_days', '').strip()
+        frequency = f'days:{custom_days}' if custom_days else 'daily'
+    scope = request.form.get('scope', 'onward')  # 'onward' | 'all'
+
+    if new_name:
+        # Copies of a habit across months are linked only by name.
+        old_name = habit.name
+        cy, cm = habit_month.year, habit_month.month
+        q = (Habit.query.join(HabitMonth)
+             .filter(HabitMonth.user_id == current_user.id, Habit.name == old_name))
+        if scope != 'all':
+            q = q.filter(db.or_(HabitMonth.year > cy,
+                                db.and_(HabitMonth.year == cy, HabitMonth.month >= cm)))
+        for h in q.all():
+            h.name = new_name
+            h.frequency = frequency
+        db.session.commit()
+        flash('Habit updated!', category='success')
+    return redirect(request.referrer or url_for('views.habits_monthly', year=habit_month.year, month=habit_month.month))
+
+
 @views.route('/habit/delete/<int:id>')
 @login_required
 def delete_habit(id):
