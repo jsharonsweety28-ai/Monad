@@ -208,31 +208,35 @@
     };
   }
 
-  // A warm accent glow behind a bordered card that reuses the pill's signature
-  // hard-shadow look. Alpha is appended as hex (colours are 6-digit hex vars).
+  // The pill itself, filling the window edge-to-edge. The window background is
+  // set to the pill fill colour so the residual square corners (an OS window is
+  // always rectangular) blend in and the whole thing reads as the pill.
   function pipStyle(t) {
     return `
       :root { color-scheme: light dark; }
       * { box-sizing: border-box; }
-      body { margin: 0; height: 100vh; display: flex; align-items: center;
-        justify-content: center; font-family: 'Segoe UI', system-ui, sans-serif;
-        color: ${t.text}; user-select: none;
-        background:
-          radial-gradient(120% 130% at 12% 0%, ${t.accent}40 0%, transparent 58%),
-          linear-gradient(150deg, ${t.bg} 0%, ${t.bg} 62%, ${t.accent}22 100%); }
-      .card { display: flex; align-items: center; gap: 10px; padding: 9px 13px;
-        background: ${t.bg}cc; border: 2px solid ${t.text}; border-radius: 16px;
+      html, body { margin: 0; height: 100%; }
+      body { background: ${t.bg}; display: flex; align-items: center;
+        justify-content: center; padding: 7px;
+        font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+        color: ${t.text}; user-select: none; }
+      .pill { display: flex; align-items: center; gap: 8px;
+        width: 100%; height: 100%; padding: 6px 16px;
+        background: ${t.bg}; border: 2px solid ${t.text}; border-radius: 999px;
         box-shadow: 3px 3px 0 ${t.text}; }
-      .col { display: flex; flex-direction: column; gap: 1px; }
-      .t { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums;
-        letter-spacing: 1px; line-height: 1; }
-      .lbl { font-size: 11px; opacity: 0.7; max-width: 110px; overflow: hidden;
-        text-overflow: ellipsis; white-space: nowrap; }
+      .ic { display: flex; flex: 0 0 auto; opacity: 0.85; }
+      .t { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums;
+        letter-spacing: 1px; line-height: 1; flex: 1; }
       button { background: none; border: none; color: inherit; cursor: pointer;
-        font-size: 19px; padding: 4px 6px; border-radius: 8px; line-height: 1; }
+        font-size: 18px; padding: 2px 5px; border-radius: 999px; line-height: 1;
+        flex: 0 0 auto; }
       button:hover { background: ${t.accent}33; }
     `;
   }
+
+  const PIP_HOURGLASS =
+    '<svg class="ic" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">' +
+    '<path d="M3 1h10a.5.5 0 0 1 0 1H12v1.5A4 4 0 0 1 9.2 8 4 4 0 0 1 12 12.5V14h1a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1h1v-1.5A4 4 0 0 1 6.8 8 4 4 0 0 1 4 3.5V2H3a.5.5 0 0 1 0-1Z"/></svg>';
 
   function renderPipWidget(win) {
     const s = get();
@@ -260,7 +264,7 @@
     if (pipWindow && !pipWindow.closed) { pipWindow.focus(); return; }
 
     try {
-      pipWindow = await window.documentPictureInPicture.requestWindow({ width: 280, height: 120 });
+      pipWindow = await window.documentPictureInPicture.requestWindow({ width: 210, height: 74 });
     } catch (e) {
       console.error('[focus] could not open floating window', e);
       pipWindow = null;
@@ -273,9 +277,9 @@
 
     const label = (s.label || 'Focus session').replace(/</g, '&lt;');
     pipWindow.document.body.innerHTML =
-      '<div class="card">' +
-        '<div class="col"><span class="t" id="pipTime">0:00</span>' +
-        '<span class="lbl">' + label + '</span></div>' +
+      '<div class="pill" title="' + label + '">' +
+        PIP_HOURGLASS +
+        '<span class="t" id="pipTime">0:00</span>' +
         '<button id="pipToggle" title="Pause/resume">⏸</button>' +
         '<button id="pipStop" title="End session">✕</button>' +
       '</div>';
