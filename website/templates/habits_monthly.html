@@ -641,7 +641,9 @@
                   {% endif %}
                   <span class="habit-name-text">{{ habit.name }}</span>
                   <button type="button" class="btn-edit-habit"
-                          onclick="openEditHabit({{ habit.id }}, {{ habit.name|tojson }}, '{{ habit.frequency or 'daily' }}')"
+                          data-habit-id="{{ habit.id }}"
+                          data-habit-name="{{ habit.name }}"
+                          data-habit-freq="{{ habit.frequency or 'daily' }}"
                           title="Edit habit">
                     <i class="bi bi-pencil-fill"></i>
                   </button>
@@ -885,6 +887,13 @@ function closeEditHabit() {
   document.getElementById('editHabitOverlay').style.display = 'none';
   document.getElementById('editHabitModal').style.display = 'none';
 }
+// Wire the edit buttons via data attributes rather than inline onclick, so a
+// habit name containing quotes can't break the handler.
+document.querySelectorAll('.btn-edit-habit').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    openEditHabit(btn.dataset.habitId, btn.dataset.habitName, btn.dataset.habitFreq);
+  });
+});
 
 /* ── Reflection modal ── */
 var currentLogId = null;
