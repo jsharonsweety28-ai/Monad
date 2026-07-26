@@ -441,5 +441,33 @@
     stop();
   });
 
+  // Buzz the user when a focus session ends, so they hear it in another app.
+  // Runs on every page (independent of the save handler above), reads the
+  // passed session rather than the store (which stop() may have cleared), and
+  // only fires when they have already enabled notifications via the bell —
+  // never a permission prompt at the moment a session completes.
+  function notifyComplete(session) {
+    if (session.isBreak) return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    const mins = Math.max(1, Math.round(core.elapsedSecs(session) / 60));
+    const title = 'Focus session complete 🎉';
+    const opts = {
+      body: (session.label || 'Focus session') + ' · ' + mins + ' min',
+      icon: '/static/icons/icon-192.png',
+      badge: '/static/icons/icon-72.png',
+      tag: 'focus-complete',
+      data: { url: '/pomodoro' },
+      vibrate: [200, 100, 200],
+    };
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.showNotification(title, opts))
+        .catch(() => { try { new Notification(title, opts); } catch (e) {} });
+    } else {
+      try { new Notification(title, opts); } catch (e) {}
+    }
+  }
+  window.FocusTimer.onComplete(notifyComplete);
+
   document.addEventListener('DOMContentLoaded', () => { if (get()) startTicking(); else renderPill(null); });
 })();
