@@ -196,21 +196,43 @@
   // holding live HTML, so the pill can float over other applications and stay
   // interactive. Styles are inlined because the app stylesheet and the icon
   // font are not loaded in the PiP document.
-  const PIP_STYLE = `
-    :root { color-scheme: light dark; }
-    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif;
-      display: flex; align-items: center; justify-content: center;
-      height: 100vh; background: #fdf6ec; color: #2b2b2b; user-select: none; }
-    @media (prefers-color-scheme: dark) { body { background: #1e1e1e; color: #f0f0f0; } }
-    .wrap { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
-    .t { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-    .lbl { font-size: 12px; opacity: 0.7; max-width: 120px; overflow: hidden;
-      text-overflow: ellipsis; white-space: nowrap; }
-    button { background: none; border: none; color: inherit; cursor: pointer;
-      font-size: 20px; padding: 4px 6px; border-radius: 6px; }
-    button:hover { background: rgba(128,128,128,0.2); }
-    .col { display: flex; flex-direction: column; gap: 1px; }
-  `;
+  // Pull the live theme colours from the page so the floating window matches
+  // whichever theme the user is on, rather than a hardcoded look.
+  function readTheme() {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n, fb) => ((cs.getPropertyValue(n) || '').trim() || fb);
+    return {
+      accent: v('--accent-1', '#E07B39'),
+      text: v('--text-primary', '#2D2A26'),
+      bg: v('--input-bg', '#FDF6F0'),
+    };
+  }
+
+  // A warm accent glow behind a bordered card that reuses the pill's signature
+  // hard-shadow look. Alpha is appended as hex (colours are 6-digit hex vars).
+  function pipStyle(t) {
+    return `
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; height: 100vh; display: flex; align-items: center;
+        justify-content: center; font-family: 'Segoe UI', system-ui, sans-serif;
+        color: ${t.text}; user-select: none;
+        background:
+          radial-gradient(120% 130% at 12% 0%, ${t.accent}40 0%, transparent 58%),
+          linear-gradient(150deg, ${t.bg} 0%, ${t.bg} 62%, ${t.accent}22 100%); }
+      .card { display: flex; align-items: center; gap: 10px; padding: 9px 13px;
+        background: ${t.bg}cc; border: 2px solid ${t.text}; border-radius: 16px;
+        box-shadow: 3px 3px 0 ${t.text}; }
+      .col { display: flex; flex-direction: column; gap: 1px; }
+      .t { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums;
+        letter-spacing: 1px; line-height: 1; }
+      .lbl { font-size: 11px; opacity: 0.7; max-width: 110px; overflow: hidden;
+        text-overflow: ellipsis; white-space: nowrap; }
+      button { background: none; border: none; color: inherit; cursor: pointer;
+        font-size: 19px; padding: 4px 6px; border-radius: 8px; line-height: 1; }
+      button:hover { background: ${t.accent}33; }
+    `;
+  }
 
   function renderPipWidget(win) {
     const s = get();
@@ -238,7 +260,7 @@
     if (pipWindow && !pipWindow.closed) { pipWindow.focus(); return; }
 
     try {
-      pipWindow = await window.documentPictureInPicture.requestWindow({ width: 260, height: 96 });
+      pipWindow = await window.documentPictureInPicture.requestWindow({ width: 280, height: 120 });
     } catch (e) {
       console.error('[focus] could not open floating window', e);
       pipWindow = null;
@@ -246,12 +268,12 @@
     }
 
     const style = pipWindow.document.createElement('style');
-    style.textContent = PIP_STYLE;
+    style.textContent = pipStyle(readTheme());
     pipWindow.document.head.appendChild(style);
 
     const label = (s.label || 'Focus session').replace(/</g, '&lt;');
     pipWindow.document.body.innerHTML =
-      '<div class="wrap">' +
+      '<div class="card">' +
         '<div class="col"><span class="t" id="pipTime">0:00</span>' +
         '<span class="lbl">' + label + '</span></div>' +
         '<button id="pipToggle" title="Pause/resume">⏸</button>' +
