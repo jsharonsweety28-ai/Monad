@@ -15,9 +15,21 @@
   const tickHandlers = [];
   let firedCompletionForRunId = null;
 
-  const PIP_SUPPORTED = 'documentPictureInPicture' in window;
+  // Desktop Chrome/Edge get a real interactive floating window (Document PiP).
+  // Android has no such thing — the only way to float over other apps there is
+  // a video, so the pill is drawn to a canvas and shown as a view-only video
+  // in system Picture-in-Picture. iPhone supports neither; the button is absent.
+  const DOC_PIP = 'documentPictureInPicture' in window;
+  const VIDEO_PIP = typeof document !== 'undefined'
+    && !!document.pictureInPictureEnabled
+    && typeof HTMLVideoElement !== 'undefined'
+    && 'requestPictureInPicture' in HTMLVideoElement.prototype;
+  const PIP_SUPPORTED = DOC_PIP || VIDEO_PIP;
   let pipWindow = null;
   let pipTick = null;
+  let pipVideo = null;
+  let pipCanvas = null;
+  let pipDraw = null;
 
   function formatClock(secs) {
     const m = Math.floor(Math.abs(secs) / 60);
@@ -257,8 +269,13 @@
     renderPill(get());
   }
 
-  async function popOut() {
-    if (!PIP_SUPPORTED) return;
+  // Desktop gets the interactive window; Android gets the view-only video.
+  function popOut() {
+    if (DOC_PIP) return popOutDoc();
+    if (VIDEO_PIP) return popOutVideo();
+  }
+
+  async function popOutDoc() {
     const s = get();
     if (!s) return;
     if (pipWindow && !pipWindow.closed) { pipWindow.focus(); return; }
@@ -305,6 +322,87 @@
 
     // While it floats, the in-app pill would be redundant.
     pillHidden = true;
+    renderPill(get());
+  }
+
+  // ── Android: view-only floating video ──
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawPipFrame(ctx, W, H, t) {
+    const cur = get();
+    if (!cur) { closePipVideo(); return; }
+    const secs = cur.mode === 'stopwatch' ? core.elapsedSecs(cur) : core.remainingSecs(cur);
+    const label = secs === 0 && cur.mode !== 'stopwatch' ? 'Done' : formatClock(secs);
+    ctx.clearRect(0, 0, W, H);
+    const x = 10, y = 10, w = W - 20, h = H - 20, r = h / 2;
+    ctx.fillStyle = t.bg;
+    roundRect(ctx, x, y, w, h, r); ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = t.text;
+    roundRect(ctx, x, y, w, h, r); ctx.stroke();
+    ctx.fillStyle = t.text;
+    ctx.font = '700 56px "Space Grotesk", system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText((cur.pausedAt !== null ? '⏸ ' : '') + label, W / 2, H / 2 + 2);
+  }
+
+  async function popOutVideo() {
+    const s = get();
+    if (!s) return;
+    if (document.pictureInPictureElement) { try { await document.exitPictureInPicture(); } catch (e) {} }
+
+    const t = readTheme();
+    const W = 340, H = 150, dpr = 2;
+    pipCanvas = document.createElement('canvas');
+    pipCanvas.width = W * dpr; pipCanvas.height = H * dpr;
+    const ctx = pipCanvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    drawPipFrame(ctx, W, H, t);
+    // Redraw as the clock advances. On Android this may slow while the tab is
+    // backgrounded; because the time is clock-derived, each frame it does draw
+    // is still correct.
+    pipDraw = setInterval(() => drawPipFrame(ctx, W, H, t), 500);
+
+    pipVideo = document.createElement('video');
+    pipVideo.muted = true;
+    pipVideo.setAttribute('playsinline', '');
+    pipVideo.style.cssText = 'position:fixed; left:-9999px; width:2px; height:2px; opacity:0;';
+    pipVideo.srcObject = pipCanvas.captureStream(2);
+    document.body.appendChild(pipVideo);
+
+    try {
+      await pipVideo.play();
+      await pipVideo.requestPictureInPicture();
+    } catch (e) {
+      console.error('[focus] could not open floating video', e);
+      closePipVideo();
+      return;
+    }
+
+    pipVideo.addEventListener('leavepictureinpicture', () => closePipVideo());
+    pillHidden = true;
+    renderPill(get());
+  }
+
+  function closePipVideo() {
+    if (pipDraw) { clearInterval(pipDraw); pipDraw = null; }
+    if (pipVideo) {
+      try {
+        if (document.pictureInPictureElement === pipVideo) document.exitPictureInPicture();
+      } catch (e) { /* already gone */ }
+      if (pipVideo.srcObject) pipVideo.srcObject.getTracks().forEach((tr) => tr.stop());
+      pipVideo.remove();
+      pipVideo = null;
+    }
+    pipCanvas = null;
+    pillHidden = false;
     renderPill(get());
   }
 
