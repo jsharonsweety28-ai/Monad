@@ -2795,37 +2795,6 @@ Return ONLY valid JSON:
             user_msg = 'AI could not generate tips right now. Please try again.'
         return jsonify({'error': user_msg}), 500
 
-@views.route('/study/setup', methods=['POST'])
-@login_required
-def study_setup_save():
-    profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
-    if not profile:
-        profile = StudentProfile(user_id=current_user.id)
-        db.session.add(profile)
-    inst_type = request.form.get('institution_type', 'school').strip()
-    profile.institution_type = inst_type if inst_type in ('school', 'college') else 'school'
-    profile.institution  = request.form.get('institution', '').strip()[:200] or None
-    profile.course       = request.form.get('course', '').strip()[:200] or None
-    profile.roll_number  = request.form.get('roll_number', '').strip()[:100] or None
-    if inst_type == 'school':
-        profile.class_name = request.form.get('class_name', '').strip()[:50] or None
-        profile.section    = request.form.get('section', '').strip()[:20] or None
-        profile.department = None; profile.year = None; profile.semester = None
-    else:
-        profile.department = request.form.get('department', '').strip()[:200] or None
-        profile.year       = request.form.get('year', '').strip()[:50] or None
-        profile.semester   = request.form.get('semester', '').strip()[:50] or None
-        profile.class_name = None; profile.section = None
-
-    photo = request.files.get('photo')
-    if photo and photo.filename:
-        ext = os.path.splitext(photo.filename)[1].lower()
-        if ext in {'.jpg', '.jpeg', '.png', '.gif', '.webp'}:
-            profile.photo_filename = upload_file(photo, "profile_photos")
-
-    db.session.commit()
-    return redirect(url_for('views.study_profile'))
-
 @views.route('/study/add-subject', methods=['POST'])
 @login_required
 def add_subject():
