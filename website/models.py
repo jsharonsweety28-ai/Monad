@@ -70,6 +70,8 @@ class Habit(db.Model):
     name = db.Column(db.String(100), nullable=False)
     frequency = db.Column(db.String(30), nullable=True, default='daily')  # daily|2x|3x|4x|5x|days:0,2,4
     habit_month_id = db.Column(db.Integer, db.ForeignKey('habit_month.id'))
+    focus_time = db.Column(db.Integer, default=0)      # seconds focused this month
+    session_count = db.Column(db.Integer, default=0)
     logs = db.relationship('HabitLog', backref='habit', lazy=True, cascade="all, delete-orphan")
 
 class HabitLog(db.Model):

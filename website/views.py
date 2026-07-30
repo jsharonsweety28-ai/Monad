@@ -1109,13 +1109,17 @@ def pomodoro(task_id=None):
     today = datetime.now(timezone.utc).replace(tzinfo=None).date()
     tasks = Task.query.filter(Task.user_id == current_user.id, db.func.date(Task.date) == today, Task.completed == False).all()
     selected_task = Task.query.get_or_404(task_id) if task_id else None
-    return render_template("pomodoro.html", tasks=tasks, selected_task=selected_task, mode=mode, active_page="pomodoro")
+    habit_month = HabitMonth.query.filter_by(user_id=current_user.id, year=today.year, month=today.month).first()
+    habits = Habit.query.filter_by(habit_month_id=habit_month.id).all() if habit_month else []
+    return render_template("pomodoro.html", tasks=tasks, selected_task=selected_task,
+                           habits=habits, mode=mode, active_page="pomodoro")
 
 @views.route('/pomodoro/save', methods=['POST'])
 @login_required
 def save_pomodoro():
     data = request.get_json()
     task_id = data.get('task_id')
+    habit_id = data.get('habit_id')
     duration_minutes = data.get('duration', 0)
     mode = data.get('mode', 'pomodoro')
     partial = bool(data.get('partial', False))
@@ -1133,10 +1137,27 @@ def save_pomodoro():
         task.focus_time = (task.focus_time or 0) + duration_seconds
         task.session_count = (task.session_count or 0) + 1
 
+    # A session can instead target a habit: a completed one logs the time and
+    # ticks the habit off for today.
+    habit = Habit.query.get(habit_id) if habit_id else None
+    if habit:
+        hm = db.session.get(HabitMonth, habit.habit_month_id)
+        if not hm or hm.user_id != current_user.id:
+            habit = None
+    if habit and not partial:
+        habit.focus_time = (habit.focus_time or 0) + duration_seconds
+        habit.session_count = (habit.session_count or 0) + 1
+        today = datetime.now(timezone.utc).replace(tzinfo=None).date()
+        log = HabitLog.query.filter_by(habit_id=habit.id, date=today).first()
+        if log:
+            log.completed = True
+        else:
+            db.session.add(HabitLog(habit_id=habit.id, date=today, completed=True))
+
     session = FocusSession(
         task_id=task.id if task else None, user_id=current_user.id,
         duration=duration_seconds, mode=mode, completed=not partial,
-        label=None if task else (label or None)
+        label=(None if task else (habit.name if habit else (label or None)))
     )
     try:
         db.session.add(session)

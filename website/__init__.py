@@ -99,13 +99,15 @@ def create_app():
         for stmt in (
             'ALTER TABLE focus_session ALTER COLUMN task_id DROP NOT NULL',
             'ALTER TABLE focus_session ADD COLUMN IF NOT EXISTS label VARCHAR(80)',
+            'ALTER TABLE habit ADD COLUMN IF NOT EXISTS focus_time INTEGER DEFAULT 0',
+            'ALTER TABLE habit ADD COLUMN IF NOT EXISTS session_count INTEGER DEFAULT 0',
         ):
             try:
                 db.session.execute(db.text(stmt))
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                print(f'focus_session migration warning ({stmt[:48]}…): {e}')
+                print(f'schema migration warning ({stmt[:48]}…): {e}')
 
     # ✅ Login manager setup
     login_manager = LoginManager()

@@ -729,15 +729,27 @@
     </div>
 
     <div class="config-group">
-      <label>Task</label>
+      <label>Focus on</label>
       <select id="cfgTask">
+        <option value="" {% if not selected_task %}selected{% endif %}>No specific task</option>
         {% if selected_task %}
-        <option value="{{ selected_task.id }}">{{ selected_task.content }}</option>
-        {% else %}
-        <option value="">No specific task</option>
-        {% for task in tasks %}
-        <option value="{{ task.id }}">{{ task.content }}</option>
-        {% endfor %}
+        <option value="{{ selected_task.id }}" selected>{{ selected_task.content }}</option>
+        {% endif %}
+        {% if tasks %}
+        <optgroup label="Tasks">
+          {% for task in tasks %}
+            {% if not selected_task or task.id != selected_task.id %}
+            <option value="{{ task.id }}">{{ task.content }}</option>
+            {% endif %}
+          {% endfor %}
+        </optgroup>
+        {% endif %}
+        {% if habits %}
+        <optgroup label="Habits">
+          {% for habit in habits %}
+          <option value="habit:{{ habit.id }}">{{ habit.name }}</option>
+          {% endfor %}
+        </optgroup>
         {% endif %}
       </select>
     </div>
@@ -823,6 +835,7 @@
   let mode = 'pomodoro', pomodoroTime = 25, timeLeft = 25 * 60, totalTime = 25 * 60;
   let isRunning = false, sessionsDone = 0;
   let currentSound = 'none', selectedTask = null, selectedTaskName = '', customSoundURL = null;
+  let selectedHabit = null;
   let sessionLabel = '';
   let focusRunId = 0;
   let timerOpen = false, isBreak = false, idleTimer = null;
@@ -938,10 +951,23 @@
     mode = document.querySelector('#modeChips .mode-chip.active').dataset.mode;
     pomodoroTime = parseInt(document.querySelector('#pomoChips .mode-chip.active').dataset.time);
     const taskSel = document.getElementById('cfgTask');
-    selectedTask = taskSel.value;
-    selectedTaskName = taskSel.value ? taskSel.options[taskSel.selectedIndex].text : '';
+    const rawTarget = taskSel.value;
+    const targetName = rawTarget ? taskSel.options[taskSel.selectedIndex].text : '';
+    // A "habit:<id>" value targets a habit; anything else is a task id.
+    if (rawTarget.indexOf('habit:') === 0) {
+      selectedHabit = rawTarget.slice(6);
+      selectedTask = null;
+      selectedTaskName = targetName;
+    } else {
+      selectedHabit = null;
+      selectedTask = rawTarget || null;
+      selectedTaskName = targetName;
+    }
     const nameInput = document.getElementById('cfgSessionName');
-    sessionLabel = selectedTask ? '' : (nameInput ? nameInput.value.trim().slice(0, 80) : '');
+    // A habit uses its name as the session label; a plain task-less session
+    // uses the typed name; a task uses neither.
+    sessionLabel = selectedHabit ? targetName
+                 : (selectedTask ? '' : (nameInput ? nameInput.value.trim().slice(0, 80) : ''));
 
     if (mode === 'timer') {
       const h = parseInt(document.getElementById('cfgHours').value) || 0;
@@ -967,6 +993,7 @@
       mode: mode,
       durationSecs: timeLeft,
       taskId: selectedTask || null,
+      habitId: selectedHabit || null,
       label: sessionLabel || null,
     }));
     FocusTimer.setPillHidden(true); // the fullscreen view is showing it instead
@@ -1375,6 +1402,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           task_id: s ? s.taskId : (selectedTask || null),
+          habit_id: s ? s.habitId : (selectedHabit || null),
           label: s ? s.label : (sessionLabel || null),
           duration: d,
           mode: s ? s.mode : mode,
@@ -1461,6 +1489,7 @@
   function showFullscreenFromSession(s) {
     mode = s.mode;
     selectedTask = s.taskId || null;
+    selectedHabit = s.habitId || null;
     sessionLabel = s.label || '';
     isBreak = !!s.isBreak;
     sessionsDone = s.sessionsDone || 0;

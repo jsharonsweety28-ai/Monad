@@ -11,13 +11,14 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   const MODES = ['pomodoro', 'timer', 'stopwatch'];
 
-  function createSession({ mode, durationSecs, taskId = null, label = null, now = Date.now() }) {
+  function createSession({ mode, durationSecs, taskId = null, habitId = null, label = null, now = Date.now() }) {
     return {
       mode: mode,
       startedAt: now,
       endsAt: mode === 'stopwatch' ? null : now + durationSecs * 1000,
       pausedAt: null,
       taskId: taskId,
+      habitId: habitId,
       label: label,
       sessionsDone: 0,
       isBreak: false,

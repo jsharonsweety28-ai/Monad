@@ -226,6 +226,11 @@
     border: 2px solid #7c3aed; white-space: nowrap;
     margin-left: 4px; flex-shrink: 0;
   }
+  /* Focus-time badge: same shape, accent colour, to read as "time" not "schedule" */
+  .freq-badge.focus-badge {
+    background: rgba(224,123,57,0.12); color: var(--accent-1);
+    border-color: var(--accent-1);
+  }
 
   /* Frequency selector in add form */
   .habit-freq-select {
@@ -651,6 +656,9 @@
                      onclick="return confirm('Delete this habit?')" title="Delete">
                     <i class="bi bi-trash3-fill"></i>
                   </a>
+                  {% if habit.focus_time and habit.focus_time >= 60 %}
+                    <span class="freq-badge focus-badge"><i class="bi bi-hourglass-split"></i> {{ habit.focus_time // 60 }}m</span>
+                  {% endif %}
                   {% set hfreq = habit.frequency or 'daily' %}
                   {% if hfreq != 'daily' %}
                     <span class="freq-badge">
