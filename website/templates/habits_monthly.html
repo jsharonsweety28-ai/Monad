@@ -323,8 +323,7 @@
       min-width: 0; width: 100%; table-layout: fixed;
     }
     .habit-table.week-windowed .col-progress,
-    .habit-table.week-windowed .col-streak,
-    .habit-table.week-windowed .col-delete {
+    .habit-table.week-windowed .col-streak {
       display: none;
     }
     .habit-table.week-windowed .col-name,
@@ -345,16 +344,6 @@
     }
   }
 
-  .btn-del-mobile { display: none; }
-  .habit-table.week-windowed .btn-del-mobile {
-    display: flex; align-items: center; justify-content: center;
-    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
-    color: var(--text-secondary); font-size: 0.65rem;
-    text-decoration: none; transition: all 0.15s;
-  }
-  .habit-table.week-windowed .btn-del-mobile:active {
-    background: rgba(239,68,68,0.15); color: #ef4444;
-  }
 
   @media (min-width: 601px) {
     [data-daynum] { display: table-cell !important; }
@@ -375,6 +364,8 @@
     color: var(--text-primary); opacity: 0.55; font-size: 0.78rem; line-height: 1;
   }
   .btn-edit-habit:hover { opacity: 1; color: var(--accent-1); }
+  /* Edit + delete grouped at the row end */
+  .habit-row-actions { display: inline-flex; align-items: center; gap: 6px; }
   #editHabitOverlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.55); z-index: 99990;
@@ -645,17 +636,6 @@
                     <div class="habit-icon icon-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div>
                   {% endif %}
                   <span class="habit-name-text">{{ habit.name }}</span>
-                  <button type="button" class="btn-edit-habit"
-                          data-habit-id="{{ habit.id }}"
-                          data-habit-name="{{ habit.name }}"
-                          data-habit-freq="{{ habit.frequency or 'daily' }}"
-                          title="Edit habit">
-                    <i class="bi bi-pencil-fill"></i>
-                  </button>
-                  <a href="{{ url_for('views.delete_habit', id=habit.id) }}" class="btn-del-mobile"
-                     onclick="return confirm('Delete this habit?')" title="Delete">
-                    <i class="bi bi-trash3-fill"></i>
-                  </a>
                   {% if habit.focus_time and habit.focus_time >= 60 %}
                     <span class="freq-badge focus-badge"><i class="bi bi-hourglass-split"></i> {{ habit.focus_time // 60 }}m</span>
                   {% endif %}
@@ -714,8 +694,17 @@
                 {% endif %}
               </td>
               <td class="col-delete">
-                <a href="{{ url_for('views.delete_habit', id=habit.id) }}" class="btn-del-habit"
-                   onclick="return confirm('Delete this habit?')" title="Delete">✕</a>
+                <div class="habit-row-actions">
+                  <button type="button" class="btn-edit-habit"
+                          data-habit-id="{{ habit.id }}"
+                          data-habit-name="{{ habit.name }}"
+                          data-habit-freq="{{ habit.frequency or 'daily' }}"
+                          title="Edit habit">
+                    <i class="bi bi-pencil-fill"></i>
+                  </button>
+                  <a href="{{ url_for('views.delete_habit', id=habit.id) }}" class="btn-del-habit"
+                     onclick="return confirm('Delete this habit?')" title="Delete">✕</a>
+                </div>
               </td>
             </tr>
           {% endfor %}
