@@ -2497,7 +2497,9 @@ def analytics():
         minutes = (task.focus_time % 3600) // 60
         task_time_stats.append({'name': task.content[:30], 'hours': round(task.focus_time / 3600, 1), 'sessions': task.session_count or 0, 'display_time': f"{hours}h {minutes}m" if hours > 0 else f"{minutes}m"})
     
-    total_focus_seconds = sum(t.focus_time or 0 for t in Task.query.filter_by(user_id=current_user.id).all())
+    # Count every focus session (task-linked or not), matching the week/month
+    # totals above; the old task-based sum silently dropped task-less sessions.
+    total_focus_seconds = db.session.query(db.func.sum(FocusSession.duration)).filter_by(user_id=current_user.id).scalar() or 0
     total_focus_hours = round(total_focus_seconds / 3600, 1)
     recent_sessions = FocusSession.query.filter_by(user_id=current_user.id).order_by(FocusSession.date.desc()).limit(10).all()
     # Focus minutes per day this week
