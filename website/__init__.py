@@ -22,7 +22,10 @@ def create_app():
         raise RuntimeError('SECRET_KEY environment variable is required')
     app.config['SECRET_KEY'] = secret_key
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE']   = True
+    # Secure-only in production. Relaxed under FLASK_DEBUG so local testing
+    # over plain http (127.0.0.1, a LAN address from a phone) keeps the session.
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.config['SESSION_COOKIE_SECURE']   = not debug
 
 
     # Database (Supabase PostgreSQL)

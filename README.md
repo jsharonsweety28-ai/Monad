@@ -165,7 +165,7 @@ Tables are created automatically on first run, and a few additive column migrati
 python start.py
 ```
 
-The app is served at `http://localhost:5000`. Note that the session cookie is marked `Secure`, so log in over `https` or a browser that treats `localhost` as a secure context.
+The app is served at `http://localhost:5000`. With `FLASK_DEBUG=true` the session cookie is not marked `Secure`, so you can also test over plain http from `127.0.0.1` or a phone on the same network. Leave `FLASK_DEBUG` unset in production to keep the cookie Secure-only.
 
 ---
 
