@@ -218,3 +218,5 @@ Issues and pull requests are welcome. Keep changes small and focused, and descri
 ## License
 
 No license has been chosen yet. All rights reserved by the author until one is added.
+
+Source is shared for portfolio and review purposes. Not licensed for reuse.
